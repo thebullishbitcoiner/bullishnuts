@@ -170,6 +170,8 @@ const Wallet = () => {
 
   return (
     <main>
+      <h1>BullishNuts</h1><p>v0.0.3</p>
+
       <div className="cashu-operations-container">
 
         <div className="section">
