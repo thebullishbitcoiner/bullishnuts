@@ -1,9 +1,9 @@
 {
     "name": "Bullish Nuts",
-    "start_url": "/src/pages/index.js",
     "display": "standalone",
     "background_color": "#2a5f7a",
     "theme_color": "#000000",
+    "start_url": "../src/pages/index.js",
     "icons": [
         {
             "src": "bullishNuts.png",
