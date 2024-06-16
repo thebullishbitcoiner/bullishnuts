@@ -179,7 +179,7 @@ const Wallet = () => {
 
         <div className="section">
           <h2>Mint</h2>
-          <label htmlFor="mint-url"><a href="https://bitcoinmints.com/">URL: [click to see list of available mints] </a></label>
+          <label htmlFor="mint-url"><a href="https://bitcoinmints.com/">URL [click to see list of mints]:</a></label>
           <input
             type="text"
             name="mintUrl"
