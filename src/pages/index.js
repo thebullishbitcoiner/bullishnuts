@@ -175,7 +175,7 @@ const Wallet = () => {
 
       <div className="cashu-operations-container">
 
-      <h1>BullishNuts <small>v0.0.14</small></h1>
+      <h1>BullishNuts <small>v0.0.15</small></h1>
       <br></br>
         <div className="section">
           <h2>Balance</h2>
