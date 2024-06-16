@@ -1,0 +1,119 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+main {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 20px;
+}
+
+.cashu-operations-container {
+  max-width: 600px;
+}
+
+.section {
+  margin-bottom: 21px;
+  background-color: #ff9900;
+  padding: 21px;
+  border-radius: 5px;
+  width: 90%;
+}
+
+.section h2 {
+  margin-bottom: 10px;
+  font-weight: bold;
+  font-size: large;
+}
+
+.section label {
+  display: block;
+  margin-bottom: 5px;
+  text-decoration: underline;
+}
+
+.section input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  color: black;
+}
+
+.section textarea {
+  width: 100%;
+  height: 100px;
+  margin-bottom: 10px;
+  color: black;
+}
+
+.section button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  background-color: #ffb649;
+  color: white;
+  min-width: 100px;
+  margin-bottom: 10px;
+}
+
+.data-display-container {
+  background-color: #ff9900;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(110, 107, 107, 0.1);
+  width: 90%;
+  height: auto;
+  overflow-y: auto;
+}
+
+.data-display-container h2 {
+  margin-bottom: 10px;
+  font-weight: bold;
+  font-size: large;
+}
+
+.data-output {
+  background-color: #f8f9fa;
+  color: black;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  white-space: pre-wrap;
+  height: 80%;
+  overflow: auto;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
