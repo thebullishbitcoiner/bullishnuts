@@ -69,8 +69,7 @@ main {
 }
 
 .section textarea {
-  width: 80%;
-  max-width: 80%;
+  width: 250px;
   height: 200px;
   padding: 8px;
   margin-bottom: 10px;
