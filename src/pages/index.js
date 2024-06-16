@@ -173,7 +173,7 @@ const Wallet = () => {
 
       <div className="cashu-operations-container">
 
-      <h1>BullishNuts <small>v0.0.11</small></h1>
+      <h1>BullishNuts <small>v0.0.12</small></h1>
       <br></br>
         <div className="section">
           <h2>Balance</h2>
@@ -182,7 +182,7 @@ const Wallet = () => {
 
         <div className="section">
           <h2>Mint</h2>
-          <label htmlFor="mint-url"><a href="https://bitcoinmints.com/">URL [click to see list of mints]:</a></label>
+          <label htmlFor="mint-url"><a href="https://bitcoinmints.com/">[click here to see list of available mints]</a></label>
           <input
             type="text"
             name="mintUrl"
@@ -208,6 +208,7 @@ const Wallet = () => {
           <button className="mint-button" onClick={handleMint}>Mint</button>
           <label htmlFor="mint-amount">Invoice:</label>
           <textarea
+            readOnly
             id="bolt11_invoice"
             name="bolt11_invoice"
             value={formData.bolt11_invoice}
