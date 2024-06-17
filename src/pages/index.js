@@ -12,6 +12,8 @@ const Wallet = () => {
     swapToken: "",
   });
   const [dataOutput, setDataOutput] = useState(null);
+  const [stateLog, setStateLog] = useState([]);
+
   /**
    * @type {[CashuWallet|null, React.Dispatch<React.SetStateAction<CashuWallet|null>>]}
    */
@@ -67,14 +69,14 @@ const Wallet = () => {
   const handleMint = async () => {
     const amount = parseInt(formData.mintAmount);
     const quote = await wallet.getMintQuote(amount);
-    
+
     setDataOutput(quote);
     setFormData((prevData) => ({ ...prevData, bolt11_invoice: quote.request }));
 
     //Display the invoice in the text area
     var textArea = document.getElementById('bolt11_invoice');
     textArea.value = quote.request;
-    
+
     await navigator.clipboard.writeText(quote.request);
     alert('Invoice copied to clipboard!');
 
@@ -90,6 +92,10 @@ const Wallet = () => {
       } catch (error) {
         console.error("Quote probably not paid: ", quote.request, error);
         setDataOutput({ error: "Failed to mint", details: error });
+
+        // Update the log of state changes
+        setStateLog((prevLog) => [...prevLog, { timestamp: new Date().toISOString(), details: error}
+        ]);
       }
     }, 5000);
   };
@@ -164,7 +170,7 @@ const Wallet = () => {
       await navigator.clipboard.writeText(textArea.value);
       alert('Copied to clipboard!');
     } catch (err) {
-        console.error('Failed to copy: ', err);
+      console.error('Failed to copy: ', err);
     }
   };
 
@@ -173,8 +179,8 @@ const Wallet = () => {
 
       <div className="cashu-operations-container">
 
-      <h6>bullishNuts <small>v0.0.21</small></h6>
-      <br></br>
+        <h6>bullishNuts <small>v0.0.21</small></h6>
+        <br></br>
         <div className="section">
           <h2>Balance</h2>
           <p>{balance} sats</p>
@@ -260,8 +266,14 @@ const Wallet = () => {
 
         <div className="data-display-container">
           <h2>Data Output</h2>
-          <pre id="data-output" className="data-output">
-            {JSON.stringify(dataOutput, null, 2)}
+          <pre id="data-output" className="data-output">{JSON.stringify(dataOutput, null, 2)}</pre>
+          <h2>State Logs</h2>
+          <pre className="data-output">
+            {stateLog.map((logEntry, index) => (
+              <div key={index}>
+                {JSON.stringify(logEntry)}
+              </div>
+            ))}
           </pre>
         </div>
 
