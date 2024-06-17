@@ -171,11 +171,9 @@ const Wallet = () => {
   return (
     <main>
 
-<link rel="manifest" href="manifest.json"></link>
-
       <div className="cashu-operations-container">
 
-      <h1>BullishNuts <small>v0.0.17</small></h1>
+      <h6>bullishNuts <small>v0.0.18</small></h6>
       <br></br>
         <div className="section">
           <h2>Balance</h2>
