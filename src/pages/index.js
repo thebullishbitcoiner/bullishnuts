@@ -72,6 +72,7 @@ const Wallet = () => {
 
     setDataOutput(quote);
     setFormData((prevData) => ({ ...prevData, bolt11_invoice: quote.request }));
+    setStateLog((prevLog) => [...prevLog, { timestamp: new Date().toISOString(), quote}]);
 
     //Display the invoice in the text area
     var textArea = document.getElementById('bolt11_invoice');
@@ -94,8 +95,7 @@ const Wallet = () => {
         setDataOutput({ error: "Failed to mint", details: error });
 
         // Update the log of state changes
-        setStateLog((prevLog) => [...prevLog, { timestamp: new Date().toISOString(), details: error}
-        ]);
+        setStateLog((prevLog) => [...prevLog, { timestamp: new Date().toISOString(), details: error}]);
       }
     }, 5000);
   };
@@ -103,7 +103,10 @@ const Wallet = () => {
   const handleMelt = async () => {
     try {
       const quote = await wallet.getMeltQuote(formData.meltInvoice);
+      
       setDataOutput([{ "got melt quote": quote }]);
+      setStateLog((prevLog) => [...prevLog, { timestamp: new Date().toISOString(), quote}]);
+
       const amount = quote.amount + quote.fee_reserve;
       const proofs = getProofsByAmount(amount, wallet.keys.id);
       if (proofs.length === 0) {
@@ -179,7 +182,7 @@ const Wallet = () => {
 
       <div className="cashu-operations-container">
 
-        <h6>bullishNuts <small>v0.0.21</small></h6>
+        <h6>bullishNuts <small>v0.0.22</small></h6>
         <br></br>
         <div className="section">
           <h2>Balance</h2>
@@ -267,7 +270,7 @@ const Wallet = () => {
         <div className="data-display-container">
           <h2>Data Output</h2>
           <pre id="data-output" className="data-output">{JSON.stringify(dataOutput, null, 2)}</pre>
-          <h2>State Logs</h2>
+          <h2>Logs</h2>
           <pre className="data-output">
             {stateLog.map((logEntry, index) => (
               <div key={index}>
