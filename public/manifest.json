@@ -6,9 +6,9 @@
     "start_url": "/",
     "icons": [
         {
-            "src": "/images/bullishNuts_logo.png",
+            "src": "/images/bullishNuts_logo.jpg",
             "sizes": "192x192",
-            "type": "image/png"
+            "type": "image/jpg"
         }
     ]
 }
