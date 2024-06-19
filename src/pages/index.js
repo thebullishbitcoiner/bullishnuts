@@ -93,8 +93,6 @@ const Wallet = () => {
       } catch (error) {
         console.error("Quote probably not paid: ", quote.request, error);
         setDataOutput({ error: "Failed to mint", details: error });
-
-        // Update the log of state changes
         setStateLog((prevLog) => [...prevLog, { timestamp: new Date().toISOString(), details: error}]);
       }
     }, 5000);
@@ -182,7 +180,7 @@ const Wallet = () => {
 
       <div className="cashu-operations-container">
 
-        <h6>bullishNuts <small>v0.0.22</small></h6>
+        <h6>bullishNuts <small>v0.0.23</small></h6>
         <br></br>
         <div className="section">
           <h2>Balance</h2>
