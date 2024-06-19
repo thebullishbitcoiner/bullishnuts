@@ -180,7 +180,7 @@ const Wallet = () => {
 
       <div className="cashu-operations-container">
 
-        <h6>bullishNuts <small>v0.0.23</small></h6>
+        <h6>bullishNuts <small>v0.0.24</small></h6>
         <br></br>
         <div className="section">
           <h2>Balance</h2>
@@ -189,7 +189,7 @@ const Wallet = () => {
 
         <div className="section">
           <h2>Mint</h2>
-          <label htmlFor="mint-url"><a href="https://bitcoinmints.com/">[View list of available mints]</a></label>
+          <label htmlFor="mint-url"><a href="https://bitcoinmints.com/"><small>[View list of available mints]</small></a></label>
           <input
             type="text"
             name="mintUrl"
@@ -269,7 +269,7 @@ const Wallet = () => {
           <h2>Data Output</h2>
           <pre id="data-output" className="data-output">{JSON.stringify(dataOutput, null, 2)}</pre>
           <h2>Logs</h2>
-          <pre className="data-output">
+          <pre className="log-output">
             {stateLog.map((logEntry, index) => (
               <div key={index}>
                 {JSON.stringify(logEntry)}
