@@ -26,6 +26,7 @@ main {
   background-color: #000000;
   padding: 21px;
   border: 1px solid #ff9900;
+  border-radius: 0px;
   width: 100%;
 }
 
@@ -46,7 +47,6 @@ main {
   padding: 8px;
   margin-bottom: 10px;
   border: 1px solid #ff9900;
-  border-radius: 0px;
   color: #ff9900;
   background-color: #111111;
 }
