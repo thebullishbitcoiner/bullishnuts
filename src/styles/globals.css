@@ -10,11 +10,11 @@ body {
 main {
   font-family: 'Courier New', Courier, monospace;
   color: #ff9900;
-  margin: 20px;
+  margin: 11px;
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding: 20px;
+  padding: 21px;
 }
 
 .cashu-operations-container {
@@ -46,8 +46,9 @@ main {
   padding: 8px;
   margin-bottom: 10px;
   border: 1px solid #ff9900;
+  border-radius: 0px;
   color: #ff9900;
-  background-color: #1d1d1d;
+  background-color: #111111;
 }
 
 .section textarea {
@@ -58,7 +59,7 @@ main {
   margin-bottom: 10px;
   border: 1px solid #ff9900;
   color: #ff9900;
-  background-color: #1d1d1d;
+  background-color: #111111;
 }
 
 .section button {
@@ -87,7 +88,7 @@ main {
 }
 
 .data-output {
-  background-color: #1d1d1d;
+  background-color: #111111;
   color: #ff9900;
   padding: 10px;
   border: 1px solid #ff9900;
@@ -99,7 +100,7 @@ main {
 }
 
 .log-output {
-  background-color: #1d1d1d;
+  background-color: #111111;
   color: #ff9900;
   padding: 10px;
   border: 1px solid #ff9900;
