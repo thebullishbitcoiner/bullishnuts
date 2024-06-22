@@ -101,10 +101,6 @@ const Wallet = () => {
       }
     }, 5000);
   };
-  
-  // Ensure this function is called on a user interaction event (e.g., button click)
-  document.getElementById('mintButton').addEventListener('click', handleMint);
-  
 
   const handleMelt = async () => {
     try {
