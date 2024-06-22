@@ -12,7 +12,6 @@ const Wallet = () => {
     swapToken: "",
   });
   const [dataOutput, setDataOutput] = useState(null);
-  const [stateLog, setStateLog] = useState([]);
 
   /**
    * @type {[CashuWallet|null, React.Dispatch<React.SetStateAction<CashuWallet|null>>]}
@@ -72,7 +71,6 @@ const Wallet = () => {
 
     setDataOutput(quote);
     setFormData((prevData) => ({ ...prevData, bolt11_invoice: quote.request }));
-    setStateLog((prevLog) => [...prevLog, { timestamp: new Date().toISOString(), quote}]);
 
     //Display the invoice in the text area
     var textArea = document.getElementById('bolt11_invoice');
@@ -93,7 +91,6 @@ const Wallet = () => {
       } catch (error) {
         console.error("Quote probably not paid: ", quote.request, error);
         setDataOutput({ error: "Failed to mint", details: error });
-        setStateLog((prevLog) => [...prevLog, { timestamp: new Date().toISOString(), details: error}]);
       }
     }, 5000);
   };
@@ -103,7 +100,6 @@ const Wallet = () => {
       const quote = await wallet.getMeltQuote(formData.meltInvoice);
       
       setDataOutput([{ "got melt quote": quote }]);
-      setStateLog((prevLog) => [...prevLog, { timestamp: new Date().toISOString(), quote}]);
 
       const amount = quote.amount + quote.fee_reserve;
       const proofs = getProofsByAmount(amount, wallet.keys.id);
@@ -175,18 +171,12 @@ const Wallet = () => {
     }
   };
 
-  const testInterval = setInterval(() => {
-    console.log(new Date().toISOString() + ' -- interval running (ID: ' + testInterval + ')...');
-    clearInterval(testInterval);
-    setStateLog((prevLog) => [{ timestamp: new Date().toISOString() }, ...prevLog]);
-  }, 5000);
-
   return (
     <main>
 
       <div className="cashu-operations-container">
 
-        <h6>bullishNuts <small>v0.0.29</small></h6>
+        <h6>bullishNuts <small>v0.0.30</small></h6>
         <br></br>
         <div className="section">
           <h2>Balance</h2>
@@ -274,14 +264,6 @@ const Wallet = () => {
         <div className="data-display-container">
           <h2>Data Output</h2>
           <pre id="data-output" className="data-output">{JSON.stringify(dataOutput, null, 2)}</pre>
-          <h2>Logs</h2>
-          <pre className="log-output">
-            {stateLog.map((logEntry, index) => (
-              <div key={index}>
-                {JSON.stringify(logEntry)}
-              </div>
-            ))}
-          </pre>
         </div>
 
       </div>

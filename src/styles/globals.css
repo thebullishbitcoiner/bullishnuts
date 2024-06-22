@@ -101,19 +101,6 @@ main {
   word-wrap: break-word;
 }
 
-.log-output {
-  background-color: #111111;
-  color: #ff9900;
-  padding: 10px;
-  border: 1px solid #ff9900;
-  white-space: pre-wrap;
-  overflow: scroll;
-  max-width: 100%;
-  height: 300px;
-  max-height: 300px;
-  word-wrap: break-word;
-}
-
 @layer utilities {
   .text-balance {
     text-wrap: balance;
