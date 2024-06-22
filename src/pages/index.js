@@ -68,17 +68,24 @@ const Wallet = () => {
   const handleMint = async () => {
     const amount = parseInt(formData.mintAmount);
     const quote = await wallet.getMintQuote(amount);
-
+  
     setDataOutput(quote);
     setFormData((prevData) => ({ ...prevData, bolt11_invoice: quote.request }));
-
-    //Display the invoice in the text area
-    var textArea = document.getElementById('bolt11_invoice');
+  
+    // Display the invoice in the text area
+    const textArea = document.getElementById('bolt11_invoice');
     textArea.value = quote.request;
-
-    await navigator.clipboard.writeText(quote.request);
-    alert('Invoice copied to clipboard!');
-
+  
+    // Clipboard operation inside a try-catch block
+    try {
+      await navigator.clipboard.writeText(quote.request);
+      alert('Invoice copied to clipboard!');
+    } catch (err) {
+      console.error('Failed to copy to clipboard: ', err);
+      alert('Failed to copy invoice to clipboard');
+    }
+  
+    // Use a ref to store intervalId to avoid multiple intervals
     const intervalId = setInterval(async () => {
       try {
         const { proofs } = await wallet.mintTokens(amount, quote.quote, {
@@ -87,13 +94,17 @@ const Wallet = () => {
         setDataOutput({ "minted proofs": proofs });
         setFormData((prevData) => ({ ...prevData, mintAmount: "", bolt11_invoice: "" }));
         addProofs(proofs);
-        clearInterval(intervalId);
+        clearInterval(intervalId); // Clear interval after successful mint
       } catch (error) {
         console.error("Quote probably not paid: ", quote.request, error);
         setDataOutput({ timestamp: new Date().toLocaleTimeString(), error: "Failed to mint", details: error });
       }
     }, 5000);
   };
+  
+  // Ensure this function is called on a user interaction event (e.g., button click)
+  document.getElementById('mintButton').addEventListener('click', handleMint);
+  
 
   const handleMelt = async () => {
     try {
@@ -176,7 +187,7 @@ const Wallet = () => {
 
       <div className="cashu-operations-container">
 
-        <h6>bullishNuts <small>v0.0.31</small></h6>
+        <h6>bullishNuts <small>v0.0.32</small></h6>
         <br></br>
         <div className="section">
           <h2>Balance</h2>
