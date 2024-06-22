@@ -175,12 +175,18 @@ const Wallet = () => {
     }
   };
 
+  const testInterval = setInterval(() => {
+    console.log(new Date().toISOString() + ' -- interval running (ID: ' + testInterval + ')...');
+    clearInterval(testInterval);
+    setStateLog((prevLog) => [{ timestamp: new Date().toISOString() }, ...prevLog]);
+  }, 5000);
+
   return (
     <main>
 
       <div className="cashu-operations-container">
 
-        <h6>bullishNuts <small>v0.0.28</small></h6>
+        <h6>bullishNuts <small>v0.0.29</small></h6>
         <br></br>
         <div className="section">
           <h2>Balance</h2>
