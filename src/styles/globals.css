@@ -72,6 +72,32 @@ main {
   margin-bottom: 10px;
 }
 
+.styled-button {
+  border: 1px solid #ff9900;
+  border-radius: 0px;
+
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+}
+
+/* Change background color on hover */
+.styled-button:hover {
+  background-color: #424242;
+  transform: scale(0.98);
+}
+
+/* Add a shadow and scale up slightly when clicked */
+.styled-button:active {
+  background-color: #cc7a00;
+  transform: scale(0.98);
+}
+
 .data-display-container {
   border: 1px solid #ff9900;
   background-color: black;

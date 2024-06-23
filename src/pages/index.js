@@ -168,13 +168,24 @@ const Wallet = () => {
     }
   };
 
+  const handleCopyP2NPUB = async (event) => {
+    try {
+      const value = event.target.value;
+      await navigator.clipboard.writeText(value);
+      alert('P2NPUB address copied to clipboard: ' + value);
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+    }
+  };
+
   return (
     <main>
 
       <div className="cashu-operations-container">
 
-        <h6>bullishNuts <small>v0.0.33</small></h6>
+        <h6>bullishNuts <small>v0.0.34</small></h6>
         <br></br>
+
         <div className="section">
           <h2>Balance</h2>
           <p>{balance} sats</p>
@@ -193,6 +204,12 @@ const Wallet = () => {
           <button className="mint-connect-button" onClick={handleSetMint}>
             Set Mint
           </button>
+        </div>
+
+        <div className="section">
+          <h2>Receive</h2>
+          <button className="styled-button">Ecash</button>
+          <button className="styled-button">Lightning</button>
         </div>
 
         <div className="section">
@@ -262,6 +279,21 @@ const Wallet = () => {
           <h2>Data Output</h2>
           <pre id="data-output" className="data-output">{JSON.stringify(dataOutput, null, 2)}</pre>
         </div>
+
+        <br></br>
+
+        <div className="section">
+          <h2>Zap Deez Nuts</h2>
+          <button className="styled-button" onClick={handleCopyP2NPUB}
+          value="npub15ypxpg429uyjmp0zczuza902chuvvr4pn35wfzv8rx6cej4z8clq6jmpcx@openbalance.app">OpenBalance.app</button>
+          <button className="styled-button" onClick={handleCopyP2NPUB}
+          value="npub15ypxpg429uyjmp0zczuza902chuvvr4pn35wfzv8rx6cej4z8clq6jmpcx@npub.cash">npub.cash</button>
+        </div>
+
+        <div className="section">
+          <small>Made with 🐂 by <a href="https://thebullishbitcoiner.com/">thebullishbitcoiner</a></small>
+        </div>
+        
 
       </div>
 
