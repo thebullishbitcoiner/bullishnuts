@@ -72,9 +72,12 @@ const Wallet = () => {
     setDataOutput(quote);
     setFormData((prevData) => ({ ...prevData, bolt11_invoice: quote.request }));
 
-    //Display the invoice in the text area
-    var textArea = document.getElementById('bolt11_invoice');
-    textArea.value = quote.request;
+    // //Display the invoice in the text area
+    // var textArea = document.getElementById('bolt11_invoice');
+    // textArea.value = quote.request;
+
+    // Display the invoice in the modal
+    showModal(quote.request);
 
     const intervalId = setInterval(async () => {
       try {
@@ -90,12 +93,12 @@ const Wallet = () => {
         setDataOutput({ timestamp: new Date().toLocaleTimeString(), error: "Failed to mint", details: error });
       }
     }, 5000);
-  };  
+  };
 
   const handleMelt = async () => {
     try {
       const quote = await wallet.getMeltQuote(formData.meltInvoice);
-      
+
       setDataOutput([{ "got melt quote": quote }]);
 
       const amount = quote.amount + quote.fee_reserve;
@@ -182,14 +185,45 @@ const Wallet = () => {
     window.location.reload();
   }
 
+  function showModal(invoice) {
+    const modal = document.getElementById('invoiceModal');
+    const invoiceText = document.getElementById('invoiceText');
+    invoiceText.value = invoice;
+    modal.style.display = 'block';
+  }
+
+  function closeModal() {
+    const modal = document.getElementById('invoiceModal');
+    modal.style.display = 'none';
+  }
+
+  const copyToClipboard = async () => {
+    try {
+      const invoiceText = document.getElementById('invoiceText');
+      await navigator.clipboard.writeText(invoiceText);
+      alert('Invoice copied to clipboard!');
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+    }
+  };
+
   return (
     <main>
 
       <div className="cashu-operations-container">
 
-      <div id="refresh-icon" onClick={refreshPage}>↻</div>
+        <div id="refresh-icon" onClick={refreshPage}>↻</div>
 
-        <h6>bullishNuts <small>v0.0.36</small></h6>
+        <div id="invoiceModal" className="modal">
+          <div className="modal-content">
+            <span className="close" onClick={closeModal}>&times;</span>
+            <p>Invoice:</p>
+            <textarea id="invoiceText" readOnly></textarea>
+            <button className="styled-button" onClick={copyToClipboard}>Copy</button>
+          </div>
+        </div>
+
+        <h6>bullishNuts <small>v0.0.37</small></h6>
         <br></br>
 
         <div className="section">
@@ -237,7 +271,7 @@ const Wallet = () => {
             value={formData.bolt11_invoice}
             onChange={handleChange}
           ></textarea>
-          <button id="copyButton" onClick={handleCopy}>Copy</button>
+          <button onClick={handleCopy}>Copy</button>
         </div>
 
         <div className="section">
@@ -293,13 +327,13 @@ const Wallet = () => {
           {/* <button className="styled-button" onClick={handleCopyP2NPUB}
           value="npub15ypxpg429uyjmp0zczuza902chuvvr4pn35wfzv8rx6cej4z8clq6jmpcx@openbalance.app">OpenBalance</button> */}
           <button className="styled-button" onClick={handleCopyP2NPUB}
-          value="npub15ypxpg429uyjmp0zczuza902chuvvr4pn35wfzv8rx6cej4z8clq6jmpcx@npub.cash">npub.cash</button>
+            value="npub15ypxpg429uyjmp0zczuza902chuvvr4pn35wfzv8rx6cej4z8clq6jmpcx@npub.cash">npub.cash</button>
         </div>
 
         <div className="section">
           <small>Made with 🐂 by <a href="https://thebullishbitcoiner.com/">thebullishbitcoiner</a></small>
         </div>
-        
+
 
       </div>
 
