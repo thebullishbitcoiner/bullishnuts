@@ -183,7 +183,7 @@ const Wallet = () => {
 
       <div className="cashu-operations-container">
 
-        <h6>bullishNuts <small>v0.0.34</small></h6>
+        <h6>bullishNuts <small>v0.0.35</small></h6>
         <br></br>
 
         <div className="section">
@@ -284,8 +284,8 @@ const Wallet = () => {
 
         <div className="section">
           <h2>Zap Deez Nuts</h2>
-          <button className="styled-button" onClick={handleCopyP2NPUB}
-          value="npub15ypxpg429uyjmp0zczuza902chuvvr4pn35wfzv8rx6cej4z8clq6jmpcx@openbalance.app">OpenBalance.app</button>
+          {/* <button className="styled-button" onClick={handleCopyP2NPUB}
+          value="npub15ypxpg429uyjmp0zczuza902chuvvr4pn35wfzv8rx6cej4z8clq6jmpcx@openbalance.app">OpenBalance</button> */}
           <button className="styled-button" onClick={handleCopyP2NPUB}
           value="npub15ypxpg429uyjmp0zczuza902chuvvr4pn35wfzv8rx6cej4z8clq6jmpcx@npub.cash">npub.cash</button>
         </div>
