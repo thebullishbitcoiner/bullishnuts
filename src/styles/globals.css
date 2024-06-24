@@ -29,6 +29,10 @@ main {
   width: 100%;
 }
 
+.section a {
+  text-decoration: underline;
+}
+
 .section h2 {
   margin-bottom: 10px;
   font-weight: bold;
@@ -121,6 +125,17 @@ main {
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  #refresh-icon {
+    position:absolute;
+    top: 15px;
+    right: 21px;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s, transform 0.3s;
   }
 
 }

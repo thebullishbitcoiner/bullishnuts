@@ -178,12 +178,18 @@ const Wallet = () => {
     }
   };
 
+  function refreshPage() {
+    window.location.reload();
+  }
+
   return (
     <main>
 
       <div className="cashu-operations-container">
 
-        <h6>bullishNuts <small>v0.0.35</small></h6>
+      <div id="refresh-icon" onClick={refreshPage}>↻</div>
+
+        <h6>bullishNuts <small>v0.0.36</small></h6>
         <br></br>
 
         <div className="section">
@@ -193,7 +199,7 @@ const Wallet = () => {
 
         <div className="section">
           <h2>Mint</h2>
-          <label htmlFor="mint-url"><a href="https://bitcoinmints.com/"><small>[View list of available mints]</small></a></label>
+          <label htmlFor="mint-url"><a href="https://bitcoinmints.com/">View list of available mints</a></label>
           <input
             type="text"
             name="mintUrl"
