@@ -201,7 +201,16 @@ const Wallet = () => {
     try {
       const invoiceText = document.getElementById('invoiceText');
       await navigator.clipboard.writeText(invoiceText);
-      alert('Invoice copied to clipboard!');
+
+      // Change button text to "Copied" temporarily
+      const copyButton = document.getElementById('copyButton');
+      copyButton.textContent = 'Copied';
+
+      // Reset button text after 1000ms (1 second)
+      setTimeout(() => {
+        copyButton.textContent = 'Copy';
+      }, 1000);
+
     } catch (err) {
       console.error('Failed to copy: ', err);
     }
@@ -219,11 +228,11 @@ const Wallet = () => {
             <span className="close" onClick={closeModal}>&times;</span>
             <p>Invoice:</p>
             <textarea id="invoiceText" readOnly></textarea>
-            <button className="styled-button" onClick={copyToClipboard}>Copy</button>
+            <button id="copyButton" className="styled-button" onClick={copyToClipboard}>Copy</button>
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.37</small></h6>
+        <h6>bullishNuts <small>v0.0.38</small></h6>
         <br></br>
 
         <div className="section">
