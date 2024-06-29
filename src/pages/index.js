@@ -72,9 +72,9 @@ const Wallet = () => {
     setDataOutput(quote);
     setFormData((prevData) => ({ ...prevData, bolt11_invoice: quote.request }));
 
-    // //Display the invoice in the text area
-    // var textArea = document.getElementById('bolt11_invoice');
-    // textArea.value = quote.request;
+    //Display the invoice in the text area
+    var textArea = document.getElementById('bolt11_invoice');
+    textArea.value = quote.request;
 
     // Display the invoice in the modal
     showModal(quote.request);
@@ -200,7 +200,7 @@ const Wallet = () => {
   const copyToClipboard = async () => {
     try {
       const invoiceText = document.getElementById('invoiceText');
-      await navigator.clipboard.writeText(invoiceText);
+      await navigator.clipboard.writeText(invoiceText.value);
 
       // Change button text to "Copied" temporarily
       const copyButton = document.getElementById('copyButton');
@@ -232,7 +232,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.38</small></h6>
+        <h6>bullishNuts <small>v0.0.39</small></h6>
         <br></br>
 
         <div className="section">
