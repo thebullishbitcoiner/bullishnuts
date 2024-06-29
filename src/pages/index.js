@@ -95,6 +95,35 @@ const Wallet = () => {
     }, 5000);
   };
 
+  async function handleMint2(amount) {
+    const quote = await wallet.getMintQuote(amount);
+
+    setDataOutput(quote);
+    setFormData((prevData) => ({ ...prevData, bolt11_invoice: quote.request }));
+
+    // Display the invoice in the text area
+    var textArea = document.getElementById('bolt11_invoice');
+    textArea.value = quote.request;
+
+    // Display the invoice in the modal
+    showModal(quote.request);
+
+    const intervalId = setInterval(async () => {
+      try {
+        const { proofs } = await wallet.mintTokens(amount, quote.quote, {
+          keysetId: wallet.keys.id,
+        });
+        setDataOutput({ "minted proofs": proofs });
+        setFormData((prevData) => ({ ...prevData, mintAmount: "", bolt11_invoice: "" }));
+        addProofs(proofs);
+        clearInterval(intervalId);
+      } catch (error) {
+        console.error("Quote probably not paid: ", quote.request, error);
+        setDataOutput({ timestamp: new Date().toLocaleTimeString(), error: "Failed to mint", details: error });
+      }
+    }, 5000);
+  }
+
   const handleMelt = async () => {
     try {
       const quote = await wallet.getMeltQuote(formData.meltInvoice);
@@ -216,6 +245,27 @@ const Wallet = () => {
     }
   };
 
+  function showReceiveLightningModal() {
+    const modal = document.getElementById('receive_lightning_modal');
+    modal.style.display = 'block';
+  }
+
+  function closeReceiveLightningModal() {
+    const modal = document.getElementById('receive_lightning_modal');
+    modal.style.display = 'none';
+  }
+
+  function createInvoiceButtonClicked() {
+    const amount = parseInt(document.getElementById('satsAmount').value);
+    if (!isNaN(amount) && amount > 0) {
+      handleMint2(amount);
+      const modal = document.getElementById('receive_lightning_modal');
+      modal.style.display = 'none'; // Hide modal after creating invoice
+    } else {
+      alert('Please enter a valid amount of sats');
+    }
+  }
+
   return (
     <main>
 
@@ -223,16 +273,17 @@ const Wallet = () => {
 
         <div id="refresh-icon" onClick={refreshPage}>↻</div>
 
+        {/* Invoice modal  */}
         <div id="invoiceModal" className="modal">
           <div className="modal-content">
-            <span className="close" onClick={closeModal}>&times;</span>
+            <span className="close-button" onClick={closeModal}>&times;</span>
             <p>Invoice:</p>
             <textarea id="invoiceText" readOnly></textarea>
             <button id="copyButton" className="styled-button" onClick={copyToClipboard}>Copy</button>
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.39</small></h6>
+        <h6>bullishNuts <small>v0.0.40</small></h6>
         <br></br>
 
         <div className="section">
@@ -258,7 +309,17 @@ const Wallet = () => {
         <div className="section">
           <h2>Receive</h2>
           <button className="styled-button">Ecash</button>
-          <button className="styled-button">Lightning</button>
+          <button className="styled-button" onClick={showReceiveLightningModal}>Lightning</button>
+        </div>
+
+        {/* Lightning modal  */}
+        <div id="receive_lightning_modal" class="modal">
+          <div className="modal-content">
+            <span className="close-button" onClick={closeReceiveLightningModal}>&times;</span>
+            <label>Enter amount of sats:</label>
+            <input type="number" id="satsAmount" name="satsAmount" min="1" />
+            <button className="styled-button" onClick={createInvoiceButtonClicked}>Create invoice</button>
+          </div>
         </div>
 
         <div className="section">

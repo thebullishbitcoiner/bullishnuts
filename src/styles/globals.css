@@ -156,6 +156,21 @@ main {
     background-color: rgba(0, 0, 0, 0.9);
   }
 
+  .modal label {
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  .modal input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ff9900;
+    border-radius: 0px;
+    color: #ff9900;
+    background-color: #111111;
+  }
+
   .modal-content {
     background-color: black;
     color: #ff9900;
@@ -165,18 +180,22 @@ main {
     border: 1px solid #ff9900;
     width: 80%;
     max-width: 500px;
+    position: relative;
   }
 
-  .close {
+  .close-button {
+    position: absolute;
+    top: 8px;
+    right: 20px;
     color: #ff9900;
-    float: right;
     font-size: 28px;
     font-weight: bold;
+    cursor: pointer;
   }
-
-  .close:hover,
-  .close:focus {
-    color: #ff9900;
+  
+  .close-button:hover,
+  .close-button:focus {
+    color: #ffae34;
     text-decoration: none;
     cursor: pointer;
   }
