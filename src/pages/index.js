@@ -5,8 +5,6 @@ import React, { useState, useEffect } from "react";
 const Wallet = () => {
   const [formData, setFormData] = useState({
     mintUrl: "",
-    mintAmount: "",
-    bolt11_invoice: "",
     meltInvoice: "",
     swapAmount: "",
     swapToken: "",
@@ -65,19 +63,14 @@ const Wallet = () => {
     }
   };
 
-  const handleMint = async () => {
-    const amount = parseInt(formData.mintAmount);
+  async function handleMint(amount) {
     const quote = await wallet.getMintQuote(amount);
 
     setDataOutput(quote);
-    setFormData((prevData) => ({ ...prevData, bolt11_invoice: quote.request }));
 
-    //Display the invoice in the text area
-    var textArea = document.getElementById('bolt11_invoice');
-    textArea.value = quote.request;
-
-    // Display the invoice in the modal
-    showModal(quote.request);
+    //Close the receive Lightning modal just before showing the invoice modal
+    closeReceiveLightningModal();
+    showInvoiceModal(quote.request);
 
     const intervalId = setInterval(async () => {
       try {
@@ -85,37 +78,9 @@ const Wallet = () => {
           keysetId: wallet.keys.id,
         });
         setDataOutput({ "minted proofs": proofs });
-        setFormData((prevData) => ({ ...prevData, mintAmount: "", bolt11_invoice: "" }));
         addProofs(proofs);
-        clearInterval(intervalId);
-      } catch (error) {
-        console.error("Quote probably not paid: ", quote.request, error);
-        setDataOutput({ timestamp: new Date().toLocaleTimeString(), error: "Failed to mint", details: error });
-      }
-    }, 5000);
-  };
-
-  async function handleMint2(amount) {
-    const quote = await wallet.getMintQuote(amount);
-
-    setDataOutput(quote);
-    setFormData((prevData) => ({ ...prevData, bolt11_invoice: quote.request }));
-
-    // Display the invoice in the text area
-    var textArea = document.getElementById('bolt11_invoice');
-    textArea.value = quote.request;
-
-    // Display the invoice in the modal
-    showModal(quote.request);
-
-    const intervalId = setInterval(async () => {
-      try {
-        const { proofs } = await wallet.mintTokens(amount, quote.quote, {
-          keysetId: wallet.keys.id,
-        });
-        setDataOutput({ "minted proofs": proofs });
-        setFormData((prevData) => ({ ...prevData, mintAmount: "", bolt11_invoice: "" }));
-        addProofs(proofs);
+        closeInvoiceModal();
+        alert('Invoice paid!');
         clearInterval(intervalId);
       } catch (error) {
         console.error("Quote probably not paid: ", quote.request, error);
@@ -190,16 +155,6 @@ const Wallet = () => {
     }
   };
 
-  const handleCopy = async () => {
-    var textArea = document.getElementById('bolt11_invoice');
-    try {
-      await navigator.clipboard.writeText(textArea.value);
-      alert('Copied to clipboard!');
-    } catch (err) {
-      console.error('Failed to copy: ', err);
-    }
-  };
-
   const handleCopyP2NPUB = async (event) => {
     try {
       const value = event.target.value;
@@ -214,14 +169,14 @@ const Wallet = () => {
     window.location.reload();
   }
 
-  function showModal(invoice) {
+  function showInvoiceModal(invoice) {
     const modal = document.getElementById('invoiceModal');
     const invoiceText = document.getElementById('invoiceText');
     invoiceText.value = invoice;
     modal.style.display = 'block';
   }
 
-  function closeModal() {
+  function closeInvoiceModal() {
     const modal = document.getElementById('invoiceModal');
     modal.style.display = 'none';
   }
@@ -258,9 +213,7 @@ const Wallet = () => {
   function createInvoiceButtonClicked() {
     const amount = parseInt(document.getElementById('satsAmount').value);
     if (!isNaN(amount) && amount > 0) {
-      handleMint2(amount);
-      const modal = document.getElementById('receive_lightning_modal');
-      modal.style.display = 'none'; // Hide modal after creating invoice
+      handleMint(amount);
     } else {
       alert('Please enter a valid amount of sats');
     }
@@ -276,14 +229,14 @@ const Wallet = () => {
         {/* Invoice modal  */}
         <div id="invoiceModal" className="modal">
           <div className="modal-content">
-            <span className="close-button" onClick={closeModal}>&times;</span>
+            <span className="close-button" onClick={closeInvoiceModal}>&times;</span>
             <p>Invoice:</p>
             <textarea id="invoiceText" readOnly></textarea>
             <button id="copyButton" className="styled-button" onClick={copyToClipboard}>Copy</button>
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.40</small></h6>
+        <h6>bullishNuts <small>v0.0.41</small></h6>
         <br></br>
 
         <div className="section">
@@ -312,7 +265,7 @@ const Wallet = () => {
           <button className="styled-button" onClick={showReceiveLightningModal}>Lightning</button>
         </div>
 
-        {/* Lightning modal  */}
+        {/* Receive Lightning modal  */}
         <div id="receive_lightning_modal" class="modal">
           <div className="modal-content">
             <span className="close-button" onClick={closeReceiveLightningModal}>&times;</span>
@@ -320,28 +273,6 @@ const Wallet = () => {
             <input type="number" id="satsAmount" name="satsAmount" min="1" />
             <button className="styled-button" onClick={createInvoiceButtonClicked}>Create invoice</button>
           </div>
-        </div>
-
-        <div className="section">
-          <h2>Minting Tokens</h2>
-          <label htmlFor="mint-amount">Amount:</label>
-          <input
-            type="number"
-            name="mintAmount"
-            className="mint-amount"
-            value={formData.mintAmount}
-            onChange={handleChange}
-          />
-          <button className="mint-button" onClick={handleMint}>Mint</button>
-          <label htmlFor="mint-amount">Invoice:</label>
-          <textarea
-            readOnly
-            id="bolt11_invoice"
-            name="bolt11_invoice"
-            value={formData.bolt11_invoice}
-            onChange={handleChange}
-          ></textarea>
-          <button onClick={handleCopy}>Copy</button>
         </div>
 
         <div className="section">
