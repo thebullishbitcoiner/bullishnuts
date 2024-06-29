@@ -171,6 +171,19 @@ main {
     background-color: #111111;
   }
 
+  .modal textarea {
+    width: 100%;
+    height: 200px;
+    margin: 10px 0;
+    padding: 10px;
+    box-sizing: border-box;
+    border: 1px solid #ff9900;
+    resize: none;
+    background-color: black;
+    color: #ff9900;
+    font-family: 'Courier New', Courier, monospace;
+  }
+
   .modal-content {
     background-color: black;
     color: #ff9900;

@@ -7,7 +7,6 @@ const Wallet = () => {
     mintUrl: "",
     meltInvoice: "",
     swapAmount: "",
-    swapToken: "",
   });
   const [dataOutput, setDataOutput] = useState(null);
 
@@ -63,7 +62,7 @@ const Wallet = () => {
     }
   };
 
-  async function handleMint(amount) {
+  async function handleReceive_Lightning(amount) {
     const quote = await wallet.getMintQuote(amount);
 
     setDataOutput(quote);
@@ -79,14 +78,32 @@ const Wallet = () => {
         });
         setDataOutput({ "minted proofs": proofs });
         addProofs(proofs);
+
         closeInvoiceModal();
         alert('Invoice paid!');
+
         clearInterval(intervalId);
       } catch (error) {
         console.error("Quote probably not paid: ", quote.request, error);
         setDataOutput({ timestamp: new Date().toLocaleTimeString(), error: "Failed to mint", details: error });
       }
     }, 5000);
+  }
+
+  async function handleReceive_Ecash(token) {
+    try {
+      const { token: newToken, tokensWithErrors } = await wallet.receive(token);
+      const { proofs } = newToken.token[0];
+      addProofs(proofs);
+
+      closeReceiveEcashModal();
+      alert('Ecash received!');
+
+      setDataOutput(proofs);
+    } catch (error) {
+      console.error(error);
+      setDataOutput({ error: "Failed to claim swap tokens", details: error });
+    }
   }
 
   const handleMelt = async () => {
@@ -139,22 +156,6 @@ const Wallet = () => {
     }
   };
 
-  const handleSwapClaim = async () => {
-    const token = formData.swapToken;
-
-    try {
-      const { token: newToken, tokensWithErrors } = await wallet.receive(token);
-
-      const { proofs } = newToken.token[0];
-
-      addProofs(proofs);
-      setDataOutput(proofs);
-    } catch (error) {
-      console.error(error);
-      setDataOutput({ error: "Failed to claim swap tokens", details: error });
-    }
-  };
-
   const handleCopyP2NPUB = async (event) => {
     try {
       const value = event.target.value;
@@ -178,6 +179,7 @@ const Wallet = () => {
 
   function closeInvoiceModal() {
     const modal = document.getElementById('invoiceModal');
+    document.getElementById('invoiceText').value = '';
     modal.style.display = 'none';
   }
 
@@ -207,16 +209,37 @@ const Wallet = () => {
 
   function closeReceiveLightningModal() {
     const modal = document.getElementById('receive_lightning_modal');
+    document.getElementById('satsAmount').value = '';
     modal.style.display = 'none';
   }
 
   function createInvoiceButtonClicked() {
     const amount = parseInt(document.getElementById('satsAmount').value);
     if (!isNaN(amount) && amount > 0) {
-      handleMint(amount);
+      handleReceive_Lightning(amount);
     } else {
       alert('Please enter a valid amount of sats');
     }
+  }
+
+  function claimButtonClicked() {
+    const cashuToken = document.getElementById('cashu_token').value;
+    if (cashuToken !== null) {
+      handleReceive_Ecash(cashuToken);
+    } else {
+      alert('Please paste a cashu token');
+    }
+  }
+
+  function showReceiveEcashModal() {
+    const modal = document.getElementById('receive_ecash_modal');
+    modal.style.display = 'block';
+  }
+
+  function closeReceiveEcashModal() {
+    const modal = document.getElementById('receive_ecash_modal');
+    document.getElementById('cashu_token').value = '';
+    modal.style.display = 'none';
   }
 
   return (
@@ -226,7 +249,7 @@ const Wallet = () => {
 
         <div id="refresh-icon" onClick={refreshPage}>↻</div>
 
-        {/* Invoice modal  */}
+        {/* Invoice modal */}
         <div id="invoiceModal" className="modal">
           <div className="modal-content">
             <span className="close-button" onClick={closeInvoiceModal}>&times;</span>
@@ -236,7 +259,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.41</small></h6>
+        <h6>bullishNuts <small>v0.0.42</small></h6>
         <br></br>
 
         <div className="section">
@@ -261,12 +284,22 @@ const Wallet = () => {
 
         <div className="section">
           <h2>Receive</h2>
-          <button className="styled-button">Ecash</button>
+          <button className="styled-button" onClick={showReceiveEcashModal}>Ecash</button>
           <button className="styled-button" onClick={showReceiveLightningModal}>Lightning</button>
         </div>
 
-        {/* Receive Lightning modal  */}
-        <div id="receive_lightning_modal" class="modal">
+        {/* Receive ecash modal */}
+        <div id="receive_ecash_modal" className="modal">
+          <div className="modal-content">
+            <span className="close-button" onClick={closeReceiveEcashModal}>&times;</span>
+            <label>Paste Cashu token:</label>
+            <textarea id="cashu_token"></textarea>
+            <button className="styled-button" onClick={claimButtonClicked}>Claim</button>
+          </div>
+        </div>
+
+        {/* Receive Lightning modal */}
+        <div id="receive_lightning_modal" className="modal">
           <div className="modal-content">
             <span className="close-button" onClick={closeReceiveLightningModal}>&times;</span>
             <label>Enter amount of sats:</label>
@@ -302,17 +335,6 @@ const Wallet = () => {
           />
           <button className="swap-send-button" onClick={handleSwapSend}>
             Swap to Send
-          </button>
-          <label htmlFor="swap-token">Token:</label>
-          <input
-            type="text"
-            name="swapToken"
-            className="swap-token"
-            value={formData.swapToken}
-            onChange={handleChange}
-          />
-          <button className="swap-claim-button" onClick={handleSwapClaim}>
-            Swap to Claim
           </button>
         </div>
 
