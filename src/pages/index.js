@@ -134,8 +134,9 @@ const Wallet = () => {
     }
   }
 
-  async function handleSend_Lightning(invoice){
+  async function handleSend_Lightning(){
     try {
+      const invoice = document.getElementById('send_lightning_invoice').value;
       const quote = await wallet.getMeltQuote(invoice);
 
       setDataOutput([{ "got melt quote": quote }]);
@@ -151,6 +152,7 @@ const Wallet = () => {
       });
       if (isPaid) {
         closeSendLightningModal();
+        alert('Invoice paid!');
         removeProofs(proofs);
         addProofs(change);
       }
@@ -329,7 +331,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.42</small></h6>
+        <h6>bullishNuts <small>v0.0.43</small></h6>
         <br></br>
 
         <div className="section">
