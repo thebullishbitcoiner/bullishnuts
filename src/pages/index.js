@@ -106,7 +106,7 @@ const Wallet = () => {
     }
   }
 
-  async function handleSend_Ecash(amount){
+  async function handleSend_Ecash(amount) {
     const proofs = getProofsByAmount(amount);
 
     if (proofs.length === 0) {
@@ -134,9 +134,71 @@ const Wallet = () => {
     }
   }
 
-  async function handleSend_Lightning(){
+  async function handleSend_Lightning() {
     try {
-      const invoice = document.getElementById('send_lightning_invoice').value;
+      const input = document.getElementById('send_lightning_input').value;
+      const isInvoice = input.startsWith("lnbc1");
+      var invoice = "";
+      if (isInvoice) {
+        invoice = input;
+
+        const quote = await wallet.getMeltQuote(invoice);
+
+        setDataOutput([{ "got melt quote": quote }]);
+
+        const amount = quote.amount + quote.fee_reserve;
+        const proofs = getProofsByAmount(amount, wallet.keys.id);
+        if (proofs.length === 0) {
+          alert("Insufficient balance");
+          return;
+        }
+        const { isPaid, change } = await wallet.meltTokens(quote, proofs, {
+          keysetId: wallet.keys.id,
+        });
+        if (isPaid) {
+          closeSendLightningModal();
+          alert('Invoice paid!');
+          removeProofs(proofs);
+          addProofs(change);
+        }
+      }
+      else { //It must be a Lightning address (but we will check)
+        closeSendLightningModal();
+        handleSend_LightningAddress_GetCallback(input);
+      }
+    }
+    catch (error) {
+      console.error(error);
+      setDataOutput({ error: "Failed to melt tokens", details: error });
+    }
+  }
+
+  //This function checks to see if the Lightning address provided is valid, gets the amount of sats to send, and fetches invoice using the callback URL
+  async function handleSend_LightningAddress_GetCallback(input) {
+    try {
+      const lightningAddressParts = input.split('@');
+      const username = lightningAddressParts[0];
+      const domain = lightningAddressParts[1];
+      const url = `https://${domain}/.well-known/lnurlp/${username}`;
+      const response = await fetch(url);
+
+      // Check if the request was successful
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+        return;
+      }
+
+      const data = await response.json();
+      const callback = data.callback;
+
+      //Wait to get amount of sats from user
+      const sats = await showSendLightningAddressModal();
+      const millisats = sats * 1000;
+
+      //Wait to get invoice using callback URL
+      const invoice = await fetchInvoiceFromCallback(callback, millisats);
+
+      //Wait to get melt quote from mint
       const quote = await wallet.getMeltQuote(invoice);
 
       setDataOutput([{ "got melt quote": quote }]);
@@ -151,7 +213,36 @@ const Wallet = () => {
         keysetId: wallet.keys.id,
       });
       if (isPaid) {
-        closeSendLightningModal();
+        alert(quote.amount + ' sat(s) sent to ' + input);
+        removeProofs(proofs);
+        addProofs(change);
+      }
+    } catch (error) {
+      console.error(error);
+      setDataOutput({ error: "Failed to melt tokens", details: error });
+    }
+  }
+
+  async function handleSend_LightningAddress_GetInvoice() {
+    try {
+      const sendAmount = document.getElementById('send_lightning_amount').value;
+      const invoice = fetchInvoiceFromCallback(callback, sendAmount);
+
+      const quote = await wallet.getMeltQuote(invoice);
+
+      setDataOutput([{ "got melt quote": quote }]);
+
+      const amount = quote.amount + quote.fee_reserve;
+      const proofs = getProofsByAmount(amount, wallet.keys.id);
+      if (proofs.length === 0) {
+        alert("Insufficient balance");
+        return;
+      }
+      const { isPaid, change } = await wallet.meltTokens(quote, proofs, {
+        keysetId: wallet.keys.id,
+      });
+      if (isPaid) {
+        closeSendLightningAddressModal();
         alert('Invoice paid!');
         removeProofs(proofs);
         addProofs(change);
@@ -159,6 +250,27 @@ const Wallet = () => {
     } catch (error) {
       console.error(error);
       setDataOutput({ error: "Failed to melt tokens", details: error });
+    }
+  }
+
+  async function fetchInvoiceFromCallback(callbackURL, amount) {
+    const url = new URL(callbackURL);
+    const params = {
+      amount: amount,
+    };
+    url.search = new URLSearchParams(params).toString();
+
+    try {
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.pr;
+    } catch (error) {
+      console.error('Error fetching JSON:', error);
     }
   }
 
@@ -208,7 +320,7 @@ const Wallet = () => {
     }
   };
 
-  async function copyCashuToken(){
+  async function copyCashuToken() {
     try {
       const token = document.getElementById('send_cashu_token').value;
       await navigator.clipboard.writeText(token);
@@ -268,7 +380,34 @@ const Wallet = () => {
 
   function closeSendLightningModal() {
     const modal = document.getElementById('send_lightning_modal');
-    document.getElementById('send_lightning_invoice').value = '';
+    document.getElementById('send_lightning_input').value = '';
+    modal.style.display = 'none';
+  }
+
+  // function showSendLightningAddressModal() {
+  //   const modal = document.getElementById('send_lightning_address_modal');
+  //   modal.style.display = 'block';
+  // }
+
+  function showSendLightningAddressModal() {
+    return new Promise((resolve) => {
+      const modal = document.getElementById('send_lightning_address_modal');
+      const input = document.getElementById('send_lightning_amount');
+      const submitButton = document.getElementById('send_lightning_submit');
+
+      modal.style.display = 'block';
+
+      submitButton.onclick = () => {
+        const value = input.value;
+        modal.style.display = 'none';
+        resolve(value);
+      };
+    });
+  }
+
+  function closeSendLightningAddressModal() {
+    const modal = document.getElementById('send_lightning_address_modal');
+    document.getElementById('send_lightning_amount').value = '';
     modal.style.display = 'none';
   }
 
@@ -331,7 +470,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.43</small></h6>
+        <h6>bullishNuts <small>v0.0.44</small></h6>
         <br></br>
 
         <div className="section">
@@ -384,9 +523,19 @@ const Wallet = () => {
         <div id="send_lightning_modal" className="modal">
           <div className="modal-content">
             <span className="close-button" onClick={closeSendLightningModal}>&times;</span>
-            <label>Paste Lightning invoice:</label>
-            <textarea id="send_lightning_invoice"></textarea>
-            <button className="styled-button" onClick={handleSend_Lightning}>Send</button>
+            <label>Paste LNURL or Lightning address:</label>
+            <textarea id="send_lightning_input"></textarea>
+            <button className="styled-button" onClick={handleSend_Lightning}>Enter</button>
+          </div>
+        </div>
+
+        {/* Send Lightning address modal */}
+        <div id="send_lightning_address_modal" className="modal">
+          <div className="modal-content">
+            <span className="close-button" onClick={closeSendLightningAddressModal}>&times;</span>
+            <label>Enter amount of sats:</label>
+            <input type="number" id="send_lightning_amount" min="1" />
+            <button className="styled-button" id="send_lightning_submit">Create invoice</button>
           </div>
         </div>
 
@@ -411,7 +560,7 @@ const Wallet = () => {
           <div className="modal-content">
             <span className="close-button" onClick={closeReceiveLightningModal}>&times;</span>
             <label>Enter amount of sats:</label>
-            <input type="number" id="satsAmount" name="satsAmount" min="1" />
+            <input type="number" id="satsAmount" min="1" />
             <button className="styled-button" onClick={createInvoiceButtonClicked}>Create invoice</button>
           </div>
         </div>
