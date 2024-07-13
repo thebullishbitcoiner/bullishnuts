@@ -535,7 +535,7 @@ const Wallet = () => {
             <span className="close-button" onClick={closeSendLightningAddressModal}>&times;</span>
             <label>Enter amount of sats:</label>
             <input type="number" id="send_lightning_amount" min="1" />
-            <button className="styled-button" id="send_lightning_submit">Create invoice</button>
+            <button className="styled-button" id="send_lightning_submit">Send</button>
           </div>
         </div>
 
