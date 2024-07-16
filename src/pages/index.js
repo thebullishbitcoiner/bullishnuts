@@ -163,7 +163,6 @@ const Wallet = () => {
         }
       }
       else { //It must be a Lightning address (but we will check)
-        closeSendLightningModal();
         handleSend_LightningAddress_GetCallback(input);
       }
     }
@@ -184,6 +183,7 @@ const Wallet = () => {
 
       // Check if the request was successful
       if (!response.ok) {
+        closeSendLightningModal();
         throw new Error(`HTTP error! status: ${response.status}`);
         return;
       }
@@ -192,27 +192,38 @@ const Wallet = () => {
       const callback = data.callback;
 
       //Wait to get amount of sats from user
+      closeSendLightningModal();
       const sats = await showSendLightningAddressModal();
       const millisats = sats * 1000;
 
       //Wait to get invoice using callback URL
       const invoice = await fetchInvoiceFromCallback(callback, millisats);
 
+      //Display waiting modal with message
+      const waitingModal = document.getElementById('waiting_modal');
+      document.getElementById('waiting_message').textContent = "Fetching invoice...";
+      waitingModal.style.display = 'block';
+
       //Wait to get melt quote from mint
       const quote = await wallet.getMeltQuote(invoice);
-
+      document.getElementById('waiting_message').textContent = "Getting melt quote...";
       setDataOutput([{ "got melt quote": quote }]);
 
       const amount = quote.amount + quote.fee_reserve;
       const proofs = getProofsByAmount(amount, wallet.keys.id);
       if (proofs.length === 0) {
+        waitingModal.style.display = 'none';
         alert("Insufficient balance");
         return;
       }
+
+      document.getElementById('waiting_message').textContent = "Paying invoice...";
       const { isPaid, change } = await wallet.meltTokens(quote, proofs, {
         keysetId: wallet.keys.id,
       });
+
       if (isPaid) {
+        waitingModal.style.display = 'none';
         alert(quote.amount + ' sat(s) sent to ' + input);
         removeProofs(proofs);
         addProofs(change);
@@ -470,7 +481,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.44</small></h6>
+        <h6>bullishNuts <small>v0.0.45</small></h6>
         <br></br>
 
         <div className="section">
@@ -536,6 +547,14 @@ const Wallet = () => {
             <label>Enter amount of sats:</label>
             <input type="number" id="send_lightning_amount" min="1" />
             <button className="styled-button" id="send_lightning_submit">Send</button>
+          </div>
+        </div>
+
+        {/* Waiting modal */}
+        <div className="modal" id="waiting_modal">
+          <div className="modal-content">
+            <div className="spinner"></div>
+            <p id="waiting_message"></p>
           </div>
         </div>
 

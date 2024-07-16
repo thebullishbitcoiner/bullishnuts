@@ -228,4 +228,18 @@ main {
 
   /* End modal styles */
 
+  .spinner {
+    border: 16px solid #281800;
+    border-top: 16px solid #ff9900;
+    border-radius: 50%;
+    width: 69px;
+    height: 69px;
+    animation: spin 2s linear infinite;
+    margin: 11px auto;
+  }
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
 }
