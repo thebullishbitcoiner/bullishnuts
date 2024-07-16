@@ -242,4 +242,28 @@ main {
     100% { transform: rotate(360deg); }
   }
 
+  .toast {
+    visibility: hidden;
+    max-width: 100vw;
+    background-color: #202020;
+    color: #ff9900;
+    text-align: center;
+    border-radius: 2px;
+    padding: 16px;
+    position: fixed;
+    z-index: 1000;
+    left: 50%;
+    top: 10px;
+    transform: translateX(-50%);
+    font-size: 17px;
+    opacity: 0;
+    transition: opacity 0.5s, visibility 0.5s, top 0.5s;
+  }
+
+  .toast.show {
+    visibility: visible;
+    opacity: 1;
+    top: 42px;
+  }
+
 }

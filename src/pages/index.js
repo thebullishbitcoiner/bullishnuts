@@ -80,7 +80,7 @@ const Wallet = () => {
         addProofs(proofs);
 
         closeInvoiceModal();
-        alert('Invoice paid!');
+        showToast('Invoice paid!');
 
         clearInterval(intervalId);
       } catch (error) {
@@ -97,7 +97,7 @@ const Wallet = () => {
       addProofs(proofs);
 
       closeReceiveEcashModal();
-      alert('Ecash received!');
+      showToast('Ecash received!');
 
       setDataOutput(proofs);
     } catch (error) {
@@ -110,7 +110,7 @@ const Wallet = () => {
     const proofs = getProofsByAmount(amount);
 
     if (proofs.length === 0) {
-      alert("Insufficient balance");
+      showToast("Insufficient balance");
       return;
     }
 
@@ -149,7 +149,7 @@ const Wallet = () => {
         const amount = quote.amount + quote.fee_reserve;
         const proofs = getProofsByAmount(amount, wallet.keys.id);
         if (proofs.length === 0) {
-          alert("Insufficient balance");
+          showToast("Insufficient balance");
           return;
         }
         const { isPaid, change } = await wallet.meltTokens(quote, proofs, {
@@ -157,7 +157,7 @@ const Wallet = () => {
         });
         if (isPaid) {
           closeSendLightningModal();
-          alert('Invoice paid!');
+          showToast('Invoice paid!');
           removeProofs(proofs);
           addProofs(change);
         }
@@ -202,6 +202,7 @@ const Wallet = () => {
       //Display waiting modal with message
       const waitingModal = document.getElementById('waiting_modal');
       document.getElementById('waiting_message').textContent = "Fetching invoice...";
+      closeSendLightningAddressModal();
       waitingModal.style.display = 'block';
 
       //Wait to get melt quote from mint
@@ -213,7 +214,7 @@ const Wallet = () => {
       const proofs = getProofsByAmount(amount, wallet.keys.id);
       if (proofs.length === 0) {
         waitingModal.style.display = 'none';
-        alert("Insufficient balance");
+        showToast("Insufficient balance");
         return;
       }
 
@@ -224,7 +225,8 @@ const Wallet = () => {
 
       if (isPaid) {
         waitingModal.style.display = 'none';
-        alert(quote.amount + ' sat(s) sent to ' + input);
+        const message = quote.amount + ' sat(s) sent to ' + input;
+        showToast(message);
         removeProofs(proofs);
         addProofs(change);
       }
@@ -289,7 +291,7 @@ const Wallet = () => {
     try {
       const value = event.target.value;
       await navigator.clipboard.writeText(value);
-      alert('P2NPUB address copied to clipboard: ' + value);
+      showToast('P2NPUB address copied to clipboard: ' + value);
     } catch (err) {
       console.error('Failed to copy: ', err);
     }
@@ -362,7 +364,7 @@ const Wallet = () => {
     if (!isNaN(amount) && amount > 0) {
       handleSend_Ecash(amount);
     } else {
-      alert('Please enter a valid amount of sats');
+      showToast('Please enter a valid amount of sats');
     }
   }
 
@@ -410,7 +412,6 @@ const Wallet = () => {
 
       submitButton.onclick = () => {
         const value = input.value;
-        modal.style.display = 'none';
         resolve(value);
       };
     });
@@ -440,7 +441,7 @@ const Wallet = () => {
     if (!isNaN(amount) && amount > 0) {
       handleReceive_Lightning(amount);
     } else {
-      alert('Please enter a valid amount of sats');
+      showToast('Please enter a valid amount of sats');
     }
   }
 
@@ -449,7 +450,7 @@ const Wallet = () => {
     if (cashuToken !== null) {
       handleReceive_Ecash(cashuToken);
     } else {
-      alert('Please paste a cashu token');
+      showToast('Please paste a cashu token');
     }
   }
 
@@ -464,12 +465,24 @@ const Wallet = () => {
     modal.style.display = 'none';
   }
 
+  function showToast(message, duration = 3000) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.className = 'toast show';
+    
+    setTimeout(() => {
+      toast.className = 'toast';
+    }, duration);
+  }
+
   return (
     <main>
 
       <div className="cashu-operations-container">
 
         <div id="refresh-icon" onClick={refreshPage}>↻</div>
+
+        <div id="toast" className="toast">This is a toast message.</div>
 
         {/* Invoice modal */}
         <div id="invoiceModal" className="modal">
@@ -481,7 +494,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.45</small></h6>
+        <h6>bullishNuts <small>v0.0.46</small></h6>
         <br></br>
 
         <div className="section">
