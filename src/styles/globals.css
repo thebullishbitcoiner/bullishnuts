@@ -244,7 +244,7 @@ main {
 
   .toast {
     visibility: hidden;
-    max-width: 100vw;
+    max-width: 90vw; /* Ensure it doesn't exceed viewport width */
     background-color: #202020;
     color: #ff9900;
     text-align: center;
@@ -255,9 +255,11 @@ main {
     left: 50%;
     top: 10px;
     transform: translateX(-50%);
-    font-size: 17px;
+    font-size: 12px;
     opacity: 0;
     transition: opacity 0.5s, visibility 0.5s, top 0.5s;
+    word-wrap: break-word; /* Ensure long words break and wrap */
+    overflow-wrap: break-word; /* Ensure long words break and wrap */
   }
 
   .toast.show {

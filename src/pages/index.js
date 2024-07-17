@@ -236,6 +236,67 @@ const Wallet = () => {
     }
   }
 
+  async function zapDeezNuts() {
+    try {
+      const lightningAddress = 'npub1cashuq3y9av98ljm2y75z8cek39d8ux6jk3g6vafkl5j0uj4m5ks378fhq@npub.cash';
+      const username = 'npub1cashuq3y9av98ljm2y75z8cek39d8ux6jk3g6vafkl5j0uj4m5ks378fhq';
+      const domain = 'npub.cash';
+      const url = `https://${domain}/.well-known/lnurlp/${username}`;
+      const response = await fetch(url);
+
+      // Check if the request was successful
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+        return;
+      }
+
+      const data = await response.json();
+      const callback = data.callback;
+
+      //Wait to get amount of sats from user
+      const sats = await showSendLightningAddressModal();
+      const millisats = sats * 1000;
+
+      //Wait to get invoice using callback URL
+      const invoice = await fetchInvoiceFromCallback(callback, millisats);
+
+      //Display waiting modal with message
+      const waitingModal = document.getElementById('waiting_modal');
+      document.getElementById('waiting_message').textContent = "Fetching invoice...";
+      closeSendLightningAddressModal();
+      waitingModal.style.display = 'block';
+
+      //Wait to get melt quote from mint
+      const quote = await wallet.getMeltQuote(invoice);
+      document.getElementById('waiting_message').textContent = "Getting melt quote...";
+      setDataOutput([{ "got melt quote": quote }]);
+
+      const amount = quote.amount + quote.fee_reserve;
+      const proofs = getProofsByAmount(amount, wallet.keys.id);
+      if (proofs.length === 0) {
+        waitingModal.style.display = 'none';
+        showToast("Insufficient balance");
+        return;
+      }
+
+      document.getElementById('waiting_message').textContent = "Paying invoice...";
+      const { isPaid, change } = await wallet.meltTokens(quote, proofs, {
+        keysetId: wallet.keys.id,
+      });
+
+      if (isPaid) {
+        waitingModal.style.display = 'none';
+        const message = quote.amount + ' sat(s) sent to ' + lightningAddress;
+        showToast(message);
+        removeProofs(proofs);
+        addProofs(change);
+      }
+    } catch (error) {
+      console.error(error);
+      setDataOutput({ error: "Failed to melt tokens", details: error });
+    }
+  }
+
   async function handleSend_LightningAddress_GetInvoice() {
     try {
       const sendAmount = document.getElementById('send_lightning_amount').value;
@@ -469,7 +530,7 @@ const Wallet = () => {
     const toast = document.getElementById('toast');
     toast.textContent = message;
     toast.className = 'toast show';
-    
+
     setTimeout(() => {
       toast.className = 'toast';
     }, duration);
@@ -494,7 +555,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.46</small></h6>
+        <h6>bullishNuts <small>v0.0.47</small></h6>
         <br></br>
 
         <div className="section">
@@ -606,10 +667,7 @@ const Wallet = () => {
 
         <div className="section">
           <h2>Zap Deez Nuts</h2>
-          {/* <button className="styled-button" onClick={handleCopyP2NPUB}
-          value="npub15ypxpg429uyjmp0zczuza902chuvvr4pn35wfzv8rx6cej4z8clq6jmpcx@openbalance.app">OpenBalance</button> */}
-          <button className="styled-button" onClick={handleCopyP2NPUB}
-            value="npub15ypxpg429uyjmp0zczuza902chuvvr4pn35wfzv8rx6cej4z8clq6jmpcx@npub.cash">npub.cash</button>
+          <button className="styled-button" onClick={zapDeezNuts} >🥜⚡</button>
         </div>
 
         <div className="section">
