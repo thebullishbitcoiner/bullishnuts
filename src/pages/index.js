@@ -555,7 +555,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.48</small></h6>
+        <h6>bullishNuts <small>v0.0.49</small></h6>
         <br></br>
 
         <div className="section">
