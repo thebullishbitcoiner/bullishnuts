@@ -1,9 +1,10 @@
 {
     "name": "bullishNuts",
+    "short_name": "bullishNuts",
     "display": "standalone",
-    "background_color": "#2a5f7a",
+    "background_color": "#ffffff",
     "theme_color": "#000000",
-    "start_url": "/",
+    "start_url": ".",
     "icons": [
         {
             "src": "/images/bullishNuts_logo.jpg",
