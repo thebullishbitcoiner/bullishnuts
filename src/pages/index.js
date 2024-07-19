@@ -625,7 +625,7 @@ const Wallet = () => {
         {/* Message modal */}
         <div id="message_modal" className="modal">
           <div className="modal-content">
-            <img src="/images/bullishNuts_logo_transparent-2048x2048.png" alt="bullishNuts Logo" style={{ width: '50px', height: '50px' }} />
+            <img src="/bullishNuts_logo_transparent-2048x2048.png" alt="bullishNuts Logo" style={{ width: '50px', height: '50px' }} />
             <p id="message"></p>
             <button className="styled-button" onClick={closeMessageModal}>OK</button>
           </div>
