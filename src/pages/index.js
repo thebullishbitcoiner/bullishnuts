@@ -1,6 +1,7 @@
 import useProofStorage from "@/hooks/useProofStorage";
 import { CashuMint, CashuWallet, getEncodedToken } from "@cashu/cashu-ts";
 import React, { useState, useEffect } from "react";
+import Image from 'next/image';
 
 const Wallet = () => {
   const [formData, setFormData] = useState({
@@ -625,7 +626,12 @@ const Wallet = () => {
         {/* Message modal */}
         <div id="message_modal" className="modal">
           <div className="modal-content">
-            <img src="/bullishNuts_logo_transparent-2048x2048.png" alt="bullishNuts Logo" style={{ width: '50px', height: '50px' }} />
+            <Image
+              src="/bullishNuts_logo_transparent-2048x2048.png"
+              alt="bullishNuts Logo"
+              width={50}
+              height={50}
+            />
             <p id="message"></p>
             <button className="styled-button" onClick={closeMessageModal}>OK</button>
           </div>
