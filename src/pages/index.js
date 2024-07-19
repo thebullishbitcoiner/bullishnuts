@@ -30,6 +30,10 @@ const Wallet = () => {
 
       setFormData((prevData) => ({ ...prevData, mintUrl: url }));
     }
+    else {
+      showMessageWithGif("bullishNuts is an ecash wallet that's in its early beta phase. " +
+        "Please use at your own risk. Make sure to add a mint before getting started and use a small amount of sats at a time!");
+    }
   }, []);
 
   const handleChange = (e) => {
@@ -46,6 +50,7 @@ const Wallet = () => {
     try {
       const info = await mint.getInfo();
       setDataOutput(info);
+      storeJSON(info);
 
       const { keysets } = await mint.getKeys();
 
@@ -66,6 +71,7 @@ const Wallet = () => {
     const quote = await wallet.getMintQuote(amount);
 
     setDataOutput(quote);
+    storeJSON(quote);
 
     //Close the receive Lightning modal just before showing the invoice modal
     closeReceiveLightningModal();
@@ -77,6 +83,7 @@ const Wallet = () => {
           keysetId: wallet.keys.id,
         });
         setDataOutput({ "minted proofs": proofs });
+        storeJSON(proofs);
         addProofs(proofs);
 
         closeInvoiceModal();
@@ -100,6 +107,7 @@ const Wallet = () => {
       showToast('Ecash received!');
 
       setDataOutput(proofs);
+      storeJSON(proofs);
     } catch (error) {
       console.error(error);
       setDataOutput({ error: "Failed to claim swap tokens", details: error });
@@ -123,11 +131,12 @@ const Wallet = () => {
 
       //Close the sats input modal and display the cashu token modal
       closeSendEcashModal();
-      showCashuTokeneModal(encodedToken);
+      showCashuTokenModal(encodedToken);
 
       removeProofs(proofs);
       addProofs(returnChange);
       setDataOutput(encodedToken);
+      storeJSON(encodedToken);
     } catch (error) {
       console.error(error);
       setDataOutput({ error: "Failed to swap tokens", details: error });
@@ -145,6 +154,7 @@ const Wallet = () => {
         const quote = await wallet.getMeltQuote(invoice);
 
         setDataOutput([{ "got melt quote": quote }]);
+        storeJSON(quote);
 
         const amount = quote.amount + quote.fee_reserve;
         const proofs = getProofsByAmount(amount, wallet.keys.id);
@@ -209,6 +219,7 @@ const Wallet = () => {
       const quote = await wallet.getMeltQuote(invoice);
       document.getElementById('waiting_message').textContent = "Getting melt quote...";
       setDataOutput([{ "got melt quote": quote }]);
+      storeJSON(quote);
 
       const amount = quote.amount + quote.fee_reserve;
       const proofs = getProofsByAmount(amount, wallet.keys.id);
@@ -238,6 +249,12 @@ const Wallet = () => {
 
   async function zapDeezNuts() {
     try {
+
+      if (wallet === null) {
+        showToast("Mint needs to be set");
+        return;
+      }
+
       const lightningAddress = 'npub1cashuq3y9av98ljm2y75z8cek39d8ux6jk3g6vafkl5j0uj4m5ks378fhq@npub.cash';
       const username = 'npub1cashuq3y9av98ljm2y75z8cek39d8ux6jk3g6vafkl5j0uj4m5ks378fhq';
       const domain = 'npub.cash';
@@ -270,6 +287,7 @@ const Wallet = () => {
       const quote = await wallet.getMeltQuote(invoice);
       document.getElementById('waiting_message').textContent = "Getting melt quote...";
       setDataOutput([{ "got melt quote": quote }]);
+      storeJSON(quote);
 
       const amount = quote.amount + quote.fee_reserve;
       const proofs = getProofsByAmount(amount, wallet.keys.id);
@@ -416,6 +434,10 @@ const Wallet = () => {
   //Send modals
 
   function showSendEcashModal() {
+    if (wallet === null) {
+      showToast("Mint needs to be set");
+      return;
+    }
     const modal = document.getElementById('send_ecash_modal');
     modal.style.display = 'block';
   }
@@ -429,7 +451,7 @@ const Wallet = () => {
     }
   }
 
-  function showCashuTokeneModal(token) {
+  function showCashuTokenModal(token) {
     const modal = document.getElementById('cashu_token_modal');
     document.getElementById('send_cashu_token').value = token;
     modal.style.display = 'block';
@@ -448,6 +470,10 @@ const Wallet = () => {
   }
 
   function showSendLightningModal() {
+    if (wallet === null) {
+      showToast("Mint needs to be set");
+      return;
+    }
     const modal = document.getElementById('send_lightning_modal');
     modal.style.display = 'block';
   }
@@ -487,6 +513,10 @@ const Wallet = () => {
   //Receive modals
 
   function showReceiveLightningModal() {
+    if (wallet === null) {
+      showToast("Mint needs to be set");
+      return;
+    }
     const modal = document.getElementById('receive_lightning_modal');
     modal.style.display = 'block';
   }
@@ -516,6 +546,10 @@ const Wallet = () => {
   }
 
   function showReceiveEcashModal() {
+    if (wallet === null) {
+      showToast("Mint needs to be set");
+      return;
+    }
     const modal = document.getElementById('receive_ecash_modal');
     modal.style.display = 'block';
   }
@@ -536,6 +570,49 @@ const Wallet = () => {
     }, duration);
   }
 
+  function showMessageModal(message) {
+    const modal = document.getElementById('message_modal');
+    document.getElementById('message').textContent = message;
+    modal.style.display = 'block';
+  }
+
+  function showMessageWithGif(text) {
+    const messageElement = document.getElementById('message');
+    messageElement.textContent = ''; // Clear any existing text
+
+    let index = 0;
+    const interval = setInterval(() => {
+      if (index < text.length) {
+        messageElement.textContent += text[index];
+        index++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 50); // Adjust the interval speed as needed
+
+    // Show the modal
+    document.getElementById('message_modal').style.display = 'block';
+  }
+
+  function closeMessageModal() {
+    const modal = document.getElementById('message_modal');
+    modal.style.display = 'none';
+  }
+
+  function storeJSON(json) {
+    // Generate a timestamp to use as the key
+    const timestamp = new Date().toISOString();
+
+    // Retrieve existing data from local storage
+    const existingData = JSON.parse(localStorage.getItem('json')) || {};
+
+    // Add new data with timestamp as the key
+    existingData[timestamp] = json;
+
+    // Store the updated data back in local storage
+    localStorage.setItem('json', JSON.stringify(existingData));
+  }
+
   return (
     <main>
 
@@ -544,6 +621,15 @@ const Wallet = () => {
         <div id="refresh-icon" onClick={refreshPage}>↻</div>
 
         <div id="toast" className="toast">This is a toast message.</div>
+
+        {/* Message modal */}
+        <div id="message_modal" className="modal">
+          <div className="modal-content">
+            <img src="/images/bullishNuts_logo_transparent-2048x2048.png" alt="bullishNuts Logo" style={{ width: '50px', height: '50px' }} />
+            <p id="message"></p>
+            <button className="styled-button" onClick={closeMessageModal}>OK</button>
+          </div>
+        </div>
 
         {/* Invoice modal */}
         <div id="invoiceModal" className="modal">
@@ -555,7 +641,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.49</small></h6>
+        <h6>bullishNuts <small>v0.0.50</small></h6>
         <br></br>
 
         <div className="section">
@@ -580,8 +666,10 @@ const Wallet = () => {
 
         <div className="section">
           <h2>Send</h2>
-          <button className="styled-button" onClick={showSendEcashModal}>Ecash</button>
-          <button className="styled-button" onClick={showSendLightningModal}>Lightning</button>
+          <div className="button-container">
+            <button className="styled-button" onClick={showSendEcashModal}>Ecash</button>
+            <button className="styled-button" onClick={showSendLightningModal}>Lightning</button>
+          </div>
         </div>
 
         {/* Send ecash modal */}
@@ -634,8 +722,10 @@ const Wallet = () => {
 
         <div className="section">
           <h2>Receive</h2>
-          <button className="styled-button" onClick={showReceiveEcashModal}>Ecash</button>
-          <button className="styled-button" onClick={showReceiveLightningModal}>Lightning</button>
+          <div className="button-container">
+            <button className="styled-button" onClick={showReceiveEcashModal}>Ecash</button>
+            <button className="styled-button" onClick={showReceiveLightningModal}>Lightning</button>
+          </div>
         </div>
 
         {/* Receive ecash modal */}
@@ -658,6 +748,11 @@ const Wallet = () => {
           </div>
         </div>
 
+        <div className="section">
+          <h2>Zap Deez Nuts</h2>
+          <button className="styled-button" onClick={zapDeezNuts} >🥜⚡</button>
+        </div>
+
         <div className="data-display-container">
           <h2>Data Output</h2>
           <pre id="data-output" className="data-output">{JSON.stringify(dataOutput, null, 2)}</pre>
@@ -666,14 +761,8 @@ const Wallet = () => {
         <br></br>
 
         <div className="section">
-          <h2>Zap Deez Nuts</h2>
-          <button className="styled-button" onClick={zapDeezNuts} >🥜⚡</button>
-        </div>
-
-        <div className="section">
           <small>Made with 🐂 by <a href="https://thebullishbitcoiner.com/">thebullishbitcoiner</a></small>
         </div>
-
 
       </div>
 

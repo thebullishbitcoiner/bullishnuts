@@ -76,7 +76,15 @@ main {
   margin-bottom: 10px;
 }
 
+.button-container {
+  display: flex;
+  width: 100%;
+  max-width: 600px; /* Adjust as necessary */
+  margin: 0 auto;
+}
+
 .styled-button {
+  flex: 1;
   border: 1px solid #ff9900;
   border-radius: 0px;
   padding: 10px 20px;
@@ -90,8 +98,11 @@ main {
 }
 
 .styled-button:active {
-  transform: scale(0.98);
-  /* Scale up slightly when clicked */
+  transform: scale(0.98); /* Scale up slightly when clicked */
+}
+
+.styled-button:hover {
+  background-color: rgba(255, 153, 0, 0.5); /* #ff9900 with 50% transparency */
 }
 
 .data-display-container {
@@ -157,6 +168,11 @@ main {
   }
 
   .modal label {
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  .modal p {
     display: block;
     margin-bottom: 5px;
   }
