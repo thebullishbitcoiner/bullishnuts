@@ -1,6 +1,7 @@
 import useProofStorage from "@/hooks/useProofStorage";
 import { CashuMint, CashuWallet, getEncodedToken } from "@cashu/cashu-ts";
 import React, { useState, useEffect } from "react";
+import Contacts from "@/components/Contacts";
 
 const Wallet = () => {
   const [formData, setFormData] = useState({
@@ -523,12 +524,12 @@ const Wallet = () => {
 
   function closeReceiveLightningModal() {
     const modal = document.getElementById('receive_lightning_modal');
-    document.getElementById('satsAmount').value = '';
+    document.getElementById('receive_lightning_amount').value = '';
     modal.style.display = 'none';
   }
 
   function createInvoiceButtonClicked() {
-    const amount = parseInt(document.getElementById('satsAmount').value);
+    const amount = parseInt(document.getElementById('receive_lightning_amount').value);
     if (!isNaN(amount) && amount > 0) {
       handleReceive_Lightning(amount);
     } else {
@@ -640,7 +641,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.50</small></h6>
+        <h6>bullishNuts <small>v0.0.51</small></h6>
         <br></br>
 
         <div className="section">
@@ -650,7 +651,7 @@ const Wallet = () => {
 
         <div className="section">
           <h2>Mint</h2>
-          <label htmlFor="mint-url"><a href="https://bitcoinmints.com/">View list of available mints</a></label>
+          <a href="https://bitcoinmints.com/">View list of available mints</a>
           <input
             type="text"
             name="mintUrl"
@@ -675,7 +676,7 @@ const Wallet = () => {
         <div id="send_ecash_modal" className="modal">
           <div className="modal-content">
             <span className="close-button" onClick={closeSendEcashModal}>&times;</span>
-            <label>Enter amount of sats:</label>
+            <label htmlFor="ecash_amount">Enter amount of sats:</label>
             <input type="number" id="ecash_amount" name="ecash_amount" min="1" />
             <button className="styled-button" onClick={sendEcashButtonClicked}>Send</button>
           </div>
@@ -695,7 +696,7 @@ const Wallet = () => {
         <div id="send_lightning_modal" className="modal">
           <div className="modal-content">
             <span className="close-button" onClick={closeSendLightningModal}>&times;</span>
-            <label>Paste LNURL or Lightning address:</label>
+            <label htmlFor="send_lightning_input">Paste LNURL or Lightning address:</label>
             <textarea id="send_lightning_input"></textarea>
             <button className="styled-button" onClick={handleSend_Lightning}>Enter</button>
           </div>
@@ -705,7 +706,7 @@ const Wallet = () => {
         <div id="send_lightning_address_modal" className="modal">
           <div className="modal-content">
             <span className="close-button" onClick={closeSendLightningAddressModal}>&times;</span>
-            <label>Enter amount of sats:</label>
+            <label htmlFor="send_lightning_amount">Enter amount of sats:</label>
             <input type="number" id="send_lightning_amount" min="1" />
             <button className="styled-button" id="send_lightning_submit">Send</button>
           </div>
@@ -731,7 +732,7 @@ const Wallet = () => {
         <div id="receive_ecash_modal" className="modal">
           <div className="modal-content">
             <span className="close-button" onClick={closeReceiveEcashModal}>&times;</span>
-            <label>Paste Cashu token:</label>
+            <label htmlFor="cashu_token">Paste Cashu token:</label>
             <textarea id="cashu_token"></textarea>
             <button className="styled-button" onClick={claimButtonClicked}>Claim</button>
           </div>
@@ -741,8 +742,8 @@ const Wallet = () => {
         <div id="receive_lightning_modal" className="modal">
           <div className="modal-content">
             <span className="close-button" onClick={closeReceiveLightningModal}>&times;</span>
-            <label>Enter amount of sats:</label>
-            <input type="number" id="satsAmount" min="1" />
+            <label htmlFor="receive_lightning_amount">Enter amount of sats:</label>
+            <input type="number" id="receive_lightning_amount" min="1" />
             <button className="styled-button" onClick={createInvoiceButtonClicked}>Create invoice</button>
           </div>
         </div>
@@ -750,6 +751,10 @@ const Wallet = () => {
         <div className="section">
           <h2>Zap Deez Nuts</h2>
           <button className="styled-button" onClick={zapDeezNuts} >🥜⚡</button>
+        </div>
+
+        <div className="section">
+          <Contacts />
         </div>
 
         <div className="data-display-container">
