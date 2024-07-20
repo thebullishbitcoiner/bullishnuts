@@ -67,15 +67,6 @@ main {
   background-color: #111111;
 }
 
-.section button {
-  padding: 10px 15px;
-  border: 1px solid #ff9900;
-  background-color: black;
-  color: #ff9900;
-  min-width: 100px;
-  margin-bottom: 10px;
-}
-
 .button-container {
   display: flex;
   width: 100%;
@@ -299,7 +290,6 @@ main {
   /* Contacts-related */
 
   .contacts-container {
-    padding: 20px;
     color: #ff9900;
     background: black;
     font-family: 'Courier New', Courier, monospace;
@@ -311,11 +301,34 @@ main {
     align-items: center;
   }
 
+  .add-button {
+    background-color: transparent;
+    color: #ff9900;
+    padding-bottom: 10px;
+    padding-right: 15px;
+    cursor: pointer;
+    font-size: 20px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .add-button:hover {
+    background-color: rgba(255, 153, 0, 0.5);
+  }
+
   .contact-row {
     display: flex;
     justify-content: space-between;
     padding: 15px;
     border-bottom: 1px solid #ff9900;
+  }
+
+  .delete-button {
+    background: none;
+    border: none;
+    color: #ff9900;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: color 0.3s ease;
   }
 
   .add_contact_modal {

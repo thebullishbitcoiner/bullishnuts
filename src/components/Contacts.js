@@ -16,6 +16,12 @@ const Contacts = () => {
         localStorage.setItem('contacts', JSON.stringify(updatedContacts));
     };
 
+    const deleteContact = (index) => {
+        const updatedContacts = contacts.filter((_, i) => i !== index);
+        setContacts(updatedContacts);
+        localStorage.setItem('contacts', JSON.stringify(updatedContacts));
+      };
+
     return (
         <div className="contacts-container">
             <div className="header">
@@ -28,6 +34,7 @@ const Contacts = () => {
             {contacts.map((contact, index) => (
                 <div className="contact-row" key={index}>
                     <span>{contact.name}</span>
+                    <button className="delete-button" onClick={() => deleteContact(index)}>×</button>
                 </div>
             ))}
             {isModalOpen && <ContactModal onClose={() => setIsModalOpen(false)} onSave={addContact} />}

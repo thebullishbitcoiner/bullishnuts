@@ -641,7 +641,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.51</small></h6>
+        <h6>bullishNuts <small>v0.0.52</small></h6>
         <br></br>
 
         <div className="section">
@@ -655,11 +655,10 @@ const Wallet = () => {
           <input
             type="text"
             name="mintUrl"
-            className="mint-url"
             value={formData.mintUrl}
             onChange={handleChange}
           />
-          <button className="mint-connect-button" onClick={handleSetMint}>
+          <button className="styled-button" onClick={handleSetMint}>
             Set Mint
           </button>
         </div>
