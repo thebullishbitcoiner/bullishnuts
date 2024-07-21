@@ -23,7 +23,7 @@ const ContactModal = ({ onClose, onSave }) => {
           <input type="text" id="contact_name" value={name} onChange={(e) => setName(e.target.value)} />
         </div>
         <div className="input-group">
-          <label htmlFor="contact_npub">npub:</label>
+          <label htmlFor="contact_npub">Npub:</label>
           <input type="text" id="contact_npub" value={npub} onChange={(e) => setNpub(e.target.value)} />
         </div>
         <button className="save-button" onClick={handleSave}>Save</button>

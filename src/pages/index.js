@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import Contacts from "@/components/Contacts";
 
 const Wallet = () => {
+  const [isLightningModalOpen, setIsLightningModalOpen] = useState(false);
+
   const [formData, setFormData] = useState({
     mintUrl: "",
     meltInvoice: "",
@@ -614,6 +616,16 @@ const Wallet = () => {
     localStorage.setItem('json', JSON.stringify(existingData));
   }
 
+  //Gets the npub for the selected contact, appends "@npub.cash", and copies it to the clipboard
+  const handleContactSelect = (contact) => {
+    const contactAddress = `${contact.npub}@npub.cash`;
+    navigator.clipboard.writeText(contactAddress).then(() => {
+      showToast(`Copied to clipboard: ${contactAddress}`);
+    }).catch(err => {
+      showToast(`Failed to copy: ${err}`);
+    });
+  };
+
   return (
     <main>
 
@@ -641,7 +653,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.52</small></h6>
+        <h6>bullishNuts <small>v0.0.53</small></h6>
         <br></br>
 
         <div className="section">
@@ -753,7 +765,7 @@ const Wallet = () => {
         </div>
 
         <div className="section">
-          <Contacts />
+          <Contacts onContactSelect={handleContactSelect} />
         </div>
 
         <div className="data-display-container">
