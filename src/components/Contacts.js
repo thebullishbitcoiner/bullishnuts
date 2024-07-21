@@ -49,7 +49,7 @@ const Contacts = ({ onContactSelect }) => {
             {isConfirmModalOpen && (
                 <div className="delete_contact_modal">
                     <div className="modal-content">
-                        <p>Are you sure you want to delete &quot{contacts[deleteIndex].name}&quot?</p>
+                        <p>Are you sure you want to delete &quot;{contacts[deleteIndex].name}&quot;?</p>
                         <button className="styled-button" onClick={deleteContact}>Yes</button>
                         <button className="styled-button" onClick={() => setIsConfirmModalOpen(false)}>No</button>
                     </div>
