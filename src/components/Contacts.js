@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ContactModal from './ContactModal';
 
-const Contacts = ({ onContactSelect }) => {
+const Contacts = ({ onContactSelect, updateContacts }) => {
     const [contacts, setContacts] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [deleteIndex, setDeleteIndex] = useState(null);
@@ -15,6 +15,7 @@ const Contacts = ({ onContactSelect }) => {
     const addContact = (newContact) => {
         const updatedContacts = [...contacts, newContact];
         setContacts(updatedContacts);
+        updateContacts(updatedContacts);
         localStorage.setItem('contacts', JSON.stringify(updatedContacts));
     };
 

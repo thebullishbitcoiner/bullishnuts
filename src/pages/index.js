@@ -2,9 +2,25 @@ import useProofStorage from "@/hooks/useProofStorage";
 import { CashuMint, CashuWallet, getEncodedToken } from "@cashu/cashu-ts";
 import React, { useState, useEffect } from "react";
 import Contacts from "@/components/Contacts";
+import LightningModal from '@/components/LightningModal';
 
 const Wallet = () => {
   const [isLightningModalOpen, setIsLightningModalOpen] = useState(false);
+  const [contacts, setContacts] = useState([]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedContacts = JSON.parse(localStorage.getItem('contacts')) || [];
+      setContacts(storedContacts);
+    }
+  }, []);
+
+  const updateContacts = (newContacts) => {
+    setContacts(newContacts);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('contacts', JSON.stringify(newContacts));
+    }
+  };
 
   const [formData, setFormData] = useState({
     mintUrl: "",
@@ -205,7 +221,7 @@ const Wallet = () => {
       const callback = data.callback;
 
       //Wait to get amount of sats from user
-      closeSendLightningModal();
+      setIsLightningModalOpen(false);
       const sats = await showSendLightningAddressModal();
       const millisats = sats * 1000;
 
@@ -653,7 +669,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.53</small></h6>
+        <h6>bullishNuts <small>v0.0.54</small></h6>
         <br></br>
 
         <div className="section">
@@ -679,8 +695,16 @@ const Wallet = () => {
           <h2>Send</h2>
           <div className="button-container">
             <button className="styled-button" onClick={showSendEcashModal}>Ecash</button>
-            <button className="styled-button" onClick={showSendLightningModal}>Lightning</button>
+            <button className="styled-button" onClick={() => setIsLightningModalOpen(true)}>Lightning</button>
+            {/* <button className="styled-button" onClick={showSendLightningModal}>Lightning</button> */}
           </div>
+          {isLightningModalOpen && (
+            <LightningModal
+              contacts={contacts}
+              onClose={() => setIsLightningModalOpen(false)}
+              onSend={handleSend_Lightning}
+            />
+          )}
         </div>
 
         {/* Send ecash modal */}
@@ -703,15 +727,15 @@ const Wallet = () => {
           </div>
         </div>
 
-        {/* Send lightning modal */}
-        <div id="send_lightning_modal" className="modal">
+        {/* Send Lightning modal */}
+        {/* <div id="send_lightning_modal" className="modal">
           <div className="modal-content">
             <span className="close-button" onClick={closeSendLightningModal}>&times;</span>
             <label htmlFor="send_lightning_input">Paste LNURL or Lightning address:</label>
             <textarea id="send_lightning_input"></textarea>
             <button className="styled-button" onClick={handleSend_Lightning}>Enter</button>
           </div>
-        </div>
+        </div> */}
 
         {/* Send Lightning address modal */}
         <div id="send_lightning_address_modal" className="modal">
@@ -765,7 +789,7 @@ const Wallet = () => {
         </div>
 
         <div className="section">
-          <Contacts onContactSelect={handleContactSelect} />
+          <Contacts onContactSelect={handleContactSelect} updateContacts={updateContacts} />
         </div>
 
         <div className="data-display-container">
