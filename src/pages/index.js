@@ -587,7 +587,7 @@ const Wallet = () => {
     modal.style.display = 'none';
   }
 
-  function showToast(message, duration = 5000) {
+  function showToast(message, duration = 4000) {
     const toast = document.getElementById('toast');
     toast.textContent = message;
     toast.className = 'toast show';
@@ -691,29 +691,14 @@ const Wallet = () => {
     URL.revokeObjectURL(url);
   };
 
-  function createEmoji(emoji) {
-    const emojiElement = document.createElement('div');
-    emojiElement.classList.add('emoji');
-    emojiElement.textContent = emoji;
-    emojiElement.style.left = `${Math.random() * 100}vw`;
-    emojiElement.style.animationDuration = `${Math.random() * 3 + 2}s`; // Random duration between 2s and 5s
-    emojiElement.style.fontSize = `${Math.random() * 2 + 1}rem`; // Random size between 1rem and 3rem
-    document.getElementById('emoji-container').appendChild(emojiElement);
-
-    // Remove the emoji after it falls out of view
-    emojiElement.addEventListener('animationend', () => {
-      emojiElement.remove();
-    });
-  }
-
-  let emojiRainInterval;
+  let emojiInterval;
 
   function startEmojiRain() {
     const emojiContainer = document.createElement('div');
     emojiContainer.id = 'emoji-container';
     document.body.appendChild(emojiContainer);
   
-    emojiRainInterval = setInterval(() => {
+    emojiInterval = setInterval(() => {
       const emoji = document.createElement('div');
       emoji.className = 'emoji';
       emoji.textContent = Math.random() > 0.5 ? '🥜' : '⚡';
@@ -726,18 +711,14 @@ const Wallet = () => {
       emoji.addEventListener('animationend', () => {
         emoji.remove();
       });
-    }, 69);
+    }, 21);
   
     // Stop emoji rain after a few seconds
-    setTimeout(stopEmojiRain, 3000);
+    setTimeout(stopEmojiRain, 1000);
   }
   
   function stopEmojiRain() {
-    clearInterval(emojiRainInterval);
-    const emojis = document.querySelectorAll('.emoji');
-    emojis.forEach(emoji => {
-      emoji.classList.add('fall-fast');
-    });
+    clearInterval(emojiInterval);
   
     // Remove the emoji container after a while to ensure all animations are done
     setTimeout(() => {
@@ -773,7 +754,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.58</small></h6>
+        <h6>bullishNuts <small>v0.0.59</small></h6>
         <br></br>
 
         <div className="section">
@@ -830,16 +811,6 @@ const Wallet = () => {
             <button id="copy_token_button" className="styled-button" onClick={copyCashuToken}>Copy</button>
           </div>
         </div>
-
-        {/* Send Lightning modal */}
-        {/* <div id="send_lightning_modal" className="modal">
-          <div className="modal-content">
-            <span className="close-button" onClick={closeSendLightningModal}>&times;</span>
-            <label htmlFor="send_lightning_input">Paste LNURL or Lightning address:</label>
-            <textarea id="send_lightning_input"></textarea>
-            <button className="styled-button" onClick={handleSend_Lightning}>Enter</button>
-          </div>
-        </div> */}
 
         {/* Send Lightning address modal */}
         <div id="send_lightning_address_modal" className="modal">
