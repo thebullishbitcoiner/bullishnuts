@@ -127,6 +127,7 @@ main {
   height: 300px;
   max-height: 300px;
   word-wrap: break-word;
+  margin: 10px 10px 10px 2px;
 }
 
 @layer utilities {

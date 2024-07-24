@@ -102,7 +102,10 @@ const Wallet = () => {
           keysetId: wallet.keys.id,
         });
         setDataOutput({ "minted proofs": proofs });
-        storeJSON(proofs);
+
+        var proofsArray = { "proofs": proofs}; 
+
+        storeJSON(proofsArray);
         addProofs(proofs);
 
         closeInvoiceModal();
@@ -443,7 +446,7 @@ const Wallet = () => {
       // Reset button text after 1000ms (1 second)
       setTimeout(() => {
         copyButton.textContent = 'Copy';
-      }, 1000);
+      }, 500);
 
     } catch (err) {
       console.error('Failed to copy: ', err);
@@ -618,9 +621,37 @@ const Wallet = () => {
     modal.style.display = 'none';
   }
 
+  function getTimestamp_EST() {
+    const date = new Date();
+    const options = {
+      timeZone: 'America/New_York',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,  // 24-hour format
+    };
+
+    // Extract parts from the formatted date string
+    const parts = new Intl.DateTimeFormat('en-US', options).formatToParts(date);
+
+    const year = parts.find(part => part.type === 'year').value;
+    const month = parts.find(part => part.type === 'month').value;
+    const day = parts.find(part => part.type === 'day').value;
+    const hour = parts.find(part => part.type === 'hour').value;
+    const minute = parts.find(part => part.type === 'minute').value;
+    const second = parts.find(part => part.type === 'second').value;
+
+    return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+  }
+
   function storeJSON(json) {
     // Generate a timestamp to use as the key
-    const timestamp = new Date().toISOString();
+    const timestamp = getTimestamp_EST();
+
+    new Date().toLocaleTimeString
 
     // Retrieve existing data from local storage
     const existingData = JSON.parse(localStorage.getItem('json')) || {};
@@ -640,6 +671,18 @@ const Wallet = () => {
     }).catch(err => {
       showToast(`Failed to copy: ${err}`);
     });
+  };
+
+  const exportJSON = () => {
+    const existingData = JSON.parse(localStorage.getItem('json')) || {};
+    const dataStr = JSON.stringify(existingData);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'logs.json';
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -669,7 +712,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.54</small></h6>
+        <h6>bullishNuts <small>v0.0.55</small></h6>
         <br></br>
 
         <div className="section">
@@ -795,6 +838,7 @@ const Wallet = () => {
         <div className="data-display-container">
           <h2>Data Output</h2>
           <pre id="data-output" className="data-output">{JSON.stringify(dataOutput, null, 2)}</pre>
+          <button className="styled-button" onClick={exportJSON}>Export JSON Logs</button>
         </div>
 
         <br></br>
