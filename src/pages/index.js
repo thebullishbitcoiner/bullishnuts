@@ -676,7 +676,7 @@ const Wallet = () => {
   const exportJSON = () => {
     const existingData = JSON.parse(localStorage.getItem('json')) || {};
     const dataStr = JSON.stringify(existingData);
-    const blob = new Blob([dataStr], { type: 'application/text' });
+    const blob = new Blob([dataStr], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
