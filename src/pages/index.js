@@ -191,6 +191,10 @@ const Wallet = () => {
           closeSendLightningModal();
           showToast('Invoice paid!');
           removeProofs(proofs);
+
+          var changeArray = { "change": change}; 
+          storeJSON(changeArray);
+
           addProofs(change);
         }
       }
@@ -713,7 +717,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.56</small></h6>
+        <h6>bullishNuts <small>v0.0.57</small></h6>
         <br></br>
 
         <div className="section">
