@@ -189,7 +189,6 @@ const Wallet = () => {
         });
         if (isPaid) {
           closeSendLightningModal();
-          startEmojiRain();
           showToast('Invoice paid!');
           removeProofs(proofs);
 
@@ -263,7 +262,6 @@ const Wallet = () => {
 
       if (isPaid) {
         waitingModal.style.display = 'none';
-        startEmojiRain();
         const message = quote.amount + ' sat(s) sent to ' + input;
         showToast(message);
         removeProofs(proofs);
@@ -336,7 +334,7 @@ const Wallet = () => {
 
       if (isPaid) {
         waitingModal.style.display = 'none';
-        startEmojiRain();
+        makeDeezNutsRain(quote.amount);
         const message = quote.amount + ' sat(s) sent to ' + lightningAddress;
         showToast(message);
         removeProofs(proofs);
@@ -693,6 +691,27 @@ const Wallet = () => {
 
   let emojiInterval;
 
+  function makeDeezNutsRain(amount) {
+    const emojiContainer = document.createElement('div');
+    emojiContainer.id = 'emoji-container';
+    document.body.appendChild(emojiContainer);
+
+    for (let i = 0; i < amount; i++) {
+      const emoji = document.createElement('div');
+      emoji.className = 'emoji';
+      emoji.textContent = Math.random() > 0.5 ? '🥜' : '⚡';
+      emoji.style.left = `${Math.random() * 100}vw`;
+      emoji.style.animationDuration = `${Math.random() * 3 + 2}s`;
+      emoji.style.fontSize = `${Math.random() * 2 + 1}rem`; // Random size between 1rem and 3rem
+      emojiContainer.appendChild(emoji);
+  
+      // Remove emoji after animation ends
+      emoji.addEventListener('animationend', () => {
+        emoji.remove();
+      });
+    }
+  }
+
   function startEmojiRain() {
     const emojiContainer = document.createElement('div');
     emojiContainer.id = 'emoji-container';
@@ -754,7 +773,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.59</small></h6>
+        <h6>bullishNuts <small>v0.0.60</small></h6>
         <br></br>
 
         <div className="section">
@@ -797,7 +816,7 @@ const Wallet = () => {
           <div className="modal-content">
             <span className="close-button" onClick={closeSendEcashModal}>&times;</span>
             <label htmlFor="ecash_amount">Enter amount of sats:</label>
-            <input type="number" id="ecash_amount" name="ecash_amount" min="1" />
+            <input type="number" id="ecash_amount" name="ecash_amount" inputMode="decimal" min="1" />
             <button className="styled-button" onClick={sendEcashButtonClicked}>Send</button>
           </div>
         </div>
@@ -817,7 +836,7 @@ const Wallet = () => {
           <div className="modal-content">
             <span className="close-button" onClick={closeSendLightningAddressModal}>&times;</span>
             <label htmlFor="send_lightning_amount">Enter amount of sats:</label>
-            <input type="number" id="send_lightning_amount" min="1" />
+            <input type="number" id="send_lightning_amount" inputMode="decimal" min="1" />
             <button className="styled-button" id="send_lightning_submit">Send</button>
           </div>
         </div>
@@ -853,7 +872,7 @@ const Wallet = () => {
           <div className="modal-content">
             <span className="close-button" onClick={closeReceiveLightningModal}>&times;</span>
             <label htmlFor="receive_lightning_amount">Enter amount of sats:</label>
-            <input type="number" id="receive_lightning_amount" min="1" />
+            <input type="number" id="receive_lightning_amount" inputMode="decimal" min="1" />
             <button className="styled-button" onClick={createInvoiceButtonClicked}>Create invoice</button>
           </div>
         </div>

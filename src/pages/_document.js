@@ -5,6 +5,7 @@ export default function Document() {
     <Html lang="en">
       <Head>
       <link rel="manifest" href="/manifest.json" />
+      <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"></meta>
       </Head>
       <body>
         <Main />
