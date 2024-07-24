@@ -313,7 +313,7 @@ main {
     font-size: 20px;
     transition: background-color 0.3s ease;
   }
-  
+
   .add-button:hover {
     background-color: rgba(255, 153, 0, 0.5);
   }
@@ -435,6 +435,58 @@ main {
 
   .save-button:hover {
     background-color: rgba(255, 153, 0, 0.8);
+  }
+
+  #emoji-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 1000;
+    /* Ensure it appears on top of other content */
+  }
+
+  .emoji {
+    position: absolute;
+    top: -50px;
+    will-change: transform, opacity;
+    animation: fall linear forwards;
+  }
+
+  @keyframes fall {
+    0% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    70% {
+      opacity: 1;
+      /* Keep fully visible till 70% of the fall */
+    }
+
+    100% {
+      transform: translateY(100vh);
+      opacity: 0;
+      /* Fully transparent at the end of the fall */
+    }
+  }
+
+  .fall-fast {
+    animation: fall-fast 2s linear forwards !important;
+  }
+
+  @keyframes fall-fast {
+    0% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    100% {
+      transform: translateY(100vh);
+      opacity: 0;
+    }
   }
 
 }

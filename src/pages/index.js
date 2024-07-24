@@ -103,7 +103,7 @@ const Wallet = () => {
         });
         setDataOutput({ "minted proofs": proofs });
 
-        var proofsArray = { "proofs": proofs}; 
+        var proofsArray = { "proofs": proofs };
 
         storeJSON(proofsArray);
         addProofs(proofs);
@@ -189,10 +189,11 @@ const Wallet = () => {
         });
         if (isPaid) {
           closeSendLightningModal();
+          startEmojiRain();
           showToast('Invoice paid!');
           removeProofs(proofs);
 
-          var changeArray = { "change": change}; 
+          var changeArray = { "change": change };
           storeJSON(changeArray);
 
           addProofs(change);
@@ -262,9 +263,14 @@ const Wallet = () => {
 
       if (isPaid) {
         waitingModal.style.display = 'none';
+        startEmojiRain();
         const message = quote.amount + ' sat(s) sent to ' + input;
         showToast(message);
         removeProofs(proofs);
+
+        var changeArray = { "change": change };
+        storeJSON(changeArray);
+
         addProofs(change);
       }
     } catch (error) {
@@ -330,9 +336,14 @@ const Wallet = () => {
 
       if (isPaid) {
         waitingModal.style.display = 'none';
+        startEmojiRain();
         const message = quote.amount + ' sat(s) sent to ' + lightningAddress;
         showToast(message);
         removeProofs(proofs);
+
+        var changeArray = { "change": change };
+        storeJSON(changeArray);
+
         addProofs(change);
       }
     } catch (error) {
@@ -391,16 +402,6 @@ const Wallet = () => {
       console.error('Error fetching JSON:', error);
     }
   }
-
-  const handleCopyP2NPUB = async (event) => {
-    try {
-      const value = event.target.value;
-      await navigator.clipboard.writeText(value);
-      showToast('P2NPUB address copied to clipboard: ' + value);
-    } catch (err) {
-      console.error('Failed to copy: ', err);
-    }
-  };
 
   function refreshPage() {
     window.location.reload();
@@ -586,7 +587,7 @@ const Wallet = () => {
     modal.style.display = 'none';
   }
 
-  function showToast(message, duration = 3000) {
+  function showToast(message, duration = 5000) {
     const toast = document.getElementById('toast');
     toast.textContent = message;
     toast.className = 'toast show';
@@ -690,13 +691,68 @@ const Wallet = () => {
     URL.revokeObjectURL(url);
   };
 
+  function createEmoji(emoji) {
+    const emojiElement = document.createElement('div');
+    emojiElement.classList.add('emoji');
+    emojiElement.textContent = emoji;
+    emojiElement.style.left = `${Math.random() * 100}vw`;
+    emojiElement.style.animationDuration = `${Math.random() * 3 + 2}s`; // Random duration between 2s and 5s
+    emojiElement.style.fontSize = `${Math.random() * 2 + 1}rem`; // Random size between 1rem and 3rem
+    document.getElementById('emoji-container').appendChild(emojiElement);
+
+    // Remove the emoji after it falls out of view
+    emojiElement.addEventListener('animationend', () => {
+      emojiElement.remove();
+    });
+  }
+
+  let emojiRainInterval;
+
+  function startEmojiRain() {
+    const emojiContainer = document.createElement('div');
+    emojiContainer.id = 'emoji-container';
+    document.body.appendChild(emojiContainer);
+  
+    emojiRainInterval = setInterval(() => {
+      const emoji = document.createElement('div');
+      emoji.className = 'emoji';
+      emoji.textContent = Math.random() > 0.5 ? '🥜' : '⚡';
+      emoji.style.left = `${Math.random() * 100}vw`;
+      emoji.style.animationDuration = `${Math.random() * 3 + 2}s`;
+      emoji.style.fontSize = `${Math.random() * 2 + 1}rem`; // Random size between 1rem and 3rem
+      emojiContainer.appendChild(emoji);
+  
+      // Remove emoji after animation ends
+      emoji.addEventListener('animationend', () => {
+        emoji.remove();
+      });
+    }, 69);
+  
+    // Stop emoji rain after a few seconds
+    setTimeout(stopEmojiRain, 3000);
+  }
+  
+  function stopEmojiRain() {
+    clearInterval(emojiRainInterval);
+    const emojis = document.querySelectorAll('.emoji');
+    emojis.forEach(emoji => {
+      emoji.classList.add('fall-fast');
+    });
+  
+    // Remove the emoji container after a while to ensure all animations are done
+    setTimeout(() => {
+      document.getElementById('emoji-container').remove();
+    }, 3000); // Extended to allow all emojis to fall
+  }
+
   return (
     <main>
+
+      <div id="emoji-container"></div>
 
       <div className="cashu-operations-container">
 
         <div id="refresh-icon" onClick={refreshPage}>↻</div>
-
         <div id="toast" className="toast">This is a toast message.</div>
 
         {/* Message modal */}
@@ -717,7 +773,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.57</small></h6>
+        <h6>bullishNuts <small>v0.0.58</small></h6>
         <br></br>
 
         <div className="section">
@@ -849,7 +905,7 @@ const Wallet = () => {
         <br></br>
 
         <div className="section">
-          <small>Made with 🐂 by <a href="https://thebullishbitcoiner.com/">thebullishbitcoiner</a></small>
+          <small>Made with <button onClick={startEmojiRain}>🐂</button> by <a href="https://thebullishbitcoiner.com/">thebullishbitcoiner</a></small>
         </div>
 
       </div>
