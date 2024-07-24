@@ -680,7 +680,8 @@ const Wallet = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'logs.txt';
+    const timestamp = getTimestamp_EST();
+    a.download = `bullishNuts_logs_${timestamp}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -712,7 +713,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.55</small></h6>
+        <h6>bullishNuts <small>v0.0.56</small></h6>
         <br></br>
 
         <div className="section">
