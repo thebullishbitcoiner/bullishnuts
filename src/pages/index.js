@@ -676,11 +676,11 @@ const Wallet = () => {
   const exportJSON = () => {
     const existingData = JSON.parse(localStorage.getItem('json')) || {};
     const dataStr = JSON.stringify(existingData);
-    const blob = new Blob([dataStr], { type: 'application/json' });
+    const blob = new Blob([dataStr], { type: 'application/text' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'logs.json';
+    a.download = 'logs.txt';
     a.click();
     URL.revokeObjectURL(url);
   };
