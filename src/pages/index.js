@@ -624,6 +624,16 @@ const Wallet = () => {
     modal.style.display = 'none';
   }
 
+  function showThankYouModal() {
+    const modal = document.getElementById('thank_you_modal');
+    modal.style.display = 'flex';
+  }
+
+  function closeThankYouModal() {
+    const modal = document.getElementById('thank_you_modal');
+    modal.style.display = 'none';
+  }
+
   function getTimestamp_EST() {
     const date = new Date();
     const options = {
@@ -692,9 +702,13 @@ const Wallet = () => {
   let emojiInterval;
 
   function makeDeezNutsRain(amount) {
+    showThankYouModal();
+
     const emojiContainer = document.createElement('div');
     emojiContainer.id = 'emoji-container';
     document.body.appendChild(emojiContainer);
+
+    triggerHapticFeedback();
 
     for (let i = 0; i < amount; i++) {
       const emoji = document.createElement('div');
@@ -704,7 +718,7 @@ const Wallet = () => {
       emoji.style.animationDuration = `${Math.random() * 3 + 2}s`;
       emoji.style.fontSize = `${Math.random() * 2 + 1}rem`; // Random size between 1rem and 3rem
       emojiContainer.appendChild(emoji);
-  
+
       // Remove emoji after animation ends
       emoji.addEventListener('animationend', () => {
         emoji.remove();
@@ -713,10 +727,13 @@ const Wallet = () => {
   }
 
   function startEmojiRain() {
+    showThankYouModal();
+    triggerHapticFeedback();
+
     const emojiContainer = document.createElement('div');
     emojiContainer.id = 'emoji-container';
     document.body.appendChild(emojiContainer);
-  
+
     emojiInterval = setInterval(() => {
       const emoji = document.createElement('div');
       emoji.className = 'emoji';
@@ -725,24 +742,30 @@ const Wallet = () => {
       emoji.style.animationDuration = `${Math.random() * 3 + 2}s`;
       emoji.style.fontSize = `${Math.random() * 2 + 1}rem`; // Random size between 1rem and 3rem
       emojiContainer.appendChild(emoji);
-  
+
       // Remove emoji after animation ends
       emoji.addEventListener('animationend', () => {
         emoji.remove();
       });
     }, 21);
-  
+
     // Stop emoji rain after a few seconds
     setTimeout(stopEmojiRain, 1000);
   }
-  
+
   function stopEmojiRain() {
     clearInterval(emojiInterval);
-  
+
     // Remove the emoji container after a while to ensure all animations are done
     setTimeout(() => {
       document.getElementById('emoji-container').remove();
     }, 3000); // Extended to allow all emojis to fall
+  }
+
+  function triggerHapticFeedback() {
+    if (navigator.vibrate) {
+      navigator.vibrate(500);
+    }
   }
 
   return (
@@ -763,6 +786,16 @@ const Wallet = () => {
           </div>
         </div>
 
+        {/* Thank you modal */}
+        <div id="thank_you_modal" className="thank_you_modal">
+          <div className="modal-content-centered">
+            <span className="close-button" onClick={closeThankYouModal}>&times;</span>
+            <p style={{ fontSize: '38px' }}>THANK YOU</p>
+            <img src="/images/bullishNuts_logo_transparent-2048x2048.png" style={{ width: '150px', height: '150px' }} />
+            <p>FOR ZAPPING DEEZ NUTS</p>
+          </div>
+        </div>
+
         {/* Invoice modal */}
         <div id="invoiceModal" className="modal">
           <div className="modal-content">
@@ -773,7 +806,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.60</small></h6>
+        <h6>bullishNuts <small>v0.0.61</small></h6>
         <br></br>
 
         <div className="section">
