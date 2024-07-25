@@ -196,10 +196,6 @@ main {
     font-family: 'Courier New', Courier, monospace;
   }
 
-  .modal img {
-    align-items: center;
-  }
-
   .modal-content {
     background-color: black;
     color: #ff9900;
@@ -475,32 +471,6 @@ main {
       opacity: 0;
       /* Fully transparent at the end of the fall */
     }
-  }
-
-  .thank_you_modal {
-    display: none;
-    position: fixed;
-    z-index: 1;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0, 0, 0);
-  }
-
-  .modal-content-centered {
-    margin: 15% auto;
-    /* 15% from the top and centered */
-    padding: 20px;
-    width: 80%;
-    /* Could be more or less, depending on screen size */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    /* Center horizontally */
-    justify-content: center;
-    /* Center vertically */
   }
 
 }
