@@ -14,7 +14,7 @@ You can start editing the page by modifying `pages/index.js`. The page auto-upda
 
 ## Feedback
 
-Add me on [Nostr](https://primal.net/thebullishbitcoiner) and let me know what you think about the PWA or what you'd like to see! Bug reports are welcome!
+Add me on [Nostr](https://njump.me/npub1cashuq3y9av98ljm2y75z8cek39d8ux6jk3g6vafkl5j0uj4m5ks378fhq) and let me know what you think about the PWA or what you'd like to see! Bug reports are welcome!
 
 ## Donate
 
