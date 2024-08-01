@@ -802,7 +802,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.64</small></h6>
+        <h6>bullishNuts <small>v0.0.65</small></h6>
         <br></br>
 
         <div className="section">
@@ -919,10 +919,11 @@ const Wallet = () => {
         </div>
 
         <div className="data-display-container">
-          <h2>Data Output</h2>
+          <h2>Advanced</h2>
+          <p>Data Output</p>
           <pre id="data-output" className="data-output">{JSON.stringify(dataOutput, null, 2)}</pre>
-          <button className="styled-button" onClick={checkProofs}>Check Proofs</button>
-          <button className="styled-button" onClick={exportJSON}>Export JSON Logs</button>
+          <button className="full_width_button" onClick={checkProofs}>Check Proofs</button>
+          <button className="full_width_button" onClick={exportJSON}>Export JSON Logs</button>
         </div>
 
         <br></br>

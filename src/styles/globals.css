@@ -114,6 +114,31 @@ main {
   transition: background-color 0.3s ease, transform 0.1s ease;
 }
 
+.full_width_button {
+  flex: 1;
+  width: 100%;
+  border: 1px solid #ff9900;
+  border-radius: 0px;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 0px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+}
+
+.full_width_button:active {
+  transform: scale(0.98);
+  /* Scale up slightly when clicked */
+}
+
+.full_width_button:hover {
+  background-color: rgba(255, 153, 0, 0.5);
+  /* #ff9900 with 50% transparency */
+}
+
 .data-display-container {
   border: 1px solid #ff9900;
   background-color: black;
@@ -141,7 +166,7 @@ main {
   height: 300px;
   max-height: 300px;
   word-wrap: break-word;
-  margin: 10px 10px 10px 2px;
+  margin: 10px 0px 10px 0px;
 }
 
 @layer utilities {
