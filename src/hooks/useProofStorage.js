@@ -49,10 +49,15 @@ export const useProofStorage = () => {
     return result.length > 0 && sum >= amount ? result : [];
   };
 
+  const getAllProofs = () => {
+    return proofs;
+  }
+
   return {
     addProofs,
     removeProofs,
     getProofsByAmount,
+    getAllProofs,
     balance,
   };
 };

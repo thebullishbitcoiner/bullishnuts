@@ -34,7 +34,7 @@ const Wallet = () => {
    */
   const [wallet, setWallet] = useState(null);
 
-  const { addProofs, balance, removeProofs, getProofsByAmount } =
+  const { addProofs, balance, removeProofs, getProofsByAmount, getAllProofs } =
     useProofStorage();
 
   useEffect(() => {
@@ -87,7 +87,8 @@ const Wallet = () => {
   };
 
   async function handleReceive_Lightning(amount) {
-    const quote = await wallet.getMintQuote(amount);
+    //const quote = await wallet.getMintQuote(amount);
+    const quote = await wallet.createMintQuote(amount);
 
     setDataOutput(quote);
     storeJSON(quote);
@@ -103,13 +104,15 @@ const Wallet = () => {
         });
         setDataOutput({ "minted proofs": proofs });
 
+        //Add new proofs to local storage
         var proofsArray = { "proofs": proofs };
-
         storeJSON(proofsArray);
+
+        //Add new proofs to existing ones
         addProofs(proofs);
 
         closeInvoiceModal();
-        showToast('Invoice paid!');
+        showToast(`${amount} sat(s) received`);
 
         clearInterval(intervalId);
       } catch (error) {
@@ -155,6 +158,9 @@ const Wallet = () => {
       closeSendEcashModal();
       showCashuTokenModal(encodedToken);
 
+      //Add token to local storage
+      storeJSON(encodedToken);
+
       removeProofs(proofs);
       addProofs(returnChange);
       setDataOutput(encodedToken);
@@ -173,7 +179,7 @@ const Wallet = () => {
       if (isInvoice) {
         invoice = input;
 
-        const quote = await wallet.getMeltQuote(invoice);
+        const quote = await wallet.createMeltQuote(invoice);
 
         setDataOutput([{ "got melt quote": quote }]);
         storeJSON(quote);
@@ -242,7 +248,7 @@ const Wallet = () => {
       waitingModal.style.display = 'block';
 
       //Wait to get melt quote from mint
-      const quote = await wallet.getMeltQuote(invoice);
+      const quote = await wallet.createMeltQuote(invoice);
       document.getElementById('waiting_message').textContent = "Getting melt quote...";
       setDataOutput([{ "got melt quote": quote }]);
       storeJSON(quote);
@@ -314,7 +320,7 @@ const Wallet = () => {
       waitingModal.style.display = 'block';
 
       //Wait to get melt quote from mint
-      const quote = await wallet.getMeltQuote(invoice);
+      const quote = await wallet.createMeltQuote(invoice);
       document.getElementById('waiting_message').textContent = "Getting melt quote...";
       setDataOutput([{ "got melt quote": quote }]);
       storeJSON(quote);
@@ -355,7 +361,7 @@ const Wallet = () => {
       const sendAmount = document.getElementById('send_lightning_amount').value;
       const invoice = fetchInvoiceFromCallback(callback, sendAmount);
 
-      const quote = await wallet.getMeltQuote(invoice);
+      const quote = await wallet.createMeltQuote(invoice);
 
       setDataOutput([{ "got melt quote": quote }]);
 
@@ -436,6 +442,16 @@ const Wallet = () => {
       console.error('Failed to copy: ', err);
     }
   };
+
+  function pasteFromClipboard() {
+    navigator.clipboard.readText()
+      .then(text => {
+        document.getElementById('cashu_token').value = text;
+      })
+      .catch(err => {
+        console.error('Failed to read clipboard contents: ', err);
+      });
+  }  
 
   async function copyCashuToken() {
     try {
@@ -704,7 +720,7 @@ const Wallet = () => {
       emoji.style.animationDuration = `${Math.random() * 3 + 2}s`;
       emoji.style.fontSize = `${Math.random() * 2 + 1}rem`; // Random size between 1rem and 3rem
       emojiContainer.appendChild(emoji);
-  
+
       // Remove emoji after animation ends
       emoji.addEventListener('animationend', () => {
         emoji.remove();
@@ -716,7 +732,7 @@ const Wallet = () => {
     const emojiContainer = document.createElement('div');
     emojiContainer.id = 'emoji-container';
     document.body.appendChild(emojiContainer);
-  
+
     emojiInterval = setInterval(() => {
       const emoji = document.createElement('div');
       emoji.className = 'emoji';
@@ -725,24 +741,37 @@ const Wallet = () => {
       emoji.style.animationDuration = `${Math.random() * 3 + 2}s`;
       emoji.style.fontSize = `${Math.random() * 2 + 1}rem`; // Random size between 1rem and 3rem
       emojiContainer.appendChild(emoji);
-  
+
       // Remove emoji after animation ends
       emoji.addEventListener('animationend', () => {
         emoji.remove();
       });
     }, 21);
-  
+
     // Stop emoji rain after a few seconds
     setTimeout(stopEmojiRain, 1000);
   }
-  
+
   function stopEmojiRain() {
     clearInterval(emojiInterval);
-  
+
     // Remove the emoji container after a while to ensure all animations are done
     setTimeout(() => {
       document.getElementById('emoji-container').remove();
     }, 3000); // Extended to allow all emojis to fall
+  }
+
+  async function checkProofs() {
+    const proofs = getAllProofs();
+    if (proofs.length === 0) {
+      showToast("No proofs to check");
+      return;
+    }
+    const spentProofs = await wallet.checkProofsSpent(proofs);
+    if (spentProofs.length > 0) {
+      removeProofs(spentProofs);
+    }
+    showToast(`Deleted ${spentProofs.length} proofs`);
   }
 
   return (
@@ -773,7 +802,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.62</small></h6>
+        <h6>bullishNuts <small>v0.0.64</small></h6>
         <br></br>
 
         <div className="section">
@@ -861,7 +890,10 @@ const Wallet = () => {
         <div id="receive_ecash_modal" className="modal">
           <div className="modal-content">
             <span className="close-button" onClick={closeReceiveEcashModal}>&times;</span>
-            <label htmlFor="cashu_token">Paste Cashu token:</label>
+            <label htmlFor="cashu_token">
+            <button className="orange-button" onClick={pasteFromClipboard} >Paste</button> Cashu token
+
+            </label>
             <textarea id="cashu_token"></textarea>
             <button className="styled-button" onClick={claimButtonClicked}>Claim</button>
           </div>
@@ -889,6 +921,7 @@ const Wallet = () => {
         <div className="data-display-container">
           <h2>Data Output</h2>
           <pre id="data-output" className="data-output">{JSON.stringify(dataOutput, null, 2)}</pre>
+          <button className="styled-button" onClick={checkProofs}>Check Proofs</button>
           <button className="styled-button" onClick={exportJSON}>Export JSON Logs</button>
         </div>
 
