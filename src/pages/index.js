@@ -451,7 +451,7 @@ const Wallet = () => {
       .catch(err => {
         console.error('Failed to read clipboard contents: ', err);
       });
-  }  
+  }
 
   async function copyCashuToken() {
     try {
@@ -891,8 +891,7 @@ const Wallet = () => {
           <div className="modal-content">
             <span className="close-button" onClick={closeReceiveEcashModal}>&times;</span>
             <label htmlFor="cashu_token">
-            <button className="orange-button" onClick={pasteFromClipboard} >Paste</button> Cashu token
-
+              <button className="orange-button" onClick={pasteFromClipboard} >Paste</button> Cashu token
             </label>
             <textarea id="cashu_token"></textarea>
             <button className="styled-button" onClick={claimButtonClicked}>Claim</button>
