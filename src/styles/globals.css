@@ -229,6 +229,7 @@ main {
     padding: 10px;
     box-sizing: border-box;
     border: 1px solid #ff9900;
+    border-radius: 0px;
     resize: none;
     background-color: black;
     color: #ff9900;
