@@ -802,7 +802,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.65</small></h6>
+        <h6>bullishNuts <small>v0.0.66</small></h6>
         <br></br>
 
         <div className="section">
