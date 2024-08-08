@@ -221,7 +221,7 @@ const Wallet = () => {
       const username = lightningAddressParts[0];
       const domain = lightningAddressParts[1];
       const url = `https://${domain}/.well-known/lnurlp/${username}`;
-      const response = await fetch(url);
+      const response = await fetchWithTimeout(url);
 
       // Check if the request was successful
       if (!response.ok) {
@@ -279,7 +279,7 @@ const Wallet = () => {
       }
     } catch (error) {
       console.error(error);
-      setDataOutput({ error: "Failed to melt tokens", details: error });
+      showToast(error.message);
     }
   }
 
@@ -394,7 +394,7 @@ const Wallet = () => {
     url.search = new URLSearchParams(params).toString();
 
     try {
-      const response = await fetch(url);
+      const response = await fetchWithTimeout(url);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -404,6 +404,35 @@ const Wallet = () => {
       return data.pr;
     } catch (error) {
       console.error('Error fetching JSON:', error);
+      showToast('Error occurred while fetching invoice.');
+    }
+  }
+
+  // Function to fetch data with a timeout
+  async function fetchWithTimeout(url, options = {}, timeout = 5000) {
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    // Set a timeout to abort the fetch request
+    const timeoutID = setTimeout(() => {
+      controller.abort();
+    }, timeout);
+
+    try {
+      const response = await fetch(url, { ...options, signal });
+      // Clear the timeout if the fetch is successful
+      clearTimeout(timeoutID);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response; // Return the Response object
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        throw new Error(`Fetch request timed out for [${url}]`);
+      }
+      throw error; // Rethrow other errors
     }
   }
 
@@ -802,7 +831,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.66</small></h6>
+        <h6>bullishNuts <small>v0.0.67</small></h6>
         <br></br>
 
         <div className="section">
