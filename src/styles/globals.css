@@ -202,6 +202,12 @@ main {
     background-color: rgba(0, 0, 0, 0.9);
   }
 
+  .modal h2 {
+    font-weight: bold;
+    font-size: large;
+    margin-bottom: 10px;
+  }
+
   .modal label {
     display: block;
     margin-bottom: 5px;

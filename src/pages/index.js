@@ -3,6 +3,7 @@ import { CashuMint, CashuWallet, getEncodedToken } from "@cashu/cashu-ts";
 import React, { useState, useEffect } from "react";
 import Contacts from "@/components/Contacts";
 import LightningModal from '@/components/LightningModal';
+import { getDecodedToken, encodeJsonToBase64 } from "@/hooks/CashuDecoder";
 
 const Wallet = () => {
   const [isLightningModalOpen, setIsLightningModalOpen] = useState(false);
@@ -124,8 +125,18 @@ const Wallet = () => {
 
   async function handleReceive_Ecash(token) {
     try {
-      const { token: newToken, tokensWithErrors } = await wallet.receive(token);
-      const { proofs } = newToken.token[0];
+      const decoded = getDecodedToken(token);
+      const tokenMint = decoded.token[0].mint;
+      // If the token being received is not associated with the current mint, add it to the corresponding mint in local storage
+      if (tokenMint !== wallet.mint.mintUrl) {
+        localStorage.setItem(tokenMint, JSON.stringify(decoded.token[0].proofs));
+        localStorage.setItem("mints", JSON.stringify({ url: tokenMint, proofs: decoded.token[0].proofs }));
+        closeReceiveEcashModal();
+        showToast("This wallet currently only supports one mint (token was not redeemed).");
+        return;
+      }
+
+      const proofs = await wallet.receive(token);
       addProofs(proofs);
 
       closeReceiveEcashModal();
@@ -135,7 +146,8 @@ const Wallet = () => {
       storeJSON(proofs);
     } catch (error) {
       console.error(error);
-      setDataOutput({ error: "Failed to claim swap tokens", details: error });
+      closeReceiveEcashModal();
+      showToast("Failed to claim token");
     }
   }
 
@@ -831,7 +843,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.67</small></h6>
+        <h6>bullishNuts <small>v0.0.68</small></h6>
         <br></br>
 
         <div className="section">
@@ -873,9 +885,9 @@ const Wallet = () => {
         <div id="send_ecash_modal" className="modal">
           <div className="modal-content">
             <span className="close-button" onClick={closeSendEcashModal}>&times;</span>
-            <label htmlFor="ecash_amount">Enter amount of sats:</label>
-            <input type="number" id="ecash_amount" name="ecash_amount" inputMode="decimal" min="1" />
-            <button className="styled-button" onClick={sendEcashButtonClicked}>Send</button>
+            <h2>Send Ecash</h2>
+            <input type="number" id="ecash_amount" name="ecash_amount" placeholder="Enter amount of sats" inputMode="decimal" min="1" />
+            <button className="styled-button" onClick={sendEcashButtonClicked}>Create Token</button>
           </div>
         </div>
 
