@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import multiMintStorage from "@/hooks/multiMintStorage";
+import useMultiMintStorage from "@/hooks/useMultiMintStorage";
 import { CashuMint } from "@cashu/cashu-ts";
 
 const Mints = () => {
@@ -8,7 +8,7 @@ const Mints = () => {
         activeMint,
         setActiveMint,
         balance,
-    } = multiMintStorage();
+    } = useMultiMintStorage();
 
     const [mintNames, setMintNames] = useState([]);
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-export const multiMintStorage = () => {
+export const useMultiMintStorage = () => {
     const [proofsByMint, setProofsByMint] = useState([]); // Initialize as an empty array.
     const [balance, setBalance] = useState(0);
     const [activeMint, setActiveMint] = useState(null);
@@ -112,4 +112,4 @@ export const multiMintStorage = () => {
     };
 };
 
-export default multiMintStorage;
+export default useMultiMintStorage;

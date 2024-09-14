@@ -1,4 +1,4 @@
-import multiMintStorage from "@/hooks/multiMintStorage";
+import useMultiMintStorage from "@/hooks/useMultiMintStorage";
 import { CashuMint, CashuWallet, getEncodedToken } from "@cashu/cashu-ts";
 import React, { useState, useEffect } from "react";
 import Contacts from "@/components/Contacts";
@@ -55,7 +55,7 @@ const Wallet = () => {
     activeMint,
     setActiveMint
   } =
-    multiMintStorage();
+    useMultiMintStorage();
 
   useEffect(() => {
     const storedMintData = JSON.parse(localStorage.getItem("mint"));
@@ -1026,13 +1026,13 @@ const Wallet = () => {
           />
         </div>
 
-          {isLightningModalOpen && (
-            <LightningModal
-              contacts={contacts}
-              onClose={() => setIsLightningModalOpen(false)}
-              onSend={handleSend_Lightning}
-            />
-          )}
+        {isLightningModalOpen && (
+          <LightningModal
+            contacts={contacts}
+            onClose={() => setIsLightningModalOpen(false)}
+            onSend={handleSend_Lightning}
+          />
+        )}
 
         {/* Send ecash modal */}
         <div id="send_ecash_modal" className="modal">
