@@ -1,12 +1,22 @@
-import useProofStorage from "@/hooks/useProofStorage";
+import multiMintStorage from "@/hooks/multiMintStorage";
 import { CashuMint, CashuWallet, getEncodedToken } from "@cashu/cashu-ts";
 import React, { useState, useEffect } from "react";
 import Contacts from "@/components/Contacts";
 import LightningModal from '@/components/LightningModal';
 import { getDecodedToken, encodeJsonToBase64 } from "@/hooks/CashuDecoder";
+import Mints from "@/components/Mints";
+import EcashOrLightning from "@/components/EcashOrLightning";
+
+//Nostr stuff
+import { finalizeEvent, generateSecretKey, getPublicKey } from 'nostr-tools/pure';
+import crypto from 'crypto'
+import * as secp from '@noble/secp256k1'
+import { Relay } from 'nostr-tools/relay'
 
 const Wallet = () => {
   const [isLightningModalOpen, setIsLightningModalOpen] = useState(false);
+  const [isEcashOrLightningOpen, setIsEcashOrLightningOpen] = useState(false);
+  const [ecashOrLightningModalLabel, setEcashOrLightningModalLabel] = useState("");
   const [contacts, setContacts] = useState([]);
 
   useEffect(() => {
@@ -35,8 +45,17 @@ const Wallet = () => {
    */
   const [wallet, setWallet] = useState(null);
 
-  const { addProofs, balance, removeProofs, getProofsByAmount, getAllProofs } =
-    useProofStorage();
+  const {
+    addProofs,
+    removeProofs,
+    getProofsByAmount,
+    getAllProofs,
+    getMintBalance,
+    balance,
+    activeMint,
+    setActiveMint
+  } =
+    multiMintStorage();
 
   useEffect(() => {
     const storedMintData = JSON.parse(localStorage.getItem("mint"));
@@ -87,6 +106,29 @@ const Wallet = () => {
     }
   };
 
+  // async function handleSetMint(mintURL) {
+  //   const mint = new CashuMint(mintURL);
+
+  //   try {
+  //     const info = await mint.getInfo();
+  //     setDataOutput(info);
+  //     storeJSON(info);
+
+  //     const { keysets } = await mint.getKeys();
+
+  //     const satKeyset = keysets.find((k) => k.unit === "sat");
+  //     setWallet(new CashuWallet(mint, { keys: satKeyset }));
+
+  //     localStorage.setItem(
+  //       "mint",
+  //       JSON.stringify({ url: formData.mintUrl, keyset: satKeyset })
+  //     );
+  //   } catch (error) {
+  //     console.error(error);
+  //     setDataOutput({ error: "Failed to connect to mint", details: error });
+  //   }
+  // }
+
   async function handleReceive_Lightning(amount) {
     //const quote = await wallet.getMintQuote(amount);
     const quote = await wallet.createMintQuote(amount);
@@ -126,18 +168,33 @@ const Wallet = () => {
   async function handleReceive_Ecash(token) {
     try {
       const decoded = getDecodedToken(token);
-      const tokenMint = decoded.token[0].mint;
-      // If the token being received is not associated with the current mint, add it to the corresponding mint in local storage
-      if (tokenMint !== wallet.mint.mintUrl) {
-        localStorage.setItem(tokenMint, JSON.stringify(decoded.token[0].proofs));
-        localStorage.setItem("mints", JSON.stringify({ url: tokenMint, proofs: decoded.token[0].proofs }));
-        closeReceiveEcashModal();
-        showToast("This wallet currently only supports one mint (token was not redeemed).");
-        return;
+      const mintURL = decoded.token[0].mint;
+      // If the token being received is not associated with the current mint
+      if (mintURL !== wallet.mint.mintUrl) {
+        const mint = new CashuMint(mintURL);
+
+        try {
+          const info = await mint.getInfo();
+          setDataOutput(info);
+          storeJSON(info);
+
+          const { keysets } = await mint.getKeys();
+
+          const satKeyset = keysets.find((k) => k.unit === "sat");
+          const newWallet = new CashuWallet(mint, { keys: satKeyset, unit: "sat" });
+          const proofs = await newWallet.receive(token);
+          addProofs(proofs, mintURL);
+          closeReceiveEcashModal();
+          showToast('Ecash received!');
+          return;
+        } catch (error) {
+          console.error(error);
+          setDataOutput({ error: "Failed to receive token from a different mint.", details: error });
+        }
       }
 
       const proofs = await wallet.receive(token);
-      addProofs(proofs);
+      addProofs(proofs, mintURL);
 
       closeReceiveEcashModal();
       showToast('Ecash received!');
@@ -152,7 +209,7 @@ const Wallet = () => {
   }
 
   async function handleSend_Ecash(amount) {
-    const proofs = getProofsByAmount(amount);
+    const proofs = getProofsByAmount(amount, activeMint);
 
     if (proofs.length === 0) {
       showToast("Insufficient balance");
@@ -365,6 +422,78 @@ const Wallet = () => {
     } catch (error) {
       console.error(error);
       setDataOutput({ error: "Failed to melt tokens", details: error });
+    }
+  }
+
+  async function payToPubkey(pubkey) {
+    let sk = generateSecretKey() // `sk` is a Uint8Array
+    let bullishNutsHex = 'c7617e02242f5853fe5b513d411f19b44ad3f0da95a28d33a9b7e927f255dd2d';
+    //let bullishHex = 'a10260a2aa2f092d85e2c0b82e95eac5f8c60ea19c68e4898719b58ccaa23e3e'
+    let pk = getPublicKey(sk) // `pk` is a hex string
+
+    const relay = await Relay.connect('wss://relay.0xchat.com')
+    console.log(`connected to ${relay.url}`)
+
+    relay.subscribe([
+      {
+        kinds: [4],
+        authors: [pk],
+      },
+    ], {
+      onevent(event) {
+        console.log('got event:', event)
+      }
+    })
+
+    let sharedPoint = secp.getSharedSecret(sk, '02' + bullishNutsHex)
+    let sharedX = sharedPoint.slice(1, 33)
+
+    let iv = crypto.randomFillSync(new Uint8Array(16))
+    var cipher = crypto.createCipheriv(
+      'aes-256-cbc',
+      Buffer.from(sharedX),
+      iv
+    )
+
+    const proofs = getProofsByAmount(21, activeMint);
+
+    if (proofs.length === 0) {
+      showToast("Insufficient balance");
+      return;
+    }
+
+    const tempMint = new CashuMint(activeMint);
+
+    try {
+      const info = await tempMint.getInfo();
+      const { keysets } = await tempMint.getKeys();
+      const satKeyset = keysets.find((k) => k.unit === "sat");
+      let tempWallet = new CashuWallet(activeMint, { keys: satKeyset, unit: "sat" });
+      const { send, returnChange } = await tempWallet.send(21, proofs);
+      const encodedToken = getEncodedToken({
+        token: [{ proofs: send, mint: activeMint }],
+      });
+
+      let encryptedMessage = cipher.update(`${encodedToken}`, 'utf8', 'base64')
+      encryptedMessage += cipher.final('base64')
+      let ivBase64 = Buffer.from(iv.buffer).toString('base64')
+
+      let event = {
+        pubkey: [pk],
+        created_at: Math.floor(Date.now() / 1000),
+        kind: 4,
+        tags: [['p', bullishNutsHex]],
+        content: encryptedMessage + '?iv=' + ivBase64
+      }
+
+      // this assigns the pubkey, calculates the event id and signs the event in a single step
+      const signedEvent = finalizeEvent(event, sk)
+      await relay.publish(signedEvent)
+
+      removeProofs(proofs, activeMint);
+    } catch (error) {
+      console.error(error);
+      setDataOutput({ error: error, details: error });
     }
   }
 
@@ -815,6 +944,37 @@ const Wallet = () => {
     showToast(`Deleted ${spentProofs.length} proofs`);
   }
 
+  const openEcashOrLightningModal = (label) => {
+    setEcashOrLightningModalLabel(label);
+    setIsEcashOrLightningOpen(true);
+  };
+
+  const closeEcashOrLightningModal = () => {
+    setIsEcashOrLightningOpen(false);
+  };
+
+  const handleOptionSelect = (option) => {
+    const action = ecashOrLightningModalLabel;
+    console.log(`Selected ${option} for ${action}`);
+    setIsEcashOrLightningOpen(false); // Close modal after selection
+    if (action === "Send") {
+      if (option === "Ecash") {
+        showSendEcashModal();
+      }
+      else if (option === "Lightning") {
+        setIsLightningModalOpen(true);
+      }
+    }
+    else if (action === "Receive") {
+      if (option === "Ecash") {
+        showReceiveEcashModal();
+      }
+      else if (option === "Lightning") {
+        showReceiveLightningModal();
+      }
+    }
+  };
+
   return (
     <main>
 
@@ -822,7 +982,7 @@ const Wallet = () => {
 
       <div className="cashu-operations-container">
 
-        <div id="refresh-icon" onClick={refreshPage}>↻</div>
+        <div id="refresh-icon" onClick={refreshPage}>⟳</div>
         <div id="toast" className="toast">This is a toast message.</div>
 
         {/* Message modal */}
@@ -849,29 +1009,23 @@ const Wallet = () => {
         <div className="section">
           <h2>Balance</h2>
           <p>{balance} sats</p>
-        </div>
-
-        <div className="section">
-          <h2>Mint</h2>
-          <a href="https://bitcoinmints.com/">View list of available mints</a>
-          <input
-            type="text"
-            name="mintUrl"
-            value={formData.mintUrl}
-            onChange={handleChange}
-          />
-          <button className="styled-button" onClick={handleSetMint}>
-            Set Mint
-          </button>
-        </div>
-
-        <div className="section">
-          <h2>Send</h2>
           <div className="button-container">
-            <button className="styled-button" onClick={showSendEcashModal}>Ecash</button>
-            <button className="styled-button" onClick={() => setIsLightningModalOpen(true)}>Lightning</button>
-            {/* <button className="styled-button" onClick={showSendLightningModal}>Lightning</button> */}
+            <button className="styled-button" onClick={() => openEcashOrLightningModal('Send')}>Send</button>
+            <button className="styled-button" onClick={() => openEcashOrLightningModal('Receive')}>Receive</button>
           </div>
+          <EcashOrLightning
+            isOpen={isEcashOrLightningOpen}
+            onClose={closeEcashOrLightningModal}
+            onOptionSelect={handleOptionSelect}
+            label={ecashOrLightningModalLabel}
+          />
+        </div>
+
+        <div className="section">
+          <Mints
+          />
+        </div>
+
           {isLightningModalOpen && (
             <LightningModal
               contacts={contacts}
@@ -879,7 +1033,6 @@ const Wallet = () => {
               onSend={handleSend_Lightning}
             />
           )}
-        </div>
 
         {/* Send ecash modal */}
         <div id="send_ecash_modal" className="modal">
@@ -919,14 +1072,6 @@ const Wallet = () => {
           </div>
         </div>
 
-        <div className="section">
-          <h2>Receive</h2>
-          <div className="button-container">
-            <button className="styled-button" onClick={showReceiveEcashModal}>Ecash</button>
-            <button className="styled-button" onClick={showReceiveLightningModal}>Lightning</button>
-          </div>
-        </div>
-
         {/* Receive ecash modal */}
         <div id="receive_ecash_modal" className="modal">
           <div className="modal-content">
@@ -949,13 +1094,32 @@ const Wallet = () => {
           </div>
         </div>
 
-        <div className="section">
-          <h2>Zap Deez Nuts</h2>
-          <button className="styled-button" onClick={zapDeezNuts} >🥜⚡</button>
-        </div>
+        {/* <div className="section">
+          <h2>Mint</h2>
+          <a href="https://bitcoinmints.com/">View list of available mints</a>
+          <input
+            type="text"
+            name="mintUrl"
+            value={formData.mintUrl}
+            onChange={handleChange}
+          />
+          <button className="styled-button" onClick={handleSetMint}>
+            Set Mint
+          </button>
+        </div> */}
 
         <div className="section">
           <Contacts onContactSelect={handleContactSelect} updateContacts={updateContacts} />
+        </div>
+
+        <div className="section">
+          <h2>Zap Deez Nuts</h2>
+          <div className="button-container">
+            <button className="styled-button" onClick={zapDeezNuts} >SMASH DONATE ⚡</button>
+          </div>
+          <div className="button-container">
+            <button className="styled-button" onClick={payToPubkey} >SEND NUTS 🥜</button>
+          </div>
         </div>
 
         <div className="data-display-container">
