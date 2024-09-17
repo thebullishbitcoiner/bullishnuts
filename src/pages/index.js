@@ -7,7 +7,7 @@ import { getDecodedToken, encodeJsonToBase64 } from "@/hooks/CashuDecoder";
 import Mints from "@/components/Mints";
 import EcashOrLightning from "@/components/EcashOrLightning";
 
-//Nostr stuff
+//Nostr
 import { finalizeEvent, generateSecretKey, getPublicKey } from 'nostr-tools/pure';
 import crypto from 'crypto'
 import * as secp from '@noble/secp256k1'
@@ -52,13 +52,11 @@ const Wallet = () => {
     getAllProofs,
     getMintBalance,
     balance,
-    activeMint,
-    setActiveMint
   } =
     useMultiMintStorage();
 
   useEffect(() => {
-    const storedMintData = JSON.parse(localStorage.getItem("mint"));
+    const storedMintData = JSON.parse(localStorage.getItem("activeMint"));
     if (storedMintData) {
       const { url, keyset } = storedMintData;
       const mint = new CashuMint(url);
@@ -83,31 +81,8 @@ const Wallet = () => {
     }));
   };
 
-  const handleSetMint = async () => {
-    const mint = new CashuMint(formData.mintUrl);
-
-    try {
-      const info = await mint.getInfo();
-      setDataOutput(info);
-      storeJSON(info);
-
-      const { keysets } = await mint.getKeys();
-
-      const satKeyset = keysets.find((k) => k.unit === "sat");
-      setWallet(new CashuWallet(mint, { keys: satKeyset }));
-
-      localStorage.setItem(
-        "mint",
-        JSON.stringify({ url: formData.mintUrl, keyset: satKeyset })
-      );
-    } catch (error) {
-      console.error(error);
-      setDataOutput({ error: "Failed to connect to mint", details: error });
-    }
-  };
-
-  // async function handleSetMint(mintURL) {
-  //   const mint = new CashuMint(mintURL);
+  // const handleSetMint = async () => {
+  //   const mint = new CashuMint(formData.mintUrl);
 
   //   try {
   //     const info = await mint.getInfo();
@@ -127,7 +102,27 @@ const Wallet = () => {
   //     console.error(error);
   //     setDataOutput({ error: "Failed to connect to mint", details: error });
   //   }
-  // }
+  // };
+
+  const handleMintChange = async (newMint) => {
+    try {
+      const mint = new CashuMint(newMint);
+      const info = await mint.getInfo();
+      setDataOutput(info);
+      const { keysets } = await mint.getKeys();
+      const satKeyset = keysets.find((k) => k.unit === "sat");
+      setWallet(new CashuWallet(mint, { keys: satKeyset }));
+
+      localStorage.setItem(
+        "activeMint",
+        JSON.stringify({ url: newMint, keyset: satKeyset })
+      );
+
+      console.log("Active mint changed to:", newMint);
+    } catch (error) {
+      console.error("Failed to handle mint change:", error);
+    }
+  };
 
   async function handleReceive_Lightning(amount) {
     //const quote = await wallet.getMintQuote(amount);
@@ -169,6 +164,12 @@ const Wallet = () => {
     try {
       const decoded = getDecodedToken(token);
       const mintURL = decoded.token[0].mint;
+
+      //If there's currently no active mint (i.e. the wallet is null), get mint info and init the wallet
+      if (wallet === null) {
+        await handleMintChange(mintURL);
+      }
+
       // If the token being received is not associated with the current mint
       if (mintURL !== wallet.mint.mintUrl) {
         const mint = new CashuMint(mintURL);
@@ -209,7 +210,9 @@ const Wallet = () => {
   }
 
   async function handleSend_Ecash(amount) {
-    const proofs = getProofsByAmount(amount, activeMint);
+    const storedMintData = JSON.parse(localStorage.getItem("activeMint"));
+    const { url, keyset } = storedMintData;
+    const proofs = getProofsByAmount(amount, url);
 
     if (proofs.length === 0) {
       showToast("Insufficient balance");
@@ -230,8 +233,8 @@ const Wallet = () => {
       //Add token to local storage
       storeJSON(encodedToken);
 
-      removeProofs(proofs);
-      addProofs(returnChange);
+      removeProofs(proofs, wallet.mint.mintUrl);
+      addProofs(returnChange, wallet.mint.mintUrl);
       setDataOutput(encodedToken);
       storeJSON(encodedToken);
     } catch (error) {
@@ -493,7 +496,7 @@ const Wallet = () => {
       removeProofs(proofs, activeMint);
     } catch (error) {
       console.error(error);
-      setDataOutput({ error: error, details: error });
+      setDataOutput({ error: true, details: error });
     }
   }
 
@@ -680,15 +683,6 @@ const Wallet = () => {
     modal.style.display = 'none';
   }
 
-  function showSendLightningModal() {
-    if (wallet === null) {
-      showToast("Mint needs to be set");
-      return;
-    }
-    const modal = document.getElementById('send_lightning_modal');
-    modal.style.display = 'block';
-  }
-
   function closeSendLightningModal() {
     const modal = document.getElementById('send_lightning_modal');
     document.getElementById('send_lightning_input').value = '';
@@ -757,10 +751,6 @@ const Wallet = () => {
   }
 
   function showReceiveEcashModal() {
-    if (wallet === null) {
-      showToast("Mint needs to be set");
-      return;
-    }
     const modal = document.getElementById('receive_ecash_modal');
     modal.style.display = 'block';
   }
@@ -1023,6 +1013,7 @@ const Wallet = () => {
 
         <div className="section">
           <Mints
+            onMintChange={handleMintChange}
           />
         </div>
 

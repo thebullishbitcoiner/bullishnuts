@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 export const useMultiMintStorage = () => {
     const [proofsByMint, setProofsByMint] = useState([]); // Initialize as an empty array.
     const [balance, setBalance] = useState(0);
-    const [activeMint, setActiveMint] = useState(null);
 
     useEffect(() => {
         // Fetch stored proofsByMint from localStorage
@@ -14,13 +13,6 @@ export const useMultiMintStorage = () => {
             setProofsByMint(parsedProofsByMint || []); // Ensure it's an array
         } else {
             console.log("No stored proofsByMint found."); // Debugging line
-        }
-
-        const storedActiveMint = localStorage.getItem("activeMint");
-        if (storedActiveMint) {
-            setActiveMint(storedActiveMint);
-        } else {
-            console.log("No stored activeMint found."); // Debugging line
         }
     }, []); // This runs only once when the component mounts.
 
@@ -36,12 +28,6 @@ export const useMultiMintStorage = () => {
         setBalance(newBalance);
     
     }, [proofsByMint]); // This runs every time proofsByMint is updated
-
-    useEffect(() => {
-        if (activeMint) {
-            localStorage.setItem("activeMint", activeMint);
-        }
-    }, [activeMint]);
 
     const calculateTotalBalance = (proofs) => {
         return Object.values(proofs)
@@ -107,8 +93,6 @@ export const useMultiMintStorage = () => {
         getAllProofs,
         getMintBalance,
         balance,
-        activeMint,
-        setActiveMint,
     };
 };
 

@@ -2,15 +2,14 @@ import React, { useState, useEffect } from "react";
 import useMultiMintStorage from "@/hooks/useMultiMintStorage";
 import { CashuMint } from "@cashu/cashu-ts";
 
-const Mints = () => {
+const Mints = ({ onMintChange }) => {
     const {
         getMintBalance,
-        activeMint,
-        setActiveMint,
         balance,
     } = useMultiMintStorage();
 
     const [mintNames, setMintNames] = useState([]);
+    const [activeMint, setLocalActiveMint] = useState(null); // Local state for activeMint
 
     useEffect(() => {
         const fetchMintNames = async () => {
@@ -35,14 +34,22 @@ const Mints = () => {
         };
 
         fetchMintNames();
+
+        // Get activeMint from localStorage
+        const storedActiveMint = JSON.parse(localStorage.getItem("activeMint"));
+        if (storedActiveMint) {
+            const { url, keyset } = storedActiveMint;
+            setLocalActiveMint(url); // Set it in the local state
+        }
     }, []);
 
     const handleMintSelection = (mint) => {
-        setActiveMint(mint);
+        // Call the callback to inform index.js about the mint change
+        onMintChange(mint);
+        setLocalActiveMint(mint); // Update local state
     };
 
     return (
-
         <div>
             <h2>Mints</h2>
             <div className="mints-list">
@@ -75,7 +82,6 @@ const Mints = () => {
                 )}
             </div>
         </div>
-
     );
 };
 
