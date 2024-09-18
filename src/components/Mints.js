@@ -11,43 +11,105 @@ const Mints = ({ onMintChange }) => {
     const [mintNames, setMintNames] = useState([]);
     const [activeMint, setLocalActiveMint] = useState(null); // Local state for activeMint
 
-    useEffect(() => {
-        const fetchMintNames = async () => {
-            if (typeof window !== "undefined" && localStorage.getItem('proofsByMint')) {
-                const storedProofsByMint = JSON.parse(localStorage.getItem('proofsByMint')) || {};
-                const mintURLs = Object.keys(storedProofsByMint);
+    const fetchMintNames = async () => {
+        if (typeof window !== "undefined" && localStorage.getItem("proofsByMint")) {
+            const storedProofsByMint = JSON.parse(localStorage.getItem("proofsByMint")) || {};
+            const mintURLs = Object.keys(storedProofsByMint);
 
-                const mintNamesPromises = mintURLs.map(async (mintUrl) => {
-                    try {
+            const mintNamesPromises = mintURLs.map(async (mintUrl) => {
+                try {
+                    // Check if mint info is already in localStorage
+                    const storedMintInfo = JSON.parse(localStorage.getItem('mintInfo')) || {};
+
+                    // If the mint info for this URL is not in localStorage, fetch and store it
+                    if (!storedMintInfo[mintUrl]) {
                         const mint = new CashuMint(mintUrl);
                         const info = await mint.getInfo();
-                        return { mintUrl, name: info.name || mintUrl }; // Fallback to URL if no name is provided
-                    } catch (error) {
-                        console.error(`Failed to fetch mint info for ${mintUrl}:`, error);
-                        return { mintUrl, name: mintUrl }; // Fallback in case of an error
+
+                        // Store the fetched mint info in localStorage
+                        storedMintInfo[mintUrl] = info;
+                        localStorage.setItem('mintInfo', JSON.stringify(storedMintInfo));
                     }
-                });
 
-                const mintNamesWithInfo = await Promise.all(mintNamesPromises);
-                setMintNames(mintNamesWithInfo);
-            }
-        };
+                    // Use the info from localStorage
+                    const mintInfo = storedMintInfo[mintUrl];
+                    return { mintUrl, name: mintInfo.name || mintUrl }; // Fallback to URL if no name is provided
+                } catch (error) {
+                    console.error(`Failed to fetch mint info for ${mintUrl}:`, error);
+                    return { mintUrl, name: mintUrl }; // Fallback in case of an error
+                }
+            });
 
+            const mintNamesWithInfo = await Promise.all(mintNamesPromises);
+            setMintNames(mintNamesWithInfo);
+        }
+    };
+
+    useEffect(() => {
         fetchMintNames();
 
         // Get activeMint from localStorage
         const storedActiveMint = JSON.parse(localStorage.getItem("activeMint"));
         if (storedActiveMint) {
-            const { url, keyset } = storedActiveMint;
-            setLocalActiveMint(url); // Set it in the local state
+            setLocalActiveMint(storedActiveMint.url); // Set it in the local state
         }
-    }, []);
+
+        // Add a storage event listener to detect changes to proofsByMint in localStorage
+        const handleStorageChange = (e) => {
+            if (e.key === "proofsByMint") {
+                fetchMintNames(); // Re-fetch mint names when proofsByMint is modified
+            }
+        };
+
+        window.addEventListener("storage", handleStorageChange);
+
+        return () => {
+            // To avoid memory leaks, clean up the event listener when the component unmounts
+            window.removeEventListener("storage", handleStorageChange);
+        };
+    }, []); // Empty array ensures it only runs once on mount
 
     const handleMintSelection = (mint) => {
         // Call the callback to inform index.js about the mint change
         onMintChange(mint);
         setLocalActiveMint(mint); // Update local state
     };
+
+    const handleDeleteMint = (mintUrl) => {
+        const mintBalance = getMintBalance(mintUrl);
+
+        // Check if the mint has a non-zero balance
+        if (mintBalance > 0) {
+            showToast("Cannot delete mint with a non-zero balance.");
+            return;
+        }
+
+        // Delete from proofsByMint and mintInfo
+        const storedProofsByMint = JSON.parse(localStorage.getItem('proofsByMint')) || {};
+        const storedMintInfo = JSON.parse(localStorage.getItem('mintInfo')) || {};
+
+        delete storedProofsByMint[mintUrl]; // Remove the mint from proofsByMint
+        delete storedMintInfo[mintUrl];     // Remove the mint from mintInfo
+
+        // Update localStorage
+        localStorage.setItem('proofsByMint', JSON.stringify(storedProofsByMint));
+        localStorage.setItem('mintInfo', JSON.stringify(storedMintInfo));
+
+        // Remove the mint from the displayed list
+        setMintNames((prev) => prev.filter((mint) => mint.mintUrl !== mintUrl));
+
+        showToast("Mint deleted successfully.");
+    };
+
+    function showToast(message, duration = 4000) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = 'toast show';
+
+        setTimeout(() => {
+            toast.className = 'toast';
+        }, duration);
+    }
 
     return (
         <div>
@@ -67,6 +129,7 @@ const Mints = ({ onMintChange }) => {
                             <div className="mint-info">
                                 <div className="mint-name-row">
                                     <span className="mint-name">{mint.name}</span>
+
                                 </div>
                                 <div className="mint-balance-row">
                                     <span className="mint-balance">
@@ -75,6 +138,7 @@ const Mints = ({ onMintChange }) => {
                                     </span>
                                 </div>
                             </div>
+                            <button className="delete-button" onClick={() => handleDeleteMint(mint.mintUrl)}>×</button>
                         </div>
                     ))
                 ) : (

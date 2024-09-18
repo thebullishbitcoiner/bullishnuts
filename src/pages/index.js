@@ -109,9 +109,12 @@ const Wallet = () => {
       const mint = new CashuMint(newMint);
       const info = await mint.getInfo();
       setDataOutput(info);
+
       const { keysets } = await mint.getKeys();
       const satKeyset = keysets.find((k) => k.unit === "sat");
-      setWallet(new CashuWallet(mint, { keys: satKeyset }));
+
+      const newWallet = new CashuWallet(mint, { keys: satKeyset });
+      setWallet(newWallet); // Still update state
 
       localStorage.setItem(
         "activeMint",
@@ -119,10 +122,14 @@ const Wallet = () => {
       );
 
       console.log("Active mint changed to:", newMint);
+
+      return newWallet; // Return the new wallet directly
     } catch (error) {
       console.error("Failed to handle mint change:", error);
+      throw error; // Rethrow or handle the error as needed
     }
   };
+
 
   async function handleReceive_Lightning(amount) {
     //const quote = await wallet.getMintQuote(amount);
@@ -165,28 +172,46 @@ const Wallet = () => {
       const decoded = getDecodedToken(token);
       const mintURL = decoded.token[0].mint;
 
-      //If there's currently no active mint (i.e. the wallet is null), get mint info and init the wallet
+      // Declare a local variable to track the wallet
+      let currentWallet = wallet;
+
+      // If there's currently no active mint (i.e., wallet is null), get mint info and init the wallet
       if (wallet === null) {
-        await handleMintChange(mintURL);
+        currentWallet = await handleMintChange(mintURL);  // Use the returned wallet from handleMintChange
       }
 
       // If the token being received is not associated with the current mint
-      if (mintURL !== wallet.mint.mintUrl) {
+      if (mintURL !== currentWallet.mint.mintUrl) {
         const mint = new CashuMint(mintURL);
 
         try {
-          const info = await mint.getInfo();
-          setDataOutput(info);
-          storeJSON(info);
+          // Check if mint info is already in localStorage
+          const storedMintInfo = JSON.parse(localStorage.getItem('mintInfo')) || {};
+
+          // If the mint info for this URL is not in localStorage, fetch and store it
+          if (!storedMintInfo[mintURL]) {
+            const info = await mint.getInfo();
+
+            // Store the fetched mint info in localStorage
+            storedMintInfo[mintURL] = info;
+            localStorage.setItem('mintInfo', JSON.stringify(storedMintInfo));
+          }
+
+          // Use the info from localStorage
+          const mintInfo = storedMintInfo[mintURL];
+          setDataOutput(mintInfo);
+          storeJSON(mintInfo);
 
           const { keysets } = await mint.getKeys();
 
           const satKeyset = keysets.find((k) => k.unit === "sat");
           const newWallet = new CashuWallet(mint, { keys: satKeyset, unit: "sat" });
           const proofs = await newWallet.receive(token);
+
           addProofs(proofs, mintURL);
           closeReceiveEcashModal();
           showToast('Ecash received!');
+
           return;
         } catch (error) {
           console.error(error);
@@ -194,7 +219,7 @@ const Wallet = () => {
         }
       }
 
-      const proofs = await wallet.receive(token);
+      const proofs = await currentWallet.receive(token);
       addProofs(proofs, mintURL);
 
       closeReceiveEcashModal();
@@ -993,7 +1018,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.70</small></h6>
+        <h6>bullishNuts <small>v0.0.71</small></h6>
         <br></br>
 
         <div className="section">
