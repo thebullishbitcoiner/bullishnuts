@@ -19,14 +19,14 @@ export const useMultiMintStorage = () => {
     useEffect(() => {
         // Ensure proofsByMint is a valid object and not empty
         if (typeof proofsByMint !== 'object' || proofsByMint === null || Object.keys(proofsByMint).length === 0) return;
-    
+
         // Store updated proofsByMint in localStorage
         localStorage.setItem("proofsByMint", JSON.stringify(proofsByMint));
-    
+
         // Calculate new balance from the updated proofsByMint
         const newBalance = calculateTotalBalance(proofsByMint);
         setBalance(newBalance);
-    
+
     }, [proofsByMint]); // This runs every time proofsByMint is updated
 
     const calculateTotalBalance = (proofs) => {
@@ -35,21 +35,42 @@ export const useMultiMintStorage = () => {
             .reduce((total, proof) => total + proof.amount, 0);
     };
 
-    const calculateMintBalance = (mint) => {
-        if (!proofsByMint[mint]) return 0;
-        return proofsByMint[mint].reduce((total, proof) => total + proof.amount, 0);
+    const calculateMintBalance = (proofs) => {
+        if (!Array.isArray(proofs)) return 0; // Ensure proofs is an array
+        return proofs.reduce((total, proof) => total + proof.amount, 0);
     };
+
+    // const addProofs = (newProofs, mint) => {
+    //     setProofsByMint((prevProofsByMint) => {
+    //         const updatedProofs = { ...prevProofsByMint };
+    //         if (!updatedProofs[mint]) {
+    //             updatedProofs[mint] = [];
+    //         }
+    //         updatedProofs[mint] = [...updatedProofs[mint], ...newProofs];
+    //         return updatedProofs;
+    //     });
+    // };
 
     const addProofs = (newProofs, mint) => {
         setProofsByMint((prevProofsByMint) => {
             const updatedProofs = { ...prevProofsByMint };
+
+            // Initialize the mint's proofs array if it doesn't exist
             if (!updatedProofs[mint]) {
                 updatedProofs[mint] = [];
             }
+
+            // Add the new proofs to the mint's existing proofs
             updatedProofs[mint] = [...updatedProofs[mint], ...newProofs];
+
+            // Update localStorage immediately after updating state
+            localStorage.setItem('proofsByMint', JSON.stringify(updatedProofs));
+
+            // Return the updated proofsByMint for the state update
             return updatedProofs;
         });
     };
+
 
     const removeProofs = (proofsToRemove, mint) => {
         if (!proofsToRemove || !mint) return;
@@ -83,7 +104,9 @@ export const useMultiMintStorage = () => {
     };
 
     const getMintBalance = (mint) => {
-        return calculateMintBalance(mint);
+        const storedProofsByMint = localStorage.getItem("proofsByMint");
+        const parsedProofsByMint = JSON.parse(storedProofsByMint);
+        return calculateMintBalance(parsedProofsByMint[mint]);
     };
 
     return {

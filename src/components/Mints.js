@@ -2,10 +2,9 @@ import React, { useState, useEffect } from "react";
 import useMultiMintStorage from "@/hooks/useMultiMintStorage";
 import { CashuMint } from "@cashu/cashu-ts";
 
-const Mints = ({ onMintChange }) => {
+const Mints = ({ onMintChange, balance }) => {
     const {
         getMintBalance,
-        balance,
     } = useMultiMintStorage();
 
     const [mintNames, setMintNames] = useState([]);
@@ -45,6 +44,7 @@ const Mints = ({ onMintChange }) => {
         }
     };
 
+    // Fetch mint names and activeMint on mount
     useEffect(() => {
         fetchMintNames();
 
@@ -53,21 +53,13 @@ const Mints = ({ onMintChange }) => {
         if (storedActiveMint) {
             setLocalActiveMint(storedActiveMint.url); // Set it in the local state
         }
-
-        // Add a storage event listener to detect changes to proofsByMint in localStorage
-        const handleStorageChange = (e) => {
-            if (e.key === "proofsByMint") {
-                fetchMintNames(); // Re-fetch mint names when proofsByMint is modified
-            }
-        };
-
-        window.addEventListener("storage", handleStorageChange);
-
-        return () => {
-            // To avoid memory leaks, clean up the event listener when the component unmounts
-            window.removeEventListener("storage", handleStorageChange);
-        };
     }, []); // Empty array ensures it only runs once on mount
+
+    // Effect to re-fetch mint names and balances when the balance changes
+    useEffect(() => {
+        console.log("Balance updated:", balance);
+        fetchMintNames(); // Re-fetch mint names and balances when balance changes
+    }, [balance]);
 
     const handleMintSelection = (mint) => {
         // Call the callback to inform index.js about the mint change
@@ -76,30 +68,47 @@ const Mints = ({ onMintChange }) => {
     };
 
     const handleDeleteMint = (mintUrl) => {
-        const mintBalance = getMintBalance(mintUrl);
+        // Check if this is the last mint
+        if (mintNames.length === 1) {
+            showToast("Cannot delete the last mint.");
+            return; // Exit the function early
+        }
 
+        const mintBalance = getMintBalance(mintUrl);
         // Check if the mint has a non-zero balance
         if (mintBalance > 0) {
             showToast("Cannot delete mint with a non-zero balance.");
             return;
         }
-
+    
         // Delete from proofsByMint and mintInfo
         const storedProofsByMint = JSON.parse(localStorage.getItem('proofsByMint')) || {};
         const storedMintInfo = JSON.parse(localStorage.getItem('mintInfo')) || {};
-
+    
         delete storedProofsByMint[mintUrl]; // Remove the mint from proofsByMint
         delete storedMintInfo[mintUrl];     // Remove the mint from mintInfo
-
+    
         // Update localStorage
         localStorage.setItem('proofsByMint', JSON.stringify(storedProofsByMint));
         localStorage.setItem('mintInfo', JSON.stringify(storedMintInfo));
-
+    
         // Remove the mint from the displayed list
-        setMintNames((prev) => prev.filter((mint) => mint.mintUrl !== mintUrl));
-
+        setMintNames((prev) => {
+            const updatedMints = prev.filter((mint) => mint.mintUrl !== mintUrl);
+    
+            // If the deleted mint was the active one, set the next mint as active
+            if (mintUrl === activeMint) {
+                const nextMint = updatedMints.length > 0 ? updatedMints[0].mintUrl : null; // Get the next mint or null if none
+                setLocalActiveMint(nextMint); // Set the next mint as active
+                onMintChange(nextMint); // Notify index.js
+            }
+    
+            return updatedMints; // Return the updated list of mints
+        });
+    
         showToast("Mint deleted successfully.");
     };
+    
 
     function showToast(message, duration = 4000) {
         const toast = document.getElementById('toast');
@@ -111,42 +120,50 @@ const Mints = ({ onMintChange }) => {
         }, duration);
     }
 
+    console.log("Rendering Mints component with balance:", balance);
+
     return (
         <div>
             <h2>Mints</h2>
             <div className="mints-list">
                 {mintNames.length > 0 ? (
-                    mintNames.map((mint, index) => (
-                        <div key={index} className="mint-row">
-                            <div className="mint-checkbox">
-                                <input
-                                    type="radio"
-                                    name="activeMint"
-                                    checked={mint.mintUrl === activeMint}
-                                    onChange={() => handleMintSelection(mint.mintUrl)}
-                                />
-                            </div>
-                            <div className="mint-info">
-                                <div className="mint-name-row">
-                                    <span className="mint-name">{mint.name}</span>
+                    mintNames.map((mint, index) => {
+                        const mintBalance = getMintBalance(mint.mintUrl); // Store the balance in a local variable
 
+                        // Optionally log the balance for debugging
+                        console.log(`Mint URL: ${mint.mintUrl}, Balance: ${mintBalance}`);
+
+                        return (
+                            <div key={index} className="mint-row">
+                                <div className="mint-checkbox">
+                                    <input
+                                        type="radio"
+                                        name="activeMint"
+                                        checked={mint.mintUrl === activeMint}
+                                        onChange={() => handleMintSelection(mint.mintUrl)}
+                                    />
                                 </div>
-                                <div className="mint-balance-row">
-                                    <span className="mint-balance">
-                                        {getMintBalance(mint.mintUrl)}{" "}
-                                        {getMintBalance(mint.mintUrl) === 1 ? "sat" : "sats"}
-                                    </span>
+                                <div className="mint-info">
+                                    <div className="mint-name-row">
+                                        <span className="mint-name">{mint.name}</span>
+                                    </div>
+                                    <div className="mint-balance-row">
+                                        <span className="mint-balance">
+                                            {mintBalance} {mintBalance === 1 ? "sat" : "sats"}
+                                        </span>
+                                    </div>
                                 </div>
+                                <button className="delete-button" onClick={() => handleDeleteMint(mint.mintUrl)}>×</button>
                             </div>
-                            <button className="delete-button" onClick={() => handleDeleteMint(mint.mintUrl)}>×</button>
-                        </div>
-                    ))
+                        );
+                    })
                 ) : (
                     <p>No mints available</p>
                 )}
             </div>
         </div>
     );
+
 };
 
 export default Mints;

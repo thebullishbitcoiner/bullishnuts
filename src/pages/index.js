@@ -81,29 +81,6 @@ const Wallet = () => {
     }));
   };
 
-  // const handleSetMint = async () => {
-  //   const mint = new CashuMint(formData.mintUrl);
-
-  //   try {
-  //     const info = await mint.getInfo();
-  //     setDataOutput(info);
-  //     storeJSON(info);
-
-  //     const { keysets } = await mint.getKeys();
-
-  //     const satKeyset = keysets.find((k) => k.unit === "sat");
-  //     setWallet(new CashuWallet(mint, { keys: satKeyset }));
-
-  //     localStorage.setItem(
-  //       "mint",
-  //       JSON.stringify({ url: formData.mintUrl, keyset: satKeyset })
-  //     );
-  //   } catch (error) {
-  //     console.error(error);
-  //     setDataOutput({ error: "Failed to connect to mint", details: error });
-  //   }
-  // };
-
   const handleMintChange = async (newMint) => {
     try {
       const mint = new CashuMint(newMint);
@@ -129,7 +106,6 @@ const Wallet = () => {
       throw error; // Rethrow or handle the error as needed
     }
   };
-
 
   async function handleReceive_Lightning(amount) {
     //const quote = await wallet.getMintQuote(amount);
@@ -391,8 +367,8 @@ const Wallet = () => {
       const lightningAddress = 'npub1cashuq3y9av98ljm2y75z8cek39d8ux6jk3g6vafkl5j0uj4m5ks378fhq@npub.cash';
       const username = 'npub1cashuq3y9av98ljm2y75z8cek39d8ux6jk3g6vafkl5j0uj4m5ks378fhq';
       const domain = 'npub.cash';
-      const url = `https://${domain}/.well-known/lnurlp/${username}`;
-      const response = await fetch(url);
+      const callbackURL = `https://${domain}/.well-known/lnurlp/${username}`;
+      const response = await fetch(callbackURL);
 
       // Check if the request was successful
       if (!response.ok) {
@@ -423,7 +399,11 @@ const Wallet = () => {
       storeJSON(quote);
 
       const amount = quote.amount + quote.fee_reserve;
-      const proofs = getProofsByAmount(amount, wallet.keys.id);
+
+      const storedMintData = JSON.parse(localStorage.getItem("activeMint"));
+      const { url, keyset } = storedMintData;
+
+      const proofs = getProofsByAmount(amount, url, wallet.keys.id);
       if (proofs.length === 0) {
         waitingModal.style.display = 'none';
         showToast("Insufficient balance");
@@ -440,12 +420,12 @@ const Wallet = () => {
         makeDeezNutsRain(quote.amount);
         const message = quote.amount + ' sat(s) sent to ' + lightningAddress;
         showToast(message);
-        removeProofs(proofs);
+        removeProofs(proofs, url);
 
         var changeArray = { "change": change };
         storeJSON(changeArray);
 
-        addProofs(change);
+        addProofs(change, url);
       }
     } catch (error) {
       console.error(error);
@@ -454,6 +434,8 @@ const Wallet = () => {
   }
 
   async function payToPubkey(pubkey) {
+    let amount = 1;
+
     let sk = generateSecretKey() // `sk` is a Uint8Array
     let bullishNutsHex = 'c7617e02242f5853fe5b513d411f19b44ad3f0da95a28d33a9b7e927f255dd2d';
     //let bullishHex = 'a10260a2aa2f092d85e2c0b82e95eac5f8c60ea19c68e4898719b58ccaa23e3e'
@@ -483,23 +465,26 @@ const Wallet = () => {
       iv
     )
 
-    const proofs = getProofsByAmount(21, activeMint);
+    const storedMintData = JSON.parse(localStorage.getItem("activeMint"));
+    const { url, keyset } = storedMintData;
+
+    const proofs = getProofsByAmount(amount, url);
 
     if (proofs.length === 0) {
       showToast("Insufficient balance");
       return;
     }
 
-    const tempMint = new CashuMint(activeMint);
+    const tempMint = new CashuMint(url);
 
     try {
       const info = await tempMint.getInfo();
       const { keysets } = await tempMint.getKeys();
       const satKeyset = keysets.find((k) => k.unit === "sat");
-      let tempWallet = new CashuWallet(activeMint, { keys: satKeyset, unit: "sat" });
-      const { send, returnChange } = await tempWallet.send(21, proofs);
+      let tempWallet = new CashuWallet(url, { keys: satKeyset, unit: "sat" });
+      const { send, returnChange } = await tempWallet.send(amount, proofs);
       const encodedToken = getEncodedToken({
-        token: [{ proofs: send, mint: activeMint }],
+        token: [{ proofs: send, mint: url }],
       });
 
       let encryptedMessage = cipher.update(`${encodedToken}`, 'utf8', 'base64')
@@ -518,40 +503,12 @@ const Wallet = () => {
       const signedEvent = finalizeEvent(event, sk)
       await relay.publish(signedEvent)
 
-      removeProofs(proofs, activeMint);
+      removeProofs(proofs, url);
+
+      showToast("Succesfully sent nuts!");
     } catch (error) {
       console.error(error);
       setDataOutput({ error: true, details: error });
-    }
-  }
-
-  async function handleSend_LightningAddress_GetInvoice() {
-    try {
-      const sendAmount = document.getElementById('send_lightning_amount').value;
-      const invoice = fetchInvoiceFromCallback(callback, sendAmount);
-
-      const quote = await wallet.createMeltQuote(invoice);
-
-      setDataOutput([{ "got melt quote": quote }]);
-
-      const amount = quote.amount + quote.fee_reserve;
-      const proofs = getProofsByAmount(amount, wallet.keys.id);
-      if (proofs.length === 0) {
-        alert("Insufficient balance");
-        return;
-      }
-      const { isPaid, change } = await wallet.meltTokens(quote, proofs, {
-        keysetId: wallet.keys.id,
-      });
-      if (isPaid) {
-        closeSendLightningAddressModal();
-        alert('Invoice paid!');
-        removeProofs(proofs);
-        addProofs(change);
-      }
-    } catch (error) {
-      console.error(error);
-      setDataOutput({ error: "Failed to melt tokens", details: error });
     }
   }
 
@@ -1018,7 +975,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.71</small></h6>
+        <h6>bullishNuts <small>v0.0.72</small></h6>
         <br></br>
 
         <div className="section">
@@ -1038,6 +995,7 @@ const Wallet = () => {
 
         <div className="section">
           <Mints
+            balance={balance}
             onMintChange={handleMintChange}
           />
         </div>
