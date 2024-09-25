@@ -436,10 +436,23 @@ const Wallet = () => {
   async function payToPubkey(pubkey) {
     let amount = 1;
 
-    let sk = generateSecretKey() // `sk` is a Uint8Array
+    // Check if the secret key already exists in local storage
+    let storedSecretKey = localStorage.getItem('secretKey');
+    let secretKey;  // `secretKey` should be a Uint8Array
+
+    if (storedSecretKey) {
+      // If it exists, retrieve it from local storage and convert it back to Uint8Array
+      secretKey = new Uint8Array(JSON.parse(storedSecretKey));
+    } else {
+      // If it doesn't exist, generate a new secret key
+      secretKey = generateSecretKey();
+      // Save the secret key to local storage as a JSON string
+      localStorage.setItem('secretKey', JSON.stringify(Array.from(secretKey)));
+    }
+
     let bullishNutsHex = 'c7617e02242f5853fe5b513d411f19b44ad3f0da95a28d33a9b7e927f255dd2d';
     //let bullishHex = 'a10260a2aa2f092d85e2c0b82e95eac5f8c60ea19c68e4898719b58ccaa23e3e'
-    let pk = getPublicKey(sk) // `pk` is a hex string
+    let publicKey = getPublicKey(secretKey) // `publicKey` is a hex string
 
     const relay = await Relay.connect('wss://relay.0xchat.com')
     console.log(`connected to ${relay.url}`)
@@ -447,7 +460,7 @@ const Wallet = () => {
     relay.subscribe([
       {
         kinds: [4],
-        authors: [pk],
+        authors: [publicKey],
       },
     ], {
       onevent(event) {
@@ -455,7 +468,7 @@ const Wallet = () => {
       }
     })
 
-    let sharedPoint = secp.getSharedSecret(sk, '02' + bullishNutsHex)
+    let sharedPoint = secp.getSharedSecret(secretKey, '02' + bullishNutsHex)
     let sharedX = sharedPoint.slice(1, 33)
 
     let iv = crypto.randomFillSync(new Uint8Array(16))
@@ -487,12 +500,14 @@ const Wallet = () => {
         token: [{ proofs: send, mint: url }],
       });
 
+      sendEncryptedMessage("Have some nuts!");
+
       let encryptedMessage = cipher.update(`${encodedToken}`, 'utf8', 'base64')
       encryptedMessage += cipher.final('base64')
       let ivBase64 = Buffer.from(iv.buffer).toString('base64')
 
       let event = {
-        pubkey: [pk],
+        pubkey: [publicKey],
         created_at: Math.floor(Date.now() / 1000),
         kind: 4,
         tags: [['p', bullishNutsHex]],
@@ -500,16 +515,63 @@ const Wallet = () => {
       }
 
       // this assigns the pubkey, calculates the event id and signs the event in a single step
-      const signedEvent = finalizeEvent(event, sk)
+      const signedEvent = finalizeEvent(event, secretKey)
       await relay.publish(signedEvent)
 
       removeProofs(proofs, url);
-
       showToast("Succesfully sent nuts!");
     } catch (error) {
       console.error(error);
       setDataOutput({ error: true, details: error });
     }
+  }
+
+  async function sendEncryptedMessage(message){
+     // Check if the secret key already exists in local storage
+     let storedSecretKey = localStorage.getItem('secretKey');
+     let secretKey;  // `secretKey` should be a Uint8Array
+ 
+     if (storedSecretKey) {
+       // If it exists, retrieve it from local storage and convert it back to Uint8Array
+       secretKey = new Uint8Array(JSON.parse(storedSecretKey));
+     } else {
+       // If it doesn't exist, generate a new secret key
+       secretKey = generateSecretKey();
+       // Save the secret key to local storage as a JSON string
+       localStorage.setItem('secretKey', JSON.stringify(Array.from(secretKey)));
+     }
+
+    let bullishNutsHex = 'c7617e02242f5853fe5b513d411f19b44ad3f0da95a28d33a9b7e927f255dd2d';
+    let publicKey = getPublicKey(secretKey) // `publicKey` is a hex string
+
+    let sharedPoint = secp.getSharedSecret(secretKey, '02' + bullishNutsHex)
+    let sharedX = sharedPoint.slice(1, 33)
+
+    let iv = crypto.randomFillSync(new Uint8Array(16))
+    var cipher = crypto.createCipheriv(
+      'aes-256-cbc',
+      Buffer.from(sharedX),
+      iv
+    )
+
+    let encryptedMessage = cipher.update(`${message}`, 'utf8', 'base64')
+    encryptedMessage += cipher.final('base64')
+    let ivBase64 = Buffer.from(iv.buffer).toString('base64')
+
+    let event = {
+      pubkey: [publicKey],
+      created_at: Math.floor(Date.now() / 1000),
+      kind: 4,
+      tags: [['p', bullishNutsHex]],
+      content: encryptedMessage + '?iv=' + ivBase64
+    }
+
+    // this assigns the pubkey, calculates the event id and signs the event in a single step
+    const signedEvent = finalizeEvent(event, secretKey)
+
+    const relay = await Relay.connect('wss://relay.0xchat.com')
+    console.log(`connected to ${relay.url}`)
+    relay.publish(signedEvent)
   }
 
   async function fetchInvoiceFromCallback(callbackURL, amount) {
@@ -975,7 +1037,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.72</small></h6>
+        <h6>bullishNuts <small>v0.0.73</small></h6>
         <br></br>
 
         <div className="section">
