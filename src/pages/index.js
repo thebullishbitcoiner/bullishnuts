@@ -69,7 +69,9 @@ const Wallet = () => {
     }
     else {
       showMessageWithGif("bullishNuts is an ecash wallet that's in its early beta phase. " +
-        "Please use at your own risk. Make sure to add a mint before getting started and use a small amount of sats at a time!");
+        "Please use at your own risk with a small amount of sats at a time. " +
+        "Your first mint will be automatically added once you redeem a token. " +
+        "Send me a DM on Nostr if you need one. 🥜");
     }
   }, []);
 
@@ -434,7 +436,17 @@ const Wallet = () => {
   }
 
   async function payToPubkey(pubkey) {
-    let amount = 1;
+    let amount = await showNumericInputModal();
+    closeNumericInputModal();
+
+    const storedMintData = JSON.parse(localStorage.getItem("activeMint"));
+    const { url, keyset } = storedMintData;
+
+    const proofs = getProofsByAmount(amount, url);
+    if (proofs.length === 0) {
+      showToast("Insufficient balance");
+      return;
+    }
 
     // Check if the secret key already exists in local storage
     let storedSecretKey = localStorage.getItem('secretKey');
@@ -478,16 +490,6 @@ const Wallet = () => {
       iv
     )
 
-    const storedMintData = JSON.parse(localStorage.getItem("activeMint"));
-    const { url, keyset } = storedMintData;
-
-    const proofs = getProofsByAmount(amount, url);
-
-    if (proofs.length === 0) {
-      showToast("Insufficient balance");
-      return;
-    }
-
     const tempMint = new CashuMint(url);
 
     try {
@@ -526,20 +528,20 @@ const Wallet = () => {
     }
   }
 
-  async function sendEncryptedMessage(message){
-     // Check if the secret key already exists in local storage
-     let storedSecretKey = localStorage.getItem('secretKey');
-     let secretKey;  // `secretKey` should be a Uint8Array
- 
-     if (storedSecretKey) {
-       // If it exists, retrieve it from local storage and convert it back to Uint8Array
-       secretKey = new Uint8Array(JSON.parse(storedSecretKey));
-     } else {
-       // If it doesn't exist, generate a new secret key
-       secretKey = generateSecretKey();
-       // Save the secret key to local storage as a JSON string
-       localStorage.setItem('secretKey', JSON.stringify(Array.from(secretKey)));
-     }
+  async function sendEncryptedMessage(message) {
+    // Check if the secret key already exists in local storage
+    let storedSecretKey = localStorage.getItem('secretKey');
+    let secretKey;  // `secretKey` should be a Uint8Array
+
+    if (storedSecretKey) {
+      // If it exists, retrieve it from local storage and convert it back to Uint8Array
+      secretKey = new Uint8Array(JSON.parse(storedSecretKey));
+    } else {
+      // If it doesn't exist, generate a new secret key
+      secretKey = generateSecretKey();
+      // Save the secret key to local storage as a JSON string
+      localStorage.setItem('secretKey', JSON.stringify(Array.from(secretKey)));
+    }
 
     let bullishNutsHex = 'c7617e02242f5853fe5b513d411f19b44ad3f0da95a28d33a9b7e927f255dd2d';
     let publicKey = getPublicKey(secretKey) // `publicKey` is a hex string
@@ -572,7 +574,7 @@ const Wallet = () => {
     const relay = await Relay.connect('wss://relay.0xchat.com')
     console.log(`connected to ${relay.url}`)
     relay.publish(signedEvent)
-  }
+  } // End sendEncryptedMessage()
 
   async function fetchInvoiceFromCallback(callbackURL, amount) {
     const url = new URL(callbackURL);
@@ -733,11 +735,6 @@ const Wallet = () => {
     modal.style.display = 'none';
   }
 
-  // function showSendLightningAddressModal() {
-  //   const modal = document.getElementById('send_lightning_address_modal');
-  //   modal.style.display = 'block';
-  // }
-
   function showSendLightningAddressModal() {
     return new Promise((resolve) => {
       const modal = document.getElementById('send_lightning_address_modal');
@@ -756,6 +753,27 @@ const Wallet = () => {
   function closeSendLightningAddressModal() {
     const modal = document.getElementById('send_lightning_address_modal');
     document.getElementById('send_lightning_amount').value = '';
+    modal.style.display = 'none';
+  }
+
+  function showNumericInputModal() {
+    return new Promise((resolve) => {
+      const modal = document.getElementById('numeric_input_modal');
+      const input = document.getElementById('numeric_input_amount');
+      const submitButton = document.getElementById('numeric_input_submit');
+
+      modal.style.display = 'block';
+
+      submitButton.onclick = () => {
+        const value = input.value;
+        resolve(value);
+      };
+    });
+  }
+
+  function closeNumericInputModal() {
+    const modal = document.getElementById('numeric_input_modal');
+    document.getElementById('numeric_input_amount').value = '';
     modal.style.display = 'none';
   }
 
@@ -1022,8 +1040,9 @@ const Wallet = () => {
         {/* Message modal */}
         <div id="message_modal" className="modal">
           <div className="modal-content">
+            <span className="close-button" onClick={closeMessageModal}>&times;</span>
             <p id="message"></p>
-            <button className="styled-button" onClick={closeMessageModal}>OK</button>
+            <button className="styled-button" onClick={closeMessageModal}>LFG</button>
           </div>
         </div>
 
@@ -1037,7 +1056,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.73</small></h6>
+        <h6>bullishNuts <small>v0.0.74</small></h6>
         <br></br>
 
         <div className="section">
@@ -1097,6 +1116,16 @@ const Wallet = () => {
             <label htmlFor="send_lightning_amount">Enter amount of sats:</label>
             <input type="number" id="send_lightning_amount" inputMode="decimal" min="1" />
             <button className="styled-button" id="send_lightning_submit">Send</button>
+          </div>
+        </div>
+
+        {/* Numeric input modal */}
+        <div id="numeric_input_modal" className="modal">
+          <div className="modal-content">
+            <span className="close-button" onClick={closeNumericInputModal}>&times;</span>
+            <label htmlFor="numeric_input_amount">Enter amount:</label>
+            <input type="number" id="numeric_input_amount" inputMode="decimal" min="1" />
+            <button className="styled-button" id="numeric_input_submit">OK</button>
           </div>
         </div>
 

@@ -41,6 +41,17 @@ const Mints = ({ onMintChange, balance }) => {
 
             const mintNamesWithInfo = await Promise.all(mintNamesPromises);
             setMintNames(mintNamesWithInfo);
+
+            // Check if activeMint is already set in localStorage, otherwise set the first mint as active
+            const storedActiveMint = JSON.parse(localStorage.getItem("activeMint"));
+            if (!storedActiveMint && mintNamesWithInfo.length > 0) {
+                const firstMint = mintNamesWithInfo[0].mintUrl;
+                setLocalActiveMint(firstMint);
+                localStorage.setItem("activeMint", JSON.stringify({ url: firstMint }));
+                onMintChange(firstMint); // Trigger the mint change in the parent component
+            } else if (storedActiveMint) {
+                setLocalActiveMint(storedActiveMint.url);
+            }
         }
     };
 
@@ -80,35 +91,34 @@ const Mints = ({ onMintChange, balance }) => {
             showToast("Cannot delete mint with a non-zero balance.");
             return;
         }
-    
+
         // Delete from proofsByMint and mintInfo
         const storedProofsByMint = JSON.parse(localStorage.getItem('proofsByMint')) || {};
         const storedMintInfo = JSON.parse(localStorage.getItem('mintInfo')) || {};
-    
+
         delete storedProofsByMint[mintUrl]; // Remove the mint from proofsByMint
         delete storedMintInfo[mintUrl];     // Remove the mint from mintInfo
-    
+
         // Update localStorage
         localStorage.setItem('proofsByMint', JSON.stringify(storedProofsByMint));
         localStorage.setItem('mintInfo', JSON.stringify(storedMintInfo));
-    
+
         // Remove the mint from the displayed list
         setMintNames((prev) => {
             const updatedMints = prev.filter((mint) => mint.mintUrl !== mintUrl);
-    
+
             // If the deleted mint was the active one, set the next mint as active
             if (mintUrl === activeMint) {
                 const nextMint = updatedMints.length > 0 ? updatedMints[0].mintUrl : null; // Get the next mint or null if none
                 setLocalActiveMint(nextMint); // Set the next mint as active
                 onMintChange(nextMint); // Notify index.js
             }
-    
+
             return updatedMints; // Return the updated list of mints
         });
-    
+
         showToast("Mint deleted successfully.");
     };
-    
 
     function showToast(message, duration = 4000) {
         const toast = document.getElementById('toast');
