@@ -139,7 +139,7 @@ const Wallet = () => {
         addProofs(proofs, wallet.mint.mintUrl);
 
         closeInvoiceModal();
-        showToast(`${amount} sat(s) received`);
+        showToast(`${amount} sat${amount !== 1 ? 's' : ''} received`);
 
         clearInterval(intervalId);
       } catch (error) {
@@ -1061,7 +1061,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.75</small></h6>
+        <h6>bullishNuts <small>v0.0.76</small></h6>
         <br></br>
 
         <div className="section">

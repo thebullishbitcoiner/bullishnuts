@@ -115,30 +115,42 @@ const Mints = ({ onMintChange }) => {
         showToast("Mint deleted successfully.");
     };
 
-    const handleAddMint = () => {
+    const handleAddMint = async () => {
         if (!newMintURL || !newMintURL.startsWith("https://")) {
             showToast("Please enter a valid mint URL.");
             return;
         }
-
-        // Update proofsByMint and mintInfo in localStorage
-        const storedProofsByMint = JSON.parse(localStorage.getItem("proofsByMint")) || {};
-        const storedMintInfo = JSON.parse(localStorage.getItem("mintInfo")) || {};
-
-        // Add new mint entry with empty proofs array and default name to mintInfo
-        storedProofsByMint[newMintURL] = [];
-        storedMintInfo[newMintURL] = { name: newMintURL }; // Placeholder name
-
-        // Save the updated data to localStorage
-        localStorage.setItem("proofsByMint", JSON.stringify(storedProofsByMint));
-        localStorage.setItem("mintInfo", JSON.stringify(storedMintInfo));
-
-        // Re-fetch mint names and hide the modal
-        fetchMintNames();
-        setShowModal(false);
-        setNewMintURL("");
-        showToast("Mint added successfully.");
+    
+        try {
+            // Update proofsByMint and mintInfo in localStorage
+            const storedProofsByMint = JSON.parse(localStorage.getItem("proofsByMint")) || {};
+            const storedMintInfo = JSON.parse(localStorage.getItem("mintInfo")) || {};
+    
+            // Add new mint entry with empty proofs array
+            storedProofsByMint[newMintURL] = [];
+    
+            // Get mint info 
+            const mint = new CashuMint(newMintURL);
+            const info = await mint.getInfo();
+    
+            // Add fetched mint info to mintInfo
+            storedMintInfo[newMintURL] = info;
+    
+            // Save the updated data to localStorage
+            localStorage.setItem("proofsByMint", JSON.stringify(storedProofsByMint));
+            localStorage.setItem("mintInfo", JSON.stringify(storedMintInfo));
+    
+            // Re-fetch mint names and hide the modal
+            await fetchMintNames(); // Ensure state updates after data is stored
+            setShowModal(false);
+            setNewMintURL("");
+            showToast("Mint added successfully.");
+        } catch (error) {
+            console.error("Failed to add mint:", error);
+            showToast("Failed to add mint. Please check the URL and try again.");
+        }
     };
+    
 
     function showToast(message, duration = 4000) {
         const toast = document.getElementById("toast");
