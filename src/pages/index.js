@@ -110,6 +110,10 @@ const Wallet = () => {
   };
 
   async function handleReceive_Lightning(amount) {
+    if (wallet === null) {
+      showToast("Mint needs to be set");
+      return;
+    }
     //const quote = await wallet.getMintQuote(amount);
     const quote = await wallet.createMintQuote(amount);
 
@@ -132,7 +136,7 @@ const Wallet = () => {
         storeJSON(proofsArray);
 
         //Add new proofs to existing ones
-        addProofs(proofs);
+        addProofs(proofs, wallet.mint.mintUrl);
 
         closeInvoiceModal();
         showToast(`${amount} sat(s) received`);
@@ -984,7 +988,8 @@ const Wallet = () => {
   }
 
   async function checkProofs() {
-    const proofs = getAllProofs();
+    const storedMintData = JSON.parse(localStorage.getItem("activeMint"));
+    const proofs = getAllProofs(storedMintData.url);
     if (proofs.length === 0) {
       showToast("No proofs to check");
       return;
@@ -1056,7 +1061,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.74</small></h6>
+        <h6>bullishNuts <small>v0.0.75</small></h6>
         <br></br>
 
         <div className="section">
@@ -1178,9 +1183,9 @@ const Wallet = () => {
         </div>
 
         <div className="section">
-          <h2>Zap Deez Nuts</h2>
+          <h2>Donate</h2>
           <div className="button-container">
-            <button className="styled-button" onClick={zapDeezNuts} >SMASH DONATE ⚡</button>
+            <button className="styled-button" onClick={zapDeezNuts} >ZAP DEEZ NUTS ⚡</button>
           </div>
           <div className="button-container">
             <button className="styled-button" onClick={payToPubkey} >SEND NUTS 🥜</button>

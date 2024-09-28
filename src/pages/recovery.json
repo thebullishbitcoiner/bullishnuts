@@ -1,0 +1,265 @@
+{
+    "2024-09-27 10:41:04": [
+        {
+            "amount": 2,
+            "C": "02497d3543252e250bb905c55e62c8615b66d96a23f9686d7b55c8eae8027dc16c",
+            "id": "0011df4cee1cc50f",
+            "secret": "759c9516b4f4a352af7e1efa9be27ec64b11b5e97f67cfb46cb366bd5f8624eb"
+        }
+    ],
+    "2024-09-27 10:48:17": "cashuAeyJ0b2tlbiI6W3sicHJvb2ZzIjpbeyJhbW91bnQiOjIsIkMiOiIwMjQ5N2QzNTQzMjUyZTI1MGJiOTA1YzU1ZTYyYzg2MTViNjZkOTZhMjNmOTY4NmQ3YjU1YzhlYWU4MDI3ZGMxNmMiLCJpZCI6IjAwMTFkZjRjZWUxY2M1MGYiLCJzZWNyZXQiOiI3NTljOTUxNmI0ZjRhMzUyYWY3ZTFlZmE5YmUyN2VjNjRiMTFiNWU5N2Y2N2NmYjQ2Y2IzNjZiZDVmODYyNGViIn1dLCJtaW50IjoiaHR0cHM6Ly9taW50Lmxud2FsbGV0LmFwcCJ9XX0",
+    "2024-09-27 11:03:24": {
+        "name": "Minibits mint",
+        "pubkey": "023cf092fb60e21e8c367817c2c9d7471d796f6b75dc259e1a3320d5e53d489554",
+        "version": "Nutshell/0.16.0",
+        "description": "Minibits wallet mint. Minibits is an active research project in BETA, use at your own risk.",
+        "description_long": "Do not use with large amounts of ecash. Minibits mint is operated on a best-effort basis and without any guarantees.",
+        "contact": [
+            {
+                "method": "email",
+                "info": "support@minibits.cash"
+            },
+            {
+                "method": "twitter",
+                "info": "@MinibitsCash"
+            },
+            {
+                "method": "nostr",
+                "info": "npub1kvaln6tm0re4d99q9e4ma788wpvnw0jzkz595cljtfgwhldd75xsj9tkzv"
+            }
+        ],
+        "motd": "Message to users",
+        "nuts": {
+            "4": {
+                "methods": [
+                    {
+                        "method": "bolt11",
+                        "unit": "sat",
+                        "min_amount": 0,
+                        "max_amount": 1000000
+                    }
+                ],
+                "disabled": false
+            },
+            "5": {
+                "methods": [
+                    {
+                        "method": "bolt11",
+                        "unit": "sat",
+                        "min_amount": 0,
+                        "max_amount": 1000000
+                    }
+                ],
+                "disabled": false
+            },
+            "7": {
+                "supported": true
+            },
+            "8": {
+                "supported": true
+            },
+            "9": {
+                "supported": true
+            },
+            "10": {
+                "supported": true
+            },
+            "11": {
+                "supported": true
+            },
+            "12": {
+                "supported": true
+            },
+            "17": {
+                "supported": [
+                    {
+                        "method": "bolt11",
+                        "unit": "sat",
+                        "commands": [
+                            "bolt11_melt_quote",
+                            "proof_state",
+                            "bolt11_mint_quote"
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    "2024-09-27 11:04:42": {
+        "quote": "LsQ9n7ZolbQ4twES9XLisOBkeQhdiSfkaunCc7wb",
+        "request": "lnbc20n1pn0djvtpp5e0u35ye4c7katpm8g6rq86stwqw73ew58cuxw9w28ve5yccg05csdqqcqzzsxqyz5vqrzjqfjkk74ladqxtjsm2gcs4am82rnkjuvt9vxlec0lfurluh808sllsrg64vqqfvcqqqqqqqqqqqqq86qq2qsp59y4k5g7je0a7lcxn9yf68ph98gxzhw94wrml2hsk5h83gxqhwudq9qxpqysgqzz899qyl9rqrf9c702spnf9jp6g4xpv768qflal5ye4u3yqnnq49z4npq58m3zaa224wveqjuym8d6yxyjwyqxg7dha4az2z07ft4rqqvepel4",
+        "paid": false,
+        "state": "UNPAID",
+        "expiry": 1727535883
+    },
+    "2024-09-27 11:04:47": {
+        "quote": "_nYsA9aFlqup0ADBfay-i83uWnALXvoZktShpMaJ",
+        "request": "lnbc200n1pn0djvspp5q4dwew0mv59nhr6ntxq9gzfwhspkdcl80fc8jh8ews7y0k2e9thqdqqcqzzsxqyz5vqrzjqfjkk74ladqxtjsm2gcs4am82rnkjuvt9vxlec0lfurluh808sllsrg64vqqfvcqqqqqqqqqqqqq86qq2qsp5a2xw6pq3kj3dg0r27jdxucnqm04xrrxvkmakluvzvg3pcemn3crq9qxpqysgqtk0gqlvj3pfuz9uzd77jnshxgrew8cgxkakfmuy7926y9myx3fyp6272nvg5zt0tus9k7yz7908vk3ymtx9k7awn25gastcx6nklejgp8wcx6e",
+        "paid": false,
+        "state": "UNPAID",
+        "expiry": 1727535888
+    },
+    "2024-09-27 11:04:59": {
+        "proofs": [
+            {
+                "amount": 4,
+                "C": "032235ece8429926e19fcd1bbb5d287294061aabec8834e5885c0c20eb3b09d5f6",
+                "id": "0011df4cee1cc50f",
+                "secret": "8f8c15d0a417eaeec0ef603ac3188480e551ba574e2b7a5bdb9065b8899afc04"
+            },
+            {
+                "amount": 16,
+                "C": "0263cde789c4aa55394560b6cad437daa08bb2c0bc7f8e6e5b6d0a4c8edec89e6f",
+                "id": "0011df4cee1cc50f",
+                "secret": "16c6ed3e2e606b70397e4798d88624efb09eac28013a13f7ffa11857afa94f32"
+            }
+        ]
+    },
+    "2024-09-27 11:05:29": {
+        "quote": "fT_tkJP-5rbxdHMr9oakd34_8ILKGQTTbmiOUdE_",
+        "request": "lnbc500n1pn0djd6pp5ynksvnuj7xxjtrx8d3yxe44n2hacq4k7u6qztdtn48vjrlqlk66sdqqcqzzsxqyz5vqrzjqfjkk74ladqxtjsm2gcs4am82rnkjuvt9vxlec0lfurluh808sllsrg64vqqfvcqqqqqqqqqqqqq86qq2qsp5r7mtefk444tdaml9p5z4pk4xjjhuyne7pwvy4qzgag2cah5zrwkq9qxpqysgq32uy63r46lv99uguxl9gjqmzfgs7jmj3d2vn7jflccutgg0qgfgr3hh4qamzwwax3dsn95redu05vjepvu60t9d269k4gdp9a7v4ekgp5msgwm",
+        "paid": false,
+        "state": "UNPAID",
+        "expiry": 1727535930
+    },
+    "2024-09-27 11:05:41": {
+        "proofs": [
+            {
+                "amount": 2,
+                "C": "02a7061b60afb62bfbe5b3d9356a504ce3399e5c0b9b6b46bfa5261e5043f061a4",
+                "id": "0011df4cee1cc50f",
+                "secret": "336d9816ab6f5bee6f3a8f5fe2e4170eb096e2f6f351c4d7f00eb4aa2e94ad09"
+            },
+            {
+                "amount": 16,
+                "C": "023a1975f0968baa0d1a11a468d286f3653030d24ab48d0394b9e3e88f0c464321",
+                "id": "0011df4cee1cc50f",
+                "secret": "f0aa0ad55d660924feaf4e0c8a248127e1f2f5a12dcf8a3f1672896988b99a68"
+            },
+            {
+                "amount": 32,
+                "C": "030f76235119d84d8453b00ecacfa6661aad45a2a3c3683f85fd13e86ee09c0fa2",
+                "id": "0011df4cee1cc50f",
+                "secret": "6bc2dae7caee986a474136f957c54564393fb16f5d841ed82d6e6ccfefe0fec3"
+            }
+        ]
+    },
+    "2024-09-27 11:07:41": {
+        "quote": "jKR_cmegbFxWl2cs9lTh702IW4b9kV08Yp__EAm3",
+        "amount": 21,
+        "fee_reserve": 1,
+        "paid": false,
+        "state": "UNPAID",
+        "expiry": 1727536061,
+        "payment_preimage": null,
+        "change": null
+    },
+    "2024-09-27 11:08:25": {
+        "quote": "5HC8KW6gPO1h4PLKY8JZ9eWK7Mpxa2dlU7pgezaE",
+        "request": "lnbc200n1pn0djn2pp5p3l9rjp6f6vh7add8gm2ejcnrk4k3sv3w8cfxlj9q7ptj87qz53sdqqcqzzsxqyz5vqrzjqfjkk74ladqxtjsm2gcs4am82rnkjuvt9vxlec0lfurluh808sllsrg64vqqfvcqqqqqqqqqqqqq86qq2qsp5936aufn9md026u4cueudp0uav2w5pvl6t6lx92puduw9vw5qj35s9qxpqysgqkt8jddj9yrfrr4k98sj7jkg67r5f92u320qdvuzvtuxumru2j9usczveye5je4nlz0eznyx4g45z2kwk0wxdrlk2c3h2y3cp5k988uqpdfpy0p",
+        "paid": false,
+        "state": "UNPAID",
+        "expiry": 1727536106
+    },
+    "2024-09-27 11:08:36": {
+        "proofs": [
+            {
+                "amount": 4,
+                "C": "020490283c2b8cbf8d705e3e97da9d8d6362b38ca84dfbd4d71627337ec06eaa12",
+                "id": "0011df4cee1cc50f",
+                "secret": "f0c1aaa7b3f90422fdf6de2a37fc7652fb6ce64bf29bddbc398b022ed840250f"
+            },
+            {
+                "amount": 16,
+                "C": "030e46ea19837daaa74214071231dfe13d66a4c72d6748f10fe125108b1ed0e460",
+                "id": "0011df4cee1cc50f",
+                "secret": "40e9dafd28ffce116778907ab6920c11bd7415824b2a0deec0dcc2126b149042"
+            }
+        ]
+    },
+    "2024-09-27 13:29:06": {
+        "name": "Minibits mint",
+        "pubkey": "023cf092fb60e21e8c367817c2c9d7471d796f6b75dc259e1a3320d5e53d489554",
+        "version": "Nutshell/0.16.0",
+        "description": "Minibits wallet mint. Minibits is an active research project in BETA, use at your own risk.",
+        "description_long": "Do not use with large amounts of ecash. Minibits mint is operated on a best-effort basis and without any guarantees.",
+        "contact": [
+            {
+                "method": "email",
+                "info": "support@minibits.cash"
+            },
+            {
+                "method": "twitter",
+                "info": "@MinibitsCash"
+            },
+            {
+                "method": "nostr",
+                "info": "npub1kvaln6tm0re4d99q9e4ma788wpvnw0jzkz595cljtfgwhldd75xsj9tkzv"
+            }
+        ],
+        "motd": "Message to users",
+        "nuts": {
+            "4": {
+                "methods": [
+                    {
+                        "method": "bolt11",
+                        "unit": "sat",
+                        "min_amount": 0,
+                        "max_amount": 1000000
+                    }
+                ],
+                "disabled": false
+            },
+            "5": {
+                "methods": [
+                    {
+                        "method": "bolt11",
+                        "unit": "sat",
+                        "min_amount": 0,
+                        "max_amount": 1000000
+                    }
+                ],
+                "disabled": false
+            },
+            "7": {
+                "supported": true
+            },
+            "8": {
+                "supported": true
+            },
+            "9": {
+                "supported": true
+            },
+            "10": {
+                "supported": true
+            },
+            "11": {
+                "supported": true
+            },
+            "12": {
+                "supported": true
+            },
+            "17": {
+                "supported": [
+                    {
+                        "method": "bolt11",
+                        "unit": "sat",
+                        "commands": [
+                            "bolt11_melt_quote",
+                            "proof_state",
+                            "bolt11_mint_quote"
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    "2024-09-27 13:32:55": [
+        {
+            "amount": 2,
+            "C": "038cf7d73141f73d5fa56824e4483c464926f37bd871fa25296fcbd2c155e9a217",
+            "id": "0011df4cee1cc50f",
+            "secret": "39c5e4562cd36c44c44a9df75dac27b6fb0586d3580b4d0ab35df89221cd690f"
+        }
+    ]
+}

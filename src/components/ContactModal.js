@@ -26,7 +26,7 @@ const ContactModal = ({ onClose, onSave }) => {
           <label htmlFor="contact_npub">Npub:</label>
           <input type="text" id="contact_npub" value={npub} onChange={(e) => setNpub(e.target.value)} />
         </div>
-        <button className="save-button" onClick={handleSave}>Save</button>
+        <button className="styled-button" onClick={handleSave}>Save</button>
       </div>
     </div>
   );
