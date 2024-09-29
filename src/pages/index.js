@@ -253,9 +253,9 @@ const Wallet = () => {
   async function handleSend_Lightning() {
     try {
       const input = document.getElementById('send_lightning_input').value;
-      const isInvoice = input.startsWith("lnbc1");
+      const isInvoiceBolt11 = input.startsWith("lnbc");
       var invoice = "";
-      if (isInvoice) {
+      if (isInvoiceBolt11) {
         invoice = input;
 
         const quote = await wallet.createMeltQuote(invoice);
@@ -264,23 +264,24 @@ const Wallet = () => {
         storeJSON(quote);
 
         const amount = quote.amount + quote.fee_reserve;
-        const proofs = getProofsByAmount(amount, wallet.keys.id);
+        const proofs = getProofsByAmount(amount, wallet.mint.mintUrl, wallet.keys.id);
         if (proofs.length === 0) {
           showToast("Insufficient balance");
           return;
         }
-        const { isPaid, change } = await wallet.meltTokens(quote, proofs, {
+        const { isPaid, preimage, change } = await wallet.meltTokens(quote, proofs, {
           keysetId: wallet.keys.id,
         });
         if (isPaid) {
-          closeSendLightningModal();
+          setIsLightningModalOpen(false);
+          //closeSendLightningModal();
           showToast('Invoice paid!');
-          removeProofs(proofs);
+          removeProofs(proofs, wallet.mint.mintUrl);
 
           var changeArray = { "change": change };
           storeJSON(changeArray);
 
-          addProofs(change);
+          addProofs(change, wallet.mint.mintUrl);
         }
       }
       else { //It must be a Lightning address (but we will check)
@@ -333,7 +334,7 @@ const Wallet = () => {
       storeJSON(quote);
 
       const amount = quote.amount + quote.fee_reserve;
-      const proofs = getProofsByAmount(amount, wallet.keys.id);
+      const proofs = getProofsByAmount(amount, wallet.mint.mintUrl, wallet.keys.id);
       if (proofs.length === 0) {
         waitingModal.style.display = 'none';
         showToast("Insufficient balance");
@@ -341,7 +342,7 @@ const Wallet = () => {
       }
 
       document.getElementById('waiting_message').textContent = "Paying invoice...";
-      const { isPaid, change } = await wallet.meltTokens(quote, proofs, {
+      const { isPaid, preimage, change } = await wallet.meltTokens(quote, proofs, {
         keysetId: wallet.keys.id,
       });
 
@@ -349,12 +350,12 @@ const Wallet = () => {
         waitingModal.style.display = 'none';
         const message = quote.amount + ' sat(s) sent to ' + input;
         showToast(message);
-        removeProofs(proofs);
+        removeProofs(proofs, wallet.mint.mintUrl);
 
         var changeArray = { "change": change };
         storeJSON(changeArray);
 
-        addProofs(change);
+        addProofs(change, wallet.mint.mintUrl);
       }
     } catch (error) {
       console.error(error);
@@ -996,7 +997,7 @@ const Wallet = () => {
     }
     const spentProofs = await wallet.checkProofsSpent(proofs);
     if (spentProofs.length > 0) {
-      removeProofs(spentProofs);
+      removeProofs(spentProofs, storedMintData.url);
     }
     showToast(`Deleted ${spentProofs.length} proofs`);
   }
@@ -1061,7 +1062,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.76</small></h6>
+        <h6>bullishNuts <small>v0.0.77</small></h6>
         <br></br>
 
         <div className="section">
