@@ -333,7 +333,7 @@ const Wallet = () => {
           const timer = setTimeout(() => {
             reject(new Error(`Operation timed out after ${timeout} ms`));
           }, timeout);
-      
+
           promise
             .then((value) => {
               clearTimeout(timer);
@@ -345,7 +345,7 @@ const Wallet = () => {
             });
         });
       }
-      
+
 
       closeSendLightningAddressModal();
       const waitingModal = document.getElementById('waiting_modal');
@@ -380,8 +380,6 @@ const Wallet = () => {
         return;
       }
 
-
-
       document.getElementById('waiting_message').textContent = "Paying invoice...";
 
       try {
@@ -395,6 +393,18 @@ const Wallet = () => {
         console.log("Invoice paid:", isPaid);
         console.log("Preimage:", preimage);
         console.log("Change:", change);
+
+        if (isPaid) {
+          waitingModal.style.display = 'none';
+          const message = quote.amount + ' sat(s) sent to ' + input;
+          showToast(message);
+          removeProofs(proofs, wallet.mint.mintUrl);
+
+          var changeArray = { "change": change };
+          storeJSON(changeArray);
+
+          addProofs(change, wallet.mint.mintUrl);
+        }
       } catch (error) {
         // Handle error, whether it's a timeout or another issue
         console.error("Error occurred:", error.message);
@@ -403,18 +413,6 @@ const Wallet = () => {
         } else {
           showToast(`Payment failed: ${error.message}`);
         }
-      }
-
-      if (isPaid) {
-        waitingModal.style.display = 'none';
-        const message = quote.amount + ' sat(s) sent to ' + input;
-        showToast(message);
-        removeProofs(proofs, wallet.mint.mintUrl);
-
-        var changeArray = { "change": change };
-        storeJSON(changeArray);
-
-        addProofs(change, wallet.mint.mintUrl);
       }
     } catch (error) {
       console.error(error);
@@ -1122,7 +1120,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.79</small></h6>
+        <h6>bullishNuts <small>v0.0.80</small></h6>
         <br></br>
 
         <div className="section">
