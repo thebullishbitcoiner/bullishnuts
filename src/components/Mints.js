@@ -14,21 +14,25 @@ const Mints = ({ onMintChange }) => {
         if (typeof window !== "undefined" && localStorage.getItem("proofsByMint")) {
             const storedProofsByMint = JSON.parse(localStorage.getItem("proofsByMint")) || {};
             const mintURLs = Object.keys(storedProofsByMint);
-
+    
+            // Retrieve the activeMint from localStorage, if any
+            const storedActiveMint = JSON.parse(localStorage.getItem("activeMint"));
+            let localActiveMint = storedActiveMint ? storedActiveMint.url : null;
+    
             const mintNamesPromises = mintURLs.map(async (mintUrl) => {
                 try {
                     const storedMintInfo = JSON.parse(localStorage.getItem("mintInfo")) || {};
-
+    
                     // If the mint info for this URL is not in localStorage, fetch and store it
                     if (!storedMintInfo[mintUrl]) {
                         const mint = new CashuMint(mintUrl);
                         const info = await mint.getInfo();
-
+    
                         // Store the fetched mint info in localStorage
                         storedMintInfo[mintUrl] = info;
                         localStorage.setItem("mintInfo", JSON.stringify(storedMintInfo));
                     }
-
+    
                     // Use the info from localStorage
                     const mintInfo = storedMintInfo[mintUrl];
                     return { mintUrl, name: mintInfo.name || mintUrl }; // Fallback to URL if no name is provided
@@ -37,12 +41,12 @@ const Mints = ({ onMintChange }) => {
                     return { mintUrl, name: mintUrl }; // Fallback in case of an error
                 }
             });
-
+    
             const mintNamesWithInfo = await Promise.all(mintNamesPromises);
             setMintNames(mintNamesWithInfo);
-
-            // Set the first mint as active if there's no active mint set yet
-            if (mintNamesWithInfo.length > 0 && !activeMint) {
+    
+            // Set the first mint as active if there's no active mint set yet in localStorage
+            if (mintNamesWithInfo.length > 0 && !localActiveMint) {
                 const firstMint = mintNamesWithInfo[0].mintUrl;
                 setLocalActiveMint(firstMint);
                 onMintChange(firstMint);
@@ -50,6 +54,7 @@ const Mints = ({ onMintChange }) => {
             }
         }
     };
+    
 
     // Fetch mint names and activeMint on mount
     useEffect(() => {

@@ -318,250 +318,242 @@ const Wallet = () => {
       const sats = await showSendLightningAddressModal();
       const millisats = sats * 1000;
 
-      //Wait to get invoice using callback URL
-      const invoice = await fetchInvoiceFromCallback(callback, millisats);
+      // Function to add a timeout to any promise
+      const withTimeout = (promise, timeoutDuration) => {
+        return Promise.race([
+          promise,
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Operation timed out")), timeoutDuration)
+          ),
+        ]);
+      };
 
-      //Display waiting modal with message
+      closeSendLightningAddressModal();
       const waitingModal = document.getElementById('waiting_modal');
       document.getElementById('waiting_message').textContent = "Fetching invoice...";
-      closeSendLightningAddressModal();
       waitingModal.style.display = 'block';
-
-      //Wait to get melt quote from mint
-      const quote = await wallet.createMeltQuote(invoice);
-      document.getElementById('waiting_message').textContent = "Getting melt quote...";
-      setDataOutput([{ "got melt quote": quote }]);
-      storeJSON(quote);
-
-      const amount = quote.amount + quote.fee_reserve;
-      const proofs = getProofsByAmount(amount, wallet.mint.mintUrl, wallet.keys.id);
-      if (proofs.length === 0) {
-        waitingModal.style.display = 'none';
-        showToast("Insufficient balance");
-        return;
-      }
-
-      document.getElementById('waiting_message').textContent = "Paying invoice...";
-      const { isPaid, preimage, change } = await wallet.meltTokens(quote, proofs, {
-        keysetId: wallet.keys.id,
-      });
-
-      if (isPaid) {
-        waitingModal.style.display = 'none';
-        const message = quote.amount + ' sat(s) sent to ' + input;
-        showToast(message);
-        removeProofs(proofs, wallet.mint.mintUrl);
-
-        var changeArray = { "change": change };
-        storeJSON(changeArray);
-
-        addProofs(change, wallet.mint.mintUrl);
-      }
-    } catch (error) {
-      console.error(error);
-      showToast(error.message);
-    }
-  }
-
-  async function zapDeezNuts() {
-    try {
-
-      if (wallet === null) {
-        showToast("Mint needs to be set");
-        return;
-      }
-
-      const lightningAddress = 'npub1cashuq3y9av98ljm2y75z8cek39d8ux6jk3g6vafkl5j0uj4m5ks378fhq@npub.cash';
-      const username = 'npub1cashuq3y9av98ljm2y75z8cek39d8ux6jk3g6vafkl5j0uj4m5ks378fhq';
-      const domain = 'npub.cash';
-      const callbackURL = `https://${domain}/.well-known/lnurlp/${username}`;
-      const response = await fetch(callbackURL);
-
-      // Check if the request was successful
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-        return;
-      }
-
-      const data = await response.json();
-      const callback = data.callback;
-
-      //Wait to get amount of sats from user
-      const sats = await showSendLightningAddressModal();
-      const millisats = sats * 1000;
 
       //Wait to get invoice using callback URL
-      const invoice = await fetchInvoiceFromCallback(callback, millisats);
+      let invoice = await withTimeout(
+        fetchInvoiceFromCallback(callback, millisats),
+        5000
+      );
 
-      //Display waiting modal with message
-      const waitingModal = document.getElementById('waiting_modal');
-      document.getElementById('waiting_message').textContent = "Fetching invoice...";
-      closeSendLightningAddressModal();
-      waitingModal.style.display = 'block';
-
-      //Wait to get melt quote from mint
-      const quote = await wallet.createMeltQuote(invoice);
-      document.getElementById('waiting_message').textContent = "Getting melt quote...";
-      setDataOutput([{ "got melt quote": quote }]);
-      storeJSON(quote);
-
-      const amount = quote.amount + quote.fee_reserve;
-
-      const storedMintData = JSON.parse(localStorage.getItem("activeMint"));
-      const { url, keyset } = storedMintData;
-
-      const proofs = getProofsByAmount(amount, url, wallet.keys.id);
-      if (proofs.length === 0) {
+      if (!invoice){
         waitingModal.style.display = 'none';
-        showToast("Insufficient balance");
+        showToast("Failed to fetch invoice. Operation timed out.");
         return;
       }
 
-      document.getElementById('waiting_message').textContent = "Paying invoice...";
-      const { isPaid, change } = await wallet.meltTokens(quote, proofs, {
-        keysetId: wallet.keys.id,
-      });
+    // const invoice = await fetchInvoiceFromCallback(callback, millisats);
+    // const waitingModal = document.getElementById('waiting_modal');
+    // document.getElementById('waiting_message').textContent = "Fetching invoice...";
+    // closeSendLightningAddressModal();
+    // waitingModal.style.display = 'block';
 
-      if (isPaid) {
-        waitingModal.style.display = 'none';
-        makeDeezNutsRain(quote.amount);
-        const message = quote.amount + ' sat(s) sent to ' + lightningAddress;
-        showToast(message);
-        removeProofs(proofs, url);
+    //Wait to get melt quote from mint
+    const quote = await wallet.createMeltQuote(invoice);
+    document.getElementById('waiting_message').textContent = "Getting melt quote...";
+    setDataOutput([{ "got melt quote": quote }]);
+    storeJSON(quote);
 
-        var changeArray = { "change": change };
-        storeJSON(changeArray);
-
-        addProofs(change, url);
-      }
-    } catch (error) {
-      console.error(error);
-      setDataOutput({ error: "Failed to melt tokens", details: error });
-    }
-  }
-
-  async function payToPubkey(pubkey) {
-    let amount = await showNumericInputModal();
-    closeNumericInputModal();
-
-    const storedMintData = JSON.parse(localStorage.getItem("activeMint"));
-    const { url, keyset } = storedMintData;
-
-    const proofs = getProofsByAmount(amount, url);
+    const amount = quote.amount + quote.fee_reserve;
+    const proofs = getProofsByAmount(amount, wallet.mint.mintUrl, wallet.keys.id);
     if (proofs.length === 0) {
+      waitingModal.style.display = 'none';
       showToast("Insufficient balance");
       return;
     }
 
-    // Check if the secret key already exists in local storage
-    let storedSecretKey = localStorage.getItem('secretKey');
-    let secretKey;  // `secretKey` should be a Uint8Array
 
-    if (storedSecretKey) {
-      // If it exists, retrieve it from local storage and convert it back to Uint8Array
-      secretKey = new Uint8Array(JSON.parse(storedSecretKey));
-    } else {
-      // If it doesn't exist, generate a new secret key
-      secretKey = generateSecretKey();
-      // Save the secret key to local storage as a JSON string
-      localStorage.setItem('secretKey', JSON.stringify(Array.from(secretKey)));
-    }
 
-    let bullishNutsHex = 'c7617e02242f5853fe5b513d411f19b44ad3f0da95a28d33a9b7e927f255dd2d';
-    //let bullishHex = 'a10260a2aa2f092d85e2c0b82e95eac5f8c60ea19c68e4898719b58ccaa23e3e'
-    let publicKey = getPublicKey(secretKey) // `publicKey` is a hex string
-
-    const relay = await Relay.connect('wss://relay.0xchat.com')
-    console.log(`connected to ${relay.url}`)
-
-    relay.subscribe([
-      {
-        kinds: [4],
-        authors: [publicKey],
-      },
-    ], {
-      onevent(event) {
-        console.log('got event:', event)
-      }
-    })
-
-    let sharedPoint = secp.getSharedSecret(secretKey, '02' + bullishNutsHex)
-    let sharedX = sharedPoint.slice(1, 33)
-
-    let iv = crypto.randomFillSync(new Uint8Array(16))
-    var cipher = crypto.createCipheriv(
-      'aes-256-cbc',
-      Buffer.from(sharedX),
-      iv
-    )
-
-    const tempMint = new CashuMint(url);
+    document.getElementById('waiting_message').textContent = "Paying invoice...";
 
     try {
-      const info = await tempMint.getInfo();
-      const { keysets } = await tempMint.getKeys();
-      const satKeyset = keysets.find((k) => k.unit === "sat");
-      let tempWallet = new CashuWallet(url, { keys: satKeyset, unit: "sat" });
-      const { send, returnChange } = await tempWallet.send(amount, proofs);
-      const encodedToken = getEncodedToken({
-        token: [{ proofs: send, mint: url }],
-      });
+      // Set a timeout of 10 seconds (10000 milliseconds) for meltTokens
+      const { isPaid, preimage, change } = await withTimeout(
+        wallet.meltTokens(quote, proofs, { keysetId: wallet.keys.id }),
+        5000
+      );
 
-      sendEncryptedMessage("Have some nuts!");
-
-      let encryptedMessage = cipher.update(`${encodedToken}`, 'utf8', 'base64')
-      encryptedMessage += cipher.final('base64')
-      let ivBase64 = Buffer.from(iv.buffer).toString('base64')
-
-      let event = {
-        pubkey: [publicKey],
-        created_at: Math.floor(Date.now() / 1000),
-        kind: 4,
-        tags: [['p', bullishNutsHex]],
-        content: encryptedMessage + '?iv=' + ivBase64
-      }
-
-      // this assigns the pubkey, calculates the event id and signs the event in a single step
-      const signedEvent = finalizeEvent(event, secretKey)
-      await relay.publish(signedEvent)
-
-      removeProofs(proofs, url);
-      showToast("Succesfully sent nuts!");
+      // Handle the result if meltTokens succeeds within the timeout
+      console.log("Invoice paid:", isPaid);
+      console.log("Preimage:", preimage);
+      console.log("Change:", change);
     } catch (error) {
-      console.error(error);
-      setDataOutput({ error: true, details: error });
+      // Handle error, whether it's a timeout or another issue
+      console.error("Error occurred:", error.message);
+      if (error.message === "Operation timed out") {
+        showToast("Payment timed out.");
+      } else {
+        showToast(`Payment failed: ${error.message}`);
+      }
     }
+
+    if (isPaid) {
+      waitingModal.style.display = 'none';
+      const message = quote.amount + ' sat(s) sent to ' + input;
+      showToast(message);
+      removeProofs(proofs, wallet.mint.mintUrl);
+
+      var changeArray = { "change": change };
+      storeJSON(changeArray);
+
+      addProofs(change, wallet.mint.mintUrl);
+    }
+  } catch (error) {
+    console.error(error);
+    showToast(error.message);
+  }
+}
+
+async function zapDeezNuts() {
+  try {
+
+    if (wallet === null) {
+      showToast("Mint needs to be set");
+      return;
+    }
+
+    const lightningAddress = 'npub1cashuq3y9av98ljm2y75z8cek39d8ux6jk3g6vafkl5j0uj4m5ks378fhq@npub.cash';
+    const username = 'npub1cashuq3y9av98ljm2y75z8cek39d8ux6jk3g6vafkl5j0uj4m5ks378fhq';
+    const domain = 'npub.cash';
+    const callbackURL = `https://${domain}/.well-known/lnurlp/${username}`;
+    const response = await fetch(callbackURL);
+
+    // Check if the request was successful
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+      return;
+    }
+
+    const data = await response.json();
+    const callback = data.callback;
+
+    //Wait to get amount of sats from user
+    const sats = await showSendLightningAddressModal();
+    const millisats = sats * 1000;
+
+    //Wait to get invoice using callback URL
+    const invoice = await fetchInvoiceFromCallback(callback, millisats);
+
+    //Display waiting modal with message
+    const waitingModal = document.getElementById('waiting_modal');
+    document.getElementById('waiting_message').textContent = "Fetching invoice...";
+    closeSendLightningAddressModal();
+    waitingModal.style.display = 'block';
+
+    //Wait to get melt quote from mint
+    const quote = await wallet.createMeltQuote(invoice);
+    document.getElementById('waiting_message').textContent = "Getting melt quote...";
+    setDataOutput([{ "got melt quote": quote }]);
+    storeJSON(quote);
+
+    const amount = quote.amount + quote.fee_reserve;
+
+    const storedMintData = JSON.parse(localStorage.getItem("activeMint"));
+    const { url, keyset } = storedMintData;
+
+    const proofs = getProofsByAmount(amount, url, wallet.keys.id);
+    if (proofs.length === 0) {
+      waitingModal.style.display = 'none';
+      showToast("Insufficient balance");
+      return;
+    }
+
+    document.getElementById('waiting_message').textContent = "Paying invoice...";
+    const { isPaid, change } = await wallet.meltTokens(quote, proofs, {
+      keysetId: wallet.keys.id,
+    });
+
+    if (isPaid) {
+      waitingModal.style.display = 'none';
+      makeDeezNutsRain(quote.amount);
+      const message = quote.amount + ' sat(s) sent to ' + lightningAddress;
+      showToast(message);
+      removeProofs(proofs, url);
+
+      var changeArray = { "change": change };
+      storeJSON(changeArray);
+
+      addProofs(change, url);
+    }
+  } catch (error) {
+    console.error(error);
+    setDataOutput({ error: "Failed to melt tokens", details: error });
+  }
+}
+
+async function payToPubkey(pubkey) {
+  let amount = await showNumericInputModal();
+  closeNumericInputModal();
+
+  const storedMintData = JSON.parse(localStorage.getItem("activeMint"));
+  const { url, keyset } = storedMintData;
+
+  const proofs = getProofsByAmount(amount, url);
+  if (proofs.length === 0) {
+    showToast("Insufficient balance");
+    return;
   }
 
-  async function sendEncryptedMessage(message) {
-    // Check if the secret key already exists in local storage
-    let storedSecretKey = localStorage.getItem('secretKey');
-    let secretKey;  // `secretKey` should be a Uint8Array
+  // Check if the secret key already exists in local storage
+  let storedSecretKey = localStorage.getItem('secretKey');
+  let secretKey;  // `secretKey` should be a Uint8Array
 
-    if (storedSecretKey) {
-      // If it exists, retrieve it from local storage and convert it back to Uint8Array
-      secretKey = new Uint8Array(JSON.parse(storedSecretKey));
-    } else {
-      // If it doesn't exist, generate a new secret key
-      secretKey = generateSecretKey();
-      // Save the secret key to local storage as a JSON string
-      localStorage.setItem('secretKey', JSON.stringify(Array.from(secretKey)));
+  if (storedSecretKey) {
+    // If it exists, retrieve it from local storage and convert it back to Uint8Array
+    secretKey = new Uint8Array(JSON.parse(storedSecretKey));
+  } else {
+    // If it doesn't exist, generate a new secret key
+    secretKey = generateSecretKey();
+    // Save the secret key to local storage as a JSON string
+    localStorage.setItem('secretKey', JSON.stringify(Array.from(secretKey)));
+  }
+
+  let bullishNutsHex = 'c7617e02242f5853fe5b513d411f19b44ad3f0da95a28d33a9b7e927f255dd2d';
+  //let bullishHex = 'a10260a2aa2f092d85e2c0b82e95eac5f8c60ea19c68e4898719b58ccaa23e3e'
+  let publicKey = getPublicKey(secretKey) // `publicKey` is a hex string
+
+  const relay = await Relay.connect('wss://relay.0xchat.com')
+  console.log(`connected to ${relay.url}`)
+
+  relay.subscribe([
+    {
+      kinds: [4],
+      authors: [publicKey],
+    },
+  ], {
+    onevent(event) {
+      console.log('got event:', event)
     }
+  })
 
-    let bullishNutsHex = 'c7617e02242f5853fe5b513d411f19b44ad3f0da95a28d33a9b7e927f255dd2d';
-    let publicKey = getPublicKey(secretKey) // `publicKey` is a hex string
+  let sharedPoint = secp.getSharedSecret(secretKey, '02' + bullishNutsHex)
+  let sharedX = sharedPoint.slice(1, 33)
 
-    let sharedPoint = secp.getSharedSecret(secretKey, '02' + bullishNutsHex)
-    let sharedX = sharedPoint.slice(1, 33)
+  let iv = crypto.randomFillSync(new Uint8Array(16))
+  var cipher = crypto.createCipheriv(
+    'aes-256-cbc',
+    Buffer.from(sharedX),
+    iv
+  )
 
-    let iv = crypto.randomFillSync(new Uint8Array(16))
-    var cipher = crypto.createCipheriv(
-      'aes-256-cbc',
-      Buffer.from(sharedX),
-      iv
-    )
+  const tempMint = new CashuMint(url);
 
-    let encryptedMessage = cipher.update(`${message}`, 'utf8', 'base64')
+  try {
+    const info = await tempMint.getInfo();
+    const { keysets } = await tempMint.getKeys();
+    const satKeyset = keysets.find((k) => k.unit === "sat");
+    let tempWallet = new CashuWallet(url, { keys: satKeyset, unit: "sat" });
+    const { send, returnChange } = await tempWallet.send(amount, proofs);
+    const encodedToken = getEncodedToken({
+      token: [{ proofs: send, mint: url }],
+    });
+
+    sendEncryptedMessage("Have some nuts!");
+
+    let encryptedMessage = cipher.update(`${encodedToken}`, 'utf8', 'base64')
     encryptedMessage += cipher.final('base64')
     let ivBase64 = Buffer.from(iv.buffer).toString('base64')
 
@@ -575,597 +567,651 @@ const Wallet = () => {
 
     // this assigns the pubkey, calculates the event id and signs the event in a single step
     const signedEvent = finalizeEvent(event, secretKey)
+    await relay.publish(signedEvent)
 
-    const relay = await Relay.connect('wss://relay.0xchat.com')
-    console.log(`connected to ${relay.url}`)
-    relay.publish(signedEvent)
-  } // End sendEncryptedMessage()
+    removeProofs(proofs, url);
+    showToast("Succesfully sent nuts!");
+  } catch (error) {
+    console.error(error);
+    setDataOutput({ error: true, details: error });
+  }
+}
 
-  async function fetchInvoiceFromCallback(callbackURL, amount) {
-    const url = new URL(callbackURL);
-    const params = {
-      amount: amount,
-    };
-    url.search = new URLSearchParams(params).toString();
+async function sendEncryptedMessage(message) {
+  // Check if the secret key already exists in local storage
+  let storedSecretKey = localStorage.getItem('secretKey');
+  let secretKey;  // `secretKey` should be a Uint8Array
 
-    try {
-      const response = await fetchWithTimeout(url);
+  if (storedSecretKey) {
+    // If it exists, retrieve it from local storage and convert it back to Uint8Array
+    secretKey = new Uint8Array(JSON.parse(storedSecretKey));
+  } else {
+    // If it doesn't exist, generate a new secret key
+    secretKey = generateSecretKey();
+    // Save the secret key to local storage as a JSON string
+    localStorage.setItem('secretKey', JSON.stringify(Array.from(secretKey)));
+  }
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+  let bullishNutsHex = 'c7617e02242f5853fe5b513d411f19b44ad3f0da95a28d33a9b7e927f255dd2d';
+  let publicKey = getPublicKey(secretKey) // `publicKey` is a hex string
 
-      const data = await response.json();
-      return data.pr;
-    } catch (error) {
-      console.error('Error fetching JSON:', error);
-      showToast('Error occurred while fetching invoice.');
+  let sharedPoint = secp.getSharedSecret(secretKey, '02' + bullishNutsHex)
+  let sharedX = sharedPoint.slice(1, 33)
+
+  let iv = crypto.randomFillSync(new Uint8Array(16))
+  var cipher = crypto.createCipheriv(
+    'aes-256-cbc',
+    Buffer.from(sharedX),
+    iv
+  )
+
+  let encryptedMessage = cipher.update(`${message}`, 'utf8', 'base64')
+  encryptedMessage += cipher.final('base64')
+  let ivBase64 = Buffer.from(iv.buffer).toString('base64')
+
+  let event = {
+    pubkey: [publicKey],
+    created_at: Math.floor(Date.now() / 1000),
+    kind: 4,
+    tags: [['p', bullishNutsHex]],
+    content: encryptedMessage + '?iv=' + ivBase64
+  }
+
+  // this assigns the pubkey, calculates the event id and signs the event in a single step
+  const signedEvent = finalizeEvent(event, secretKey)
+
+  const relay = await Relay.connect('wss://relay.0xchat.com')
+  console.log(`connected to ${relay.url}`)
+  relay.publish(signedEvent)
+} // End sendEncryptedMessage()
+
+async function fetchInvoiceFromCallback(callbackURL, amount) {
+  const url = new URL(callbackURL);
+  const params = {
+    amount: amount,
+  };
+  url.search = new URLSearchParams(params).toString();
+
+  try {
+    const response = await fetchWithTimeout(url);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+
+    const data = await response.json();
+    return data.pr;
+  } catch (error) {
+    console.error('Error fetching JSON:', error);
+    showToast('Error occurred while fetching invoice.');
   }
+}
 
-  // Function to fetch data with a timeout
-  async function fetchWithTimeout(url, options = {}, timeout = 5000) {
-    const controller = new AbortController();
-    const signal = controller.signal;
+// Function to fetch data with a timeout
+async function fetchWithTimeout(url, options = {}, timeout = 5000) {
+  const controller = new AbortController();
+  const signal = controller.signal;
 
-    // Set a timeout to abort the fetch request
-    const timeoutID = setTimeout(() => {
-      controller.abort();
-    }, timeout);
+  // Set a timeout to abort the fetch request
+  const timeoutID = setTimeout(() => {
+    controller.abort();
+  }, timeout);
 
-    try {
-      const response = await fetch(url, { ...options, signal });
-      // Clear the timeout if the fetch is successful
-      clearTimeout(timeoutID);
+  try {
+    const response = await fetch(url, { ...options, signal });
+    // Clear the timeout if the fetch is successful
+    clearTimeout(timeoutID);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      return response; // Return the Response object
-    } catch (error) {
-      if (error.name === 'AbortError') {
-        throw new Error(`Fetch request timed out for [${url}]`);
-      }
-      throw error; // Rethrow other errors
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  }
 
-  function refreshPage() {
-    window.location.reload();
+    return response; // Return the Response object
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error(`Fetch request timed out for [${url}]`);
+    }
+    throw error; // Rethrow other errors
   }
+}
 
-  function showInvoiceModal(invoice) {
-    const modal = document.getElementById('invoiceModal');
+function refreshPage() {
+  window.location.reload();
+}
+
+function showInvoiceModal(invoice) {
+  const modal = document.getElementById('invoiceModal');
+  const invoiceText = document.getElementById('invoiceText');
+  invoiceText.value = invoice;
+  modal.style.display = 'block';
+}
+
+function closeInvoiceModal() {
+  const modal = document.getElementById('invoiceModal');
+  document.getElementById('invoiceText').value = '';
+  modal.style.display = 'none';
+}
+
+const copyToClipboard = async () => {
+  try {
     const invoiceText = document.getElementById('invoiceText');
-    invoiceText.value = invoice;
-    modal.style.display = 'block';
+    await navigator.clipboard.writeText(invoiceText.value);
+
+    // Change button text to "Copied" temporarily
+    const copyButton = document.getElementById('copyButton');
+    copyButton.textContent = 'Copied';
+
+    // Reset button text after 1000ms (1 second)
+    setTimeout(() => {
+      copyButton.textContent = 'Copy';
+    }, 1000);
+
+  } catch (err) {
+    console.error('Failed to copy: ', err);
   }
+};
 
-  function closeInvoiceModal() {
-    const modal = document.getElementById('invoiceModal');
-    document.getElementById('invoiceText').value = '';
-    modal.style.display = 'none';
-  }
-
-  const copyToClipboard = async () => {
-    try {
-      const invoiceText = document.getElementById('invoiceText');
-      await navigator.clipboard.writeText(invoiceText.value);
-
-      // Change button text to "Copied" temporarily
-      const copyButton = document.getElementById('copyButton');
-      copyButton.textContent = 'Copied';
-
-      // Reset button text after 1000ms (1 second)
-      setTimeout(() => {
-        copyButton.textContent = 'Copy';
-      }, 1000);
-
-    } catch (err) {
-      console.error('Failed to copy: ', err);
-    }
-  };
-
-  function pasteFromClipboard() {
-    navigator.clipboard.readText()
-      .then(text => {
-        document.getElementById('cashu_token').value = text;
-      })
-      .catch(err => {
-        console.error('Failed to read clipboard contents: ', err);
-      });
-  }
-
-  async function copyCashuToken() {
-    try {
-      const token = document.getElementById('send_cashu_token').value;
-      await navigator.clipboard.writeText(token);
-
-      // Change button text to "Copied" temporarily
-      const copyButton = document.getElementById('copy_token_button');
-      copyButton.textContent = 'Copied';
-
-      // Reset button text after 1000ms (1 second)
-      setTimeout(() => {
-        copyButton.textContent = 'Copy';
-      }, 500);
-
-    } catch (err) {
-      console.error('Failed to copy: ', err);
-    }
-  }
-
-  //Send modals
-
-  function showSendEcashModal() {
-    if (wallet === null) {
-      showToast("Mint needs to be set");
-      return;
-    }
-    const modal = document.getElementById('send_ecash_modal');
-    modal.style.display = 'block';
-  }
-
-  function sendEcashButtonClicked() {
-    const amount = parseInt(document.getElementById('ecash_amount').value);
-    if (!isNaN(amount) && amount > 0) {
-      handleSend_Ecash(amount);
-    } else {
-      showToast('Please enter a valid amount of sats');
-    }
-  }
-
-  function showCashuTokenModal(token) {
-    const modal = document.getElementById('cashu_token_modal');
-    document.getElementById('send_cashu_token').value = token;
-    modal.style.display = 'block';
-  }
-
-  function closeCashuTokenModal() {
-    document.getElementById('send_cashu_token').value = '';
-    const modal = document.getElementById('cashu_token_modal');
-    modal.style.display = 'none';
-  }
-
-  function closeSendEcashModal() {
-    const modal = document.getElementById('send_ecash_modal');
-    document.getElementById('ecash_amount').value = '';
-    modal.style.display = 'none';
-  }
-
-  function closeSendLightningModal() {
-    const modal = document.getElementById('send_lightning_modal');
-    document.getElementById('send_lightning_input').value = '';
-    modal.style.display = 'none';
-  }
-
-  function showSendLightningAddressModal() {
-    return new Promise((resolve) => {
-      const modal = document.getElementById('send_lightning_address_modal');
-      const input = document.getElementById('send_lightning_amount');
-      const submitButton = document.getElementById('send_lightning_submit');
-
-      modal.style.display = 'block';
-
-      submitButton.onclick = () => {
-        const value = input.value;
-        resolve(value);
-      };
+function pasteFromClipboard() {
+  navigator.clipboard.readText()
+    .then(text => {
+      document.getElementById('cashu_token').value = text;
+    })
+    .catch(err => {
+      console.error('Failed to read clipboard contents: ', err);
     });
-  }
+}
 
-  function closeSendLightningAddressModal() {
+async function copyCashuToken() {
+  try {
+    const token = document.getElementById('send_cashu_token').value;
+    await navigator.clipboard.writeText(token);
+
+    // Change button text to "Copied" temporarily
+    const copyButton = document.getElementById('copy_token_button');
+    copyButton.textContent = 'Copied';
+
+    // Reset button text after 1000ms (1 second)
+    setTimeout(() => {
+      copyButton.textContent = 'Copy';
+    }, 500);
+
+  } catch (err) {
+    console.error('Failed to copy: ', err);
+  }
+}
+
+//Send modals
+
+function showSendEcashModal() {
+  if (wallet === null) {
+    showToast("Mint needs to be set");
+    return;
+  }
+  const modal = document.getElementById('send_ecash_modal');
+  modal.style.display = 'block';
+}
+
+function sendEcashButtonClicked() {
+  const amount = parseInt(document.getElementById('ecash_amount').value);
+  if (!isNaN(amount) && amount > 0) {
+    handleSend_Ecash(amount);
+  } else {
+    showToast('Please enter a valid amount of sats');
+  }
+}
+
+function showCashuTokenModal(token) {
+  const modal = document.getElementById('cashu_token_modal');
+  document.getElementById('send_cashu_token').value = token;
+  modal.style.display = 'block';
+}
+
+function closeCashuTokenModal() {
+  document.getElementById('send_cashu_token').value = '';
+  const modal = document.getElementById('cashu_token_modal');
+  modal.style.display = 'none';
+}
+
+function closeSendEcashModal() {
+  const modal = document.getElementById('send_ecash_modal');
+  document.getElementById('ecash_amount').value = '';
+  modal.style.display = 'none';
+}
+
+function closeSendLightningModal() {
+  const modal = document.getElementById('send_lightning_modal');
+  document.getElementById('send_lightning_input').value = '';
+  modal.style.display = 'none';
+}
+
+function showSendLightningAddressModal() {
+  return new Promise((resolve) => {
     const modal = document.getElementById('send_lightning_address_modal');
-    document.getElementById('send_lightning_amount').value = '';
-    modal.style.display = 'none';
-  }
+    const input = document.getElementById('send_lightning_amount');
+    const submitButton = document.getElementById('send_lightning_submit');
 
-  function showNumericInputModal() {
-    return new Promise((resolve) => {
-      const modal = document.getElementById('numeric_input_modal');
-      const input = document.getElementById('numeric_input_amount');
-      const submitButton = document.getElementById('numeric_input_submit');
-
-      modal.style.display = 'block';
-
-      submitButton.onclick = () => {
-        const value = input.value;
-        resolve(value);
-      };
-    });
-  }
-
-  function closeNumericInputModal() {
-    const modal = document.getElementById('numeric_input_modal');
-    document.getElementById('numeric_input_amount').value = '';
-    modal.style.display = 'none';
-  }
-
-  //Receive modals
-
-  function showReceiveLightningModal() {
-    if (wallet === null) {
-      showToast("Mint needs to be set");
-      return;
-    }
-    const modal = document.getElementById('receive_lightning_modal');
     modal.style.display = 'block';
-  }
 
-  function closeReceiveLightningModal() {
-    const modal = document.getElementById('receive_lightning_modal');
-    document.getElementById('receive_lightning_amount').value = '';
-    modal.style.display = 'none';
-  }
-
-  function createInvoiceButtonClicked() {
-    const amount = parseInt(document.getElementById('receive_lightning_amount').value);
-    if (!isNaN(amount) && amount > 0) {
-      handleReceive_Lightning(amount);
-    } else {
-      showToast('Please enter a valid amount of sats');
-    }
-  }
-
-  function claimButtonClicked() {
-    const cashuToken = document.getElementById('cashu_token').value;
-    if (cashuToken !== null) {
-      handleReceive_Ecash(cashuToken);
-    } else {
-      showToast('Please paste a cashu token');
-    }
-  }
-
-  function showReceiveEcashModal() {
-    const modal = document.getElementById('receive_ecash_modal');
-    modal.style.display = 'block';
-  }
-
-  function closeReceiveEcashModal() {
-    const modal = document.getElementById('receive_ecash_modal');
-    document.getElementById('cashu_token').value = '';
-    modal.style.display = 'none';
-  }
-
-  function showToast(message, duration = 4000) {
-    const toast = document.getElementById('toast');
-    toast.textContent = message;
-    toast.className = 'toast show';
-
-    setTimeout(() => {
-      toast.className = 'toast';
-    }, duration);
-  }
-
-  function showMessageModal(message) {
-    const modal = document.getElementById('message_modal');
-    document.getElementById('message').textContent = message;
-    modal.style.display = 'block';
-  }
-
-  function showMessageWithGif(text) {
-    const messageElement = document.getElementById('message');
-    messageElement.textContent = ''; // Clear any existing text
-
-    let index = 0;
-    const interval = setInterval(() => {
-      if (index < text.length) {
-        messageElement.textContent += text[index];
-        index++;
-      } else {
-        clearInterval(interval);
-      }
-    }, 50); // Adjust the interval speed as needed
-
-    // Show the modal
-    document.getElementById('message_modal').style.display = 'block';
-  }
-
-  function closeMessageModal() {
-    const modal = document.getElementById('message_modal');
-    modal.style.display = 'none';
-  }
-
-  function getTimestamp_EST() {
-    const date = new Date();
-    const options = {
-      timeZone: 'America/New_York',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false,  // 24-hour format
+    submitButton.onclick = () => {
+      const value = input.value;
+      resolve(value);
     };
+  });
+}
 
-    // Extract parts from the formatted date string
-    const parts = new Intl.DateTimeFormat('en-US', options).formatToParts(date);
+function closeSendLightningAddressModal() {
+  const modal = document.getElementById('send_lightning_address_modal');
+  document.getElementById('send_lightning_amount').value = '';
+  modal.style.display = 'none';
+}
 
-    const year = parts.find(part => part.type === 'year').value;
-    const month = parts.find(part => part.type === 'month').value;
-    const day = parts.find(part => part.type === 'day').value;
-    const hour = parts.find(part => part.type === 'hour').value;
-    const minute = parts.find(part => part.type === 'minute').value;
-    const second = parts.find(part => part.type === 'second').value;
+function showNumericInputModal() {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('numeric_input_modal');
+    const input = document.getElementById('numeric_input_amount');
+    const submitButton = document.getElementById('numeric_input_submit');
 
-    return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+    modal.style.display = 'block';
+
+    submitButton.onclick = () => {
+      const value = input.value;
+      resolve(value);
+    };
+  });
+}
+
+function closeNumericInputModal() {
+  const modal = document.getElementById('numeric_input_modal');
+  document.getElementById('numeric_input_amount').value = '';
+  modal.style.display = 'none';
+}
+
+//Receive modals
+
+function showReceiveLightningModal() {
+  if (wallet === null) {
+    showToast("Mint needs to be set");
+    return;
   }
+  const modal = document.getElementById('receive_lightning_modal');
+  modal.style.display = 'block';
+}
 
-  function storeJSON(json) {
-    // Generate a timestamp to use as the key
-    const timestamp = getTimestamp_EST();
+function closeReceiveLightningModal() {
+  const modal = document.getElementById('receive_lightning_modal');
+  document.getElementById('receive_lightning_amount').value = '';
+  modal.style.display = 'none';
+}
 
-    new Date().toLocaleTimeString
-
-    // Retrieve existing data from local storage
-    const existingData = JSON.parse(localStorage.getItem('json')) || {};
-
-    // Add new data with timestamp as the key
-    existingData[timestamp] = json;
-
-    // Store the updated data back in local storage
-    localStorage.setItem('json', JSON.stringify(existingData));
+function createInvoiceButtonClicked() {
+  const amount = parseInt(document.getElementById('receive_lightning_amount').value);
+  if (!isNaN(amount) && amount > 0) {
+    handleReceive_Lightning(amount);
+  } else {
+    showToast('Please enter a valid amount of sats');
   }
+}
 
-  //Gets the npub for the selected contact, appends "@npub.cash", and copies it to the clipboard
-  const handleContactSelect = (contact) => {
-    const contactAddress = `${contact.npub}@npub.cash`;
-    navigator.clipboard.writeText(contactAddress).then(() => {
-      showToast(`Copied to clipboard: ${contactAddress}`);
-    }).catch(err => {
-      showToast(`Failed to copy: ${err}`);
+function claimButtonClicked() {
+  const cashuToken = document.getElementById('cashu_token').value;
+  if (cashuToken !== null) {
+    handleReceive_Ecash(cashuToken);
+  } else {
+    showToast('Please paste a cashu token');
+  }
+}
+
+function showReceiveEcashModal() {
+  const modal = document.getElementById('receive_ecash_modal');
+  modal.style.display = 'block';
+}
+
+function closeReceiveEcashModal() {
+  const modal = document.getElementById('receive_ecash_modal');
+  document.getElementById('cashu_token').value = '';
+  modal.style.display = 'none';
+}
+
+function showToast(message, duration = 4000) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.className = 'toast show';
+
+  setTimeout(() => {
+    toast.className = 'toast';
+  }, duration);
+}
+
+function showMessageModal(message) {
+  const modal = document.getElementById('message_modal');
+  document.getElementById('message').textContent = message;
+  modal.style.display = 'block';
+}
+
+function showMessageWithGif(text) {
+  const messageElement = document.getElementById('message');
+  messageElement.textContent = ''; // Clear any existing text
+
+  let index = 0;
+  const interval = setInterval(() => {
+    if (index < text.length) {
+      messageElement.textContent += text[index];
+      index++;
+    } else {
+      clearInterval(interval);
+    }
+  }, 50); // Adjust the interval speed as needed
+
+  // Show the modal
+  document.getElementById('message_modal').style.display = 'block';
+}
+
+function closeMessageModal() {
+  const modal = document.getElementById('message_modal');
+  modal.style.display = 'none';
+}
+
+function getTimestamp_EST() {
+  const date = new Date();
+  const options = {
+    timeZone: 'America/New_York',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,  // 24-hour format
+  };
+
+  // Extract parts from the formatted date string
+  const parts = new Intl.DateTimeFormat('en-US', options).formatToParts(date);
+
+  const year = parts.find(part => part.type === 'year').value;
+  const month = parts.find(part => part.type === 'month').value;
+  const day = parts.find(part => part.type === 'day').value;
+  const hour = parts.find(part => part.type === 'hour').value;
+  const minute = parts.find(part => part.type === 'minute').value;
+  const second = parts.find(part => part.type === 'second').value;
+
+  return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+}
+
+function storeJSON(json) {
+  // Generate a timestamp to use as the key
+  const timestamp = getTimestamp_EST();
+
+  new Date().toLocaleTimeString
+
+  // Retrieve existing data from local storage
+  const existingData = JSON.parse(localStorage.getItem('json')) || {};
+
+  // Add new data with timestamp as the key
+  existingData[timestamp] = json;
+
+  // Store the updated data back in local storage
+  localStorage.setItem('json', JSON.stringify(existingData));
+}
+
+//Gets the npub for the selected contact, appends "@npub.cash", and copies it to the clipboard
+const handleContactSelect = (contact) => {
+  const contactAddress = `${contact.npub}@npub.cash`;
+  navigator.clipboard.writeText(contactAddress).then(() => {
+    showToast(`Copied to clipboard: ${contactAddress}`);
+  }).catch(err => {
+    showToast(`Failed to copy: ${err}`);
+  });
+};
+
+const exportJSON = () => {
+  const existingData = JSON.parse(localStorage.getItem('json')) || {};
+  const dataStr = JSON.stringify(existingData);
+  const blob = new Blob([dataStr], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const timestamp = getTimestamp_EST();
+  a.download = `bullishNuts_logs_${timestamp}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+let emojiInterval;
+
+function makeDeezNutsRain(amount) {
+  const emojiContainer = document.createElement('div');
+  emojiContainer.id = 'emoji-container';
+  document.body.appendChild(emojiContainer);
+
+  for (let i = 0; i < amount; i++) {
+    const emoji = document.createElement('div');
+    emoji.className = 'emoji';
+    emoji.textContent = Math.random() > 0.5 ? '🥜' : '⚡';
+    emoji.style.left = `${Math.random() * 100}vw`;
+    emoji.style.animationDuration = `${Math.random() * 3 + 2}s`;
+    emoji.style.fontSize = `${Math.random() * 2 + 1}rem`; // Random size between 1rem and 3rem
+    emojiContainer.appendChild(emoji);
+
+    // Remove emoji after animation ends
+    emoji.addEventListener('animationend', () => {
+      emoji.remove();
     });
-  };
+  }
+}
 
-  const exportJSON = () => {
-    const existingData = JSON.parse(localStorage.getItem('json')) || {};
-    const dataStr = JSON.stringify(existingData);
-    const blob = new Blob([dataStr], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const timestamp = getTimestamp_EST();
-    a.download = `bullishNuts_logs_${timestamp}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+function startEmojiRain() {
+  const emojiContainer = document.createElement('div');
+  emojiContainer.id = 'emoji-container';
+  document.body.appendChild(emojiContainer);
 
-  let emojiInterval;
+  emojiInterval = setInterval(() => {
+    const emoji = document.createElement('div');
+    emoji.className = 'emoji';
+    emoji.textContent = Math.random() > 0.5 ? '🥜' : '⚡';
+    emoji.style.left = `${Math.random() * 100}vw`;
+    emoji.style.animationDuration = `${Math.random() * 3 + 2}s`;
+    emoji.style.fontSize = `${Math.random() * 2 + 1}rem`; // Random size between 1rem and 3rem
+    emojiContainer.appendChild(emoji);
 
-  function makeDeezNutsRain(amount) {
-    const emojiContainer = document.createElement('div');
-    emojiContainer.id = 'emoji-container';
-    document.body.appendChild(emojiContainer);
+    // Remove emoji after animation ends
+    emoji.addEventListener('animationend', () => {
+      emoji.remove();
+    });
+  }, 21);
 
-    for (let i = 0; i < amount; i++) {
-      const emoji = document.createElement('div');
-      emoji.className = 'emoji';
-      emoji.textContent = Math.random() > 0.5 ? '🥜' : '⚡';
-      emoji.style.left = `${Math.random() * 100}vw`;
-      emoji.style.animationDuration = `${Math.random() * 3 + 2}s`;
-      emoji.style.fontSize = `${Math.random() * 2 + 1}rem`; // Random size between 1rem and 3rem
-      emojiContainer.appendChild(emoji);
+  // Stop emoji rain after a few seconds
+  setTimeout(stopEmojiRain, 1000);
+}
 
-      // Remove emoji after animation ends
-      emoji.addEventListener('animationend', () => {
-        emoji.remove();
-      });
+function stopEmojiRain() {
+  clearInterval(emojiInterval);
+
+  // Remove the emoji container after a while to ensure all animations are done
+  setTimeout(() => {
+    document.getElementById('emoji-container').remove();
+  }, 3000); // Extended to allow all emojis to fall
+}
+
+async function checkProofs() {
+  const storedMintData = JSON.parse(localStorage.getItem("activeMint"));
+  const proofs = getAllProofs(storedMintData.url);
+  if (proofs.length === 0) {
+    showToast("No proofs to check");
+    return;
+  }
+  const spentProofs = await wallet.checkProofsSpent(proofs);
+  if (spentProofs.length > 0) {
+    removeProofs(spentProofs, storedMintData.url);
+  }
+  showToast(`Deleted ${spentProofs.length} proofs`);
+}
+
+const openEcashOrLightningModal = (label) => {
+  setEcashOrLightningModalLabel(label);
+  setIsEcashOrLightningOpen(true);
+};
+
+const closeEcashOrLightningModal = () => {
+  setIsEcashOrLightningOpen(false);
+};
+
+const handleOptionSelect = (option) => {
+  const action = ecashOrLightningModalLabel;
+  console.log(`Selected ${option} for ${action}`);
+  setIsEcashOrLightningOpen(false); // Close modal after selection
+  if (action === "Send") {
+    if (option === "Ecash") {
+      showSendEcashModal();
+    }
+    else if (option === "Lightning") {
+      setIsLightningModalOpen(true);
     }
   }
-
-  function startEmojiRain() {
-    const emojiContainer = document.createElement('div');
-    emojiContainer.id = 'emoji-container';
-    document.body.appendChild(emojiContainer);
-
-    emojiInterval = setInterval(() => {
-      const emoji = document.createElement('div');
-      emoji.className = 'emoji';
-      emoji.textContent = Math.random() > 0.5 ? '🥜' : '⚡';
-      emoji.style.left = `${Math.random() * 100}vw`;
-      emoji.style.animationDuration = `${Math.random() * 3 + 2}s`;
-      emoji.style.fontSize = `${Math.random() * 2 + 1}rem`; // Random size between 1rem and 3rem
-      emojiContainer.appendChild(emoji);
-
-      // Remove emoji after animation ends
-      emoji.addEventListener('animationend', () => {
-        emoji.remove();
-      });
-    }, 21);
-
-    // Stop emoji rain after a few seconds
-    setTimeout(stopEmojiRain, 1000);
+  else if (action === "Receive") {
+    if (option === "Ecash") {
+      showReceiveEcashModal();
+    }
+    else if (option === "Lightning") {
+      showReceiveLightningModal();
+    }
   }
+};
 
-  function stopEmojiRain() {
-    clearInterval(emojiInterval);
+return (
+  <main>
 
-    // Remove the emoji container after a while to ensure all animations are done
-    setTimeout(() => {
-      document.getElementById('emoji-container').remove();
-    }, 3000); // Extended to allow all emojis to fall
-  }
+    <div id="emoji-container"></div>
 
-  async function checkProofs() {
-    const storedMintData = JSON.parse(localStorage.getItem("activeMint"));
-    const proofs = getAllProofs(storedMintData.url);
-    if (proofs.length === 0) {
-      showToast("No proofs to check");
-      return;
-    }
-    const spentProofs = await wallet.checkProofsSpent(proofs);
-    if (spentProofs.length > 0) {
-      removeProofs(spentProofs, storedMintData.url);
-    }
-    showToast(`Deleted ${spentProofs.length} proofs`);
-  }
+    <div className="cashu-operations-container">
 
-  const openEcashOrLightningModal = (label) => {
-    setEcashOrLightningModalLabel(label);
-    setIsEcashOrLightningOpen(true);
-  };
+      <div id="refresh-icon" onClick={refreshPage}>⟳</div>
+      <div id="toast" className="toast">This is a toast message.</div>
 
-  const closeEcashOrLightningModal = () => {
-    setIsEcashOrLightningOpen(false);
-  };
+      {/* Message modal */}
+      <div id="message_modal" className="modal">
+        <div className="modal-content">
+          <span className="close-button" onClick={closeMessageModal}>&times;</span>
+          <p id="message"></p>
+          <button className="styled-button" onClick={closeMessageModal}>LFG</button>
+        </div>
+      </div>
 
-  const handleOptionSelect = (option) => {
-    const action = ecashOrLightningModalLabel;
-    console.log(`Selected ${option} for ${action}`);
-    setIsEcashOrLightningOpen(false); // Close modal after selection
-    if (action === "Send") {
-      if (option === "Ecash") {
-        showSendEcashModal();
-      }
-      else if (option === "Lightning") {
-        setIsLightningModalOpen(true);
-      }
-    }
-    else if (action === "Receive") {
-      if (option === "Ecash") {
-        showReceiveEcashModal();
-      }
-      else if (option === "Lightning") {
-        showReceiveLightningModal();
-      }
-    }
-  };
+      {/* Invoice modal */}
+      <div id="invoiceModal" className="modal">
+        <div className="modal-content">
+          <span className="close-button" onClick={closeInvoiceModal}>&times;</span>
+          <p>Invoice:</p>
+          <textarea id="invoiceText" readOnly></textarea>
+          <button id="copyButton" className="styled-button" onClick={copyToClipboard}>Copy</button>
+        </div>
+      </div>
 
-  return (
-    <main>
+      <h6>bullishNuts <small>v0.0.78</small></h6>
+      <br></br>
 
-      <div id="emoji-container"></div>
+      <div className="section">
+        <h2>Balance</h2>
+        <p>{balance} sats</p>
+        <div className="button-container">
+          <button className="styled-button" onClick={() => openEcashOrLightningModal('Send')}>Send</button>
+          <button className="styled-button" onClick={() => openEcashOrLightningModal('Receive')}>Receive</button>
+        </div>
+        <EcashOrLightning
+          isOpen={isEcashOrLightningOpen}
+          onClose={closeEcashOrLightningModal}
+          onOptionSelect={handleOptionSelect}
+          label={ecashOrLightningModalLabel}
+        />
+      </div>
 
-      <div className="cashu-operations-container">
+      <div className="section">
+        <Mints
+          balance={balance}
+          onMintChange={handleMintChange}
+        />
+      </div>
 
-        <div id="refresh-icon" onClick={refreshPage}>⟳</div>
-        <div id="toast" className="toast">This is a toast message.</div>
+      {isLightningModalOpen && (
+        <LightningModal
+          contacts={contacts}
+          onClose={() => setIsLightningModalOpen(false)}
+          onSend={handleSend_Lightning}
+        />
+      )}
 
-        {/* Message modal */}
-        <div id="message_modal" className="modal">
-          <div className="modal-content">
-            <span className="close-button" onClick={closeMessageModal}>&times;</span>
-            <p id="message"></p>
-            <button className="styled-button" onClick={closeMessageModal}>LFG</button>
+      {/* Send ecash modal */}
+      <div id="send_ecash_modal" className="modal">
+        <div className="modal-content">
+          <span className="close-button" onClick={closeSendEcashModal}>&times;</span>
+          <h2>Send Ecash</h2>
+          <input type="number" id="ecash_amount" name="ecash_amount" placeholder="Enter amount of sats" inputMode="decimal" min="1" />
+          <button className="styled-button" onClick={sendEcashButtonClicked}>Create Token</button>
+        </div>
+      </div>
+
+      {/* Cashu token modal */}
+      <div id="cashu_token_modal" className="modal">
+        <div className="modal-content">
+          <span className="close-button" onClick={closeCashuTokenModal}>&times;</span>
+          <p>Cashu token:</p>
+          <textarea id="send_cashu_token" readOnly></textarea>
+          <button id="copy_token_button" className="styled-button" onClick={copyCashuToken}>Copy</button>
+        </div>
+      </div>
+
+      {/* Send Lightning address modal */}
+      <div id="send_lightning_address_modal" className="modal">
+        <div className="modal-content">
+          <span className="close-button" onClick={closeSendLightningAddressModal}>&times;</span>
+          <label htmlFor="send_lightning_amount">Enter amount of sats:</label>
+          <input type="number" id="send_lightning_amount" inputMode="decimal" min="1" />
+          <button className="styled-button" id="send_lightning_submit">Send</button>
+        </div>
+      </div>
+
+      {/* Numeric input modal */}
+      <div id="numeric_input_modal" className="modal">
+        <div className="modal-content">
+          <span className="close-button" onClick={closeNumericInputModal}>&times;</span>
+          <label htmlFor="numeric_input_amount">Enter amount:</label>
+          <input type="number" id="numeric_input_amount" inputMode="decimal" min="1" />
+          <button className="styled-button" id="numeric_input_submit">OK</button>
+        </div>
+      </div>
+
+      {/* Waiting modal */}
+      <div className="modal" id="waiting_modal">
+        <div className="modal-content">
+          <div className="progress-bar-container">
+            <div className="progress-bar"></div>
           </div>
+          <p id="waiting_message"></p>
         </div>
+      </div>
 
-        {/* Invoice modal */}
-        <div id="invoiceModal" className="modal">
-          <div className="modal-content">
-            <span className="close-button" onClick={closeInvoiceModal}>&times;</span>
-            <p>Invoice:</p>
-            <textarea id="invoiceText" readOnly></textarea>
-            <button id="copyButton" className="styled-button" onClick={copyToClipboard}>Copy</button>
-          </div>
+      {/* Receive ecash modal */}
+      <div id="receive_ecash_modal" className="modal">
+        <div className="modal-content">
+          <span className="close-button" onClick={closeReceiveEcashModal}>&times;</span>
+          <label htmlFor="cashu_token">
+            <button className="orange-button" onClick={pasteFromClipboard} >Paste</button> Cashu token
+          </label>
+          <textarea id="cashu_token"></textarea>
+          <button className="styled-button" onClick={claimButtonClicked}>Claim</button>
         </div>
+      </div>
 
-        <h6>bullishNuts <small>v0.0.77</small></h6>
-        <br></br>
-
-        <div className="section">
-          <h2>Balance</h2>
-          <p>{balance} sats</p>
-          <div className="button-container">
-            <button className="styled-button" onClick={() => openEcashOrLightningModal('Send')}>Send</button>
-            <button className="styled-button" onClick={() => openEcashOrLightningModal('Receive')}>Receive</button>
-          </div>
-          <EcashOrLightning
-            isOpen={isEcashOrLightningOpen}
-            onClose={closeEcashOrLightningModal}
-            onOptionSelect={handleOptionSelect}
-            label={ecashOrLightningModalLabel}
-          />
+      {/* Receive Lightning modal */}
+      <div id="receive_lightning_modal" className="modal">
+        <div className="modal-content">
+          <span className="close-button" onClick={closeReceiveLightningModal}>&times;</span>
+          <label htmlFor="receive_lightning_amount">Enter amount of sats:</label>
+          <input type="number" id="receive_lightning_amount" inputMode="decimal" min="1" />
+          <button className="styled-button" onClick={createInvoiceButtonClicked}>Create invoice</button>
         </div>
+      </div>
 
-        <div className="section">
-          <Mints
-            balance={balance}
-            onMintChange={handleMintChange}
-          />
-        </div>
-
-        {isLightningModalOpen && (
-          <LightningModal
-            contacts={contacts}
-            onClose={() => setIsLightningModalOpen(false)}
-            onSend={handleSend_Lightning}
-          />
-        )}
-
-        {/* Send ecash modal */}
-        <div id="send_ecash_modal" className="modal">
-          <div className="modal-content">
-            <span className="close-button" onClick={closeSendEcashModal}>&times;</span>
-            <h2>Send Ecash</h2>
-            <input type="number" id="ecash_amount" name="ecash_amount" placeholder="Enter amount of sats" inputMode="decimal" min="1" />
-            <button className="styled-button" onClick={sendEcashButtonClicked}>Create Token</button>
-          </div>
-        </div>
-
-        {/* Cashu token modal */}
-        <div id="cashu_token_modal" className="modal">
-          <div className="modal-content">
-            <span className="close-button" onClick={closeCashuTokenModal}>&times;</span>
-            <p>Cashu token:</p>
-            <textarea id="send_cashu_token" readOnly></textarea>
-            <button id="copy_token_button" className="styled-button" onClick={copyCashuToken}>Copy</button>
-          </div>
-        </div>
-
-        {/* Send Lightning address modal */}
-        <div id="send_lightning_address_modal" className="modal">
-          <div className="modal-content">
-            <span className="close-button" onClick={closeSendLightningAddressModal}>&times;</span>
-            <label htmlFor="send_lightning_amount">Enter amount of sats:</label>
-            <input type="number" id="send_lightning_amount" inputMode="decimal" min="1" />
-            <button className="styled-button" id="send_lightning_submit">Send</button>
-          </div>
-        </div>
-
-        {/* Numeric input modal */}
-        <div id="numeric_input_modal" className="modal">
-          <div className="modal-content">
-            <span className="close-button" onClick={closeNumericInputModal}>&times;</span>
-            <label htmlFor="numeric_input_amount">Enter amount:</label>
-            <input type="number" id="numeric_input_amount" inputMode="decimal" min="1" />
-            <button className="styled-button" id="numeric_input_submit">OK</button>
-          </div>
-        </div>
-
-        {/* Waiting modal */}
-        <div className="modal" id="waiting_modal">
-          <div className="modal-content">
-            <div className="spinner"></div>
-            <p id="waiting_message"></p>
-          </div>
-        </div>
-
-        {/* Receive ecash modal */}
-        <div id="receive_ecash_modal" className="modal">
-          <div className="modal-content">
-            <span className="close-button" onClick={closeReceiveEcashModal}>&times;</span>
-            <label htmlFor="cashu_token">
-              <button className="orange-button" onClick={pasteFromClipboard} >Paste</button> Cashu token
-            </label>
-            <textarea id="cashu_token"></textarea>
-            <button className="styled-button" onClick={claimButtonClicked}>Claim</button>
-          </div>
-        </div>
-
-        {/* Receive Lightning modal */}
-        <div id="receive_lightning_modal" className="modal">
-          <div className="modal-content">
-            <span className="close-button" onClick={closeReceiveLightningModal}>&times;</span>
-            <label htmlFor="receive_lightning_amount">Enter amount of sats:</label>
-            <input type="number" id="receive_lightning_amount" inputMode="decimal" min="1" />
-            <button className="styled-button" onClick={createInvoiceButtonClicked}>Create invoice</button>
-          </div>
-        </div>
-
-        {/* <div className="section">
+      {/* <div className="section">
           <h2>Mint</h2>
           <a href="https://bitcoinmints.com/">View list of available mints</a>
           <input
@@ -1179,38 +1225,38 @@ const Wallet = () => {
           </button>
         </div> */}
 
-        <div className="section">
-          <Contacts onContactSelect={handleContactSelect} updateContacts={updateContacts} />
-        </div>
-
-        <div className="section">
-          <h2>Donate</h2>
-          <div className="button-container">
-            <button className="styled-button" onClick={zapDeezNuts} >ZAP DEEZ NUTS ⚡</button>
-          </div>
-          <div className="button-container">
-            <button className="styled-button" onClick={payToPubkey} >SEND NUTS 🥜</button>
-          </div>
-        </div>
-
-        <div className="data-display-container">
-          <h2>Advanced</h2>
-          <p>Data Output</p>
-          <pre id="data-output" className="data-output">{JSON.stringify(dataOutput, null, 2)}</pre>
-          <button className="full_width_button" onClick={checkProofs}>Check Proofs</button>
-          <button className="full_width_button" onClick={exportJSON}>Export JSON Logs</button>
-        </div>
-
-        <br></br>
-
-        <div className="section">
-          <small>Made with <button onClick={startEmojiRain}>🐂</button> by <a href="https://thebullishbitcoiner.com/">thebullishbitcoiner</a></small>
-        </div>
-
+      <div className="section">
+        <Contacts onContactSelect={handleContactSelect} updateContacts={updateContacts} />
       </div>
 
-    </main>
-  );
+      <div className="section">
+        <h2>Donate</h2>
+        <div className="button-container">
+          <button className="styled-button" onClick={zapDeezNuts} >ZAP DEEZ NUTS ⚡</button>
+        </div>
+        <div className="button-container">
+          <button className="styled-button" onClick={payToPubkey} >SEND NUTS 🥜</button>
+        </div>
+      </div>
+
+      <div className="data-display-container">
+        <h2>Advanced</h2>
+        <p>Data Output</p>
+        <pre id="data-output" className="data-output">{JSON.stringify(dataOutput, null, 2)}</pre>
+        <button className="full_width_button" onClick={checkProofs}>Check Proofs</button>
+        <button className="full_width_button" onClick={exportJSON}>Export JSON Logs</button>
+      </div>
+
+      <br></br>
+
+      <div className="section">
+        <small>Made with <button onClick={startEmojiRain}>🐂</button> by <a href="https://thebullishbitcoiner.com/">thebullishbitcoiner</a></small>
+      </div>
+
+    </div>
+
+  </main>
+);
 
 };
 
