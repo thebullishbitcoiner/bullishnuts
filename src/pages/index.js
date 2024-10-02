@@ -294,9 +294,19 @@ const Wallet = () => {
     }
   }
 
+  function isValidLightningAddress(address) {
+    // Basic pattern check for username@domain
+    const lightningAddressPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return lightningAddressPattern.test(address);
+  }
+
   //This function checks to see if the Lightning address provided is valid, gets the amount of sats to send, and fetches invoice using the callback URL
   async function handleSend_LightningAddress_GetCallback(input) {
     try {
+      if(!isValidLightningAddress(input)){
+        showToast("Enter a valid Lightning address");
+        return;
+      }
       const lightningAddressParts = input.split('@');
       const username = lightningAddressParts[0];
       const domain = lightningAddressParts[1];
@@ -317,35 +327,6 @@ const Wallet = () => {
       setIsLightningModalOpen(false);
       const sats = await showSendLightningAddressModal();
       const millisats = sats * 1000;
-
-      // // Function to add a timeout to any promise
-      // const withTimeout = (promise, timeoutDuration) => {
-      //   return Promise.race([
-      //     promise,
-      //     new Promise((_, reject) =>
-      //       setTimeout(() => reject(new Error("Operation timed out")), timeoutDuration)
-      //     ),
-      //   ]);
-      // };
-
-      function withTimeout(promise, timeout) {
-        return new Promise((resolve, reject) => {
-          const timer = setTimeout(() => {
-            reject(new Error(`Operation timed out after ${timeout} ms`));
-          }, timeout);
-
-          promise
-            .then((value) => {
-              clearTimeout(timer);
-              resolve(value);
-            })
-            .catch((err) => {
-              clearTimeout(timer);
-              reject(err);
-            });
-        });
-      }
-
 
       closeSendLightningAddressModal();
       const waitingModal = document.getElementById('waiting_modal');
@@ -493,9 +474,10 @@ const Wallet = () => {
       }
     } catch (error) {
       console.error(error);
-      setDataOutput({ error: "Failed to melt tokens", details: error });
+      showToast(error);
+      setDataOutput({ error: "Failed to zap deez nuts", details: error });
     }
-  }
+  } // End zapDeezNuts
 
   async function payToPubkey(pubkey) {
     let amount = await showNumericInputModal();
@@ -638,26 +620,41 @@ const Wallet = () => {
     relay.publish(signedEvent)
   } // End sendEncryptedMessage()
 
-  async function fetchInvoiceFromCallback(callbackURL, amount) {
+  async function fetchInvoiceFromCallback(callbackURL, amount, timeout = 5000) {
     const url = new URL(callbackURL);
     const params = {
       amount: amount,
     };
     url.search = new URLSearchParams(params).toString();
-
+  
+    // Use AbortController to handle the timeout
+    const controller = new AbortController();
+    const signal = controller.signal;
+  
+    // Set a timeout to abort the fetch request
+    const timeoutID = setTimeout(() => controller.abort(), timeout);
+  
     try {
-      const response = await fetchWithTimeout(url);
-
+      const response = await fetch(url, { signal });
+  
+      // Clear timeout once response is received
+      clearTimeout(timeoutID);
+  
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`Failed to fetch invoice. HTTP error! status: ${response.status}`);
       }
-
+  
       const data = await response.json();
       return data.pr;
     } catch (error) {
-      console.error('Error fetching JSON:', error);
-      throw error;
-      //showToast('Error occurred while fetching invoice.');
+      // Check if the error is due to a timeout
+      if (error.name === 'AbortError') {
+        console.error(`Request to ${url} timed out after ${timeout} ms`);
+        throw new Error(`Failed to fetch invoice. Request timed out.`);
+      } else {
+        console.error('Error fetching invoice:', error);
+        throw new Error(`Failed to fetch invoice. Error: ${error.message}`);
+      }
     }
   }
 
@@ -886,7 +883,7 @@ const Wallet = () => {
     modal.style.display = 'none';
   }
 
-  function showToast(message, duration = 4000) {
+  function showToast(message, duration = 2000) {
     const toast = document.getElementById('toast');
     toast.textContent = message;
     toast.className = 'toast show';
@@ -1091,6 +1088,16 @@ const Wallet = () => {
     }
   };
 
+  // Function to add a timeout to any promise
+  const withTimeout = (promise, timeout) => {
+    return Promise.race([
+      promise,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error(`Operation timed out after ${timeout} ms`)), timeout)
+      ),
+    ]);
+  };
+
   return (
     <main>
 
@@ -1120,7 +1127,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.80</small></h6>
+        <h6>bullishNuts <small>v0.0.81</small></h6>
         <br></br>
 
         <div className="section">

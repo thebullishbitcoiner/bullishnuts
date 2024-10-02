@@ -14,21 +14,16 @@ const LightningModal = ({ contacts, onClose, onSend }) => {
             <div className="modal-content">
                 <span className="close-button" onClick={onClose}>&times;</span>
                 <h2>Send Lightning</h2>
-                <p>Enter invoice or address</p>
                 <div className="input-container">
-                    <input
-                        type="text"
+                    <textarea
                         id="send_lightning_input"
-                        placeholder="lnbc..."
+                        placeholder="Lightning invoice or address"
                         value={invoiceOrAddress}
                         onChange={(e) => setInvoiceOrAddress(e.target.value)}
-                    />
-                    <button
-                        className="select_contact_button"
-                        onClick={() => setIsContactModalOpen(true)}
-                    >
-                        👤
-                    </button>
+                        rows="4"
+                        cols="42"
+                    ></textarea>
+                    <button className="select_contact_button" onClick={() => setIsContactModalOpen(true)}>👤</button>
                 </div>
                 <button className="styled-button" onClick={() => onSend(invoiceOrAddress)}>Send</button>
             </div>
