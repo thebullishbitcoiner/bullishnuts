@@ -303,7 +303,7 @@ const Wallet = () => {
   //This function checks to see if the Lightning address provided is valid, gets the amount of sats to send, and fetches invoice using the callback URL
   async function handleSend_LightningAddress_GetCallback(input) {
     try {
-      if(!isValidLightningAddress(input)){
+      if (!isValidLightningAddress(input)) {
         showToast("Enter a valid Lightning address");
         return;
       }
@@ -480,8 +480,8 @@ const Wallet = () => {
   } // End zapDeezNuts
 
   async function payToPubkey(pubkey) {
-    let amount = await showNumericInputModal();
-    closeNumericInputModal();
+    let { amount, message } = await showSendNutsModal();
+    closeSendNutsModal();
 
     const storedMintData = JSON.parse(localStorage.getItem("activeMint"));
     const { url, keyset } = storedMintData;
@@ -543,10 +543,10 @@ const Wallet = () => {
       let tempWallet = new CashuWallet(url, { keys: satKeyset, unit: "sat" });
       const { send, returnChange } = await tempWallet.send(amount, proofs);
       const encodedToken = getEncodedToken({
-        token: [{ proofs: send, mint: url }],
+        token: [{ proofs: send, mint: url }], memo: "BULLISH"
       });
 
-      sendEncryptedMessage("Have some nuts!");
+      sendEncryptedMessage(message);
 
       let encryptedMessage = cipher.update(`${encodedToken}`, 'utf8', 'base64')
       encryptedMessage += cipher.final('base64')
@@ -626,24 +626,24 @@ const Wallet = () => {
       amount: amount,
     };
     url.search = new URLSearchParams(params).toString();
-  
+
     // Use AbortController to handle the timeout
     const controller = new AbortController();
     const signal = controller.signal;
-  
+
     // Set a timeout to abort the fetch request
     const timeoutID = setTimeout(() => controller.abort(), timeout);
-  
+
     try {
       const response = await fetch(url, { signal });
-  
+
       // Clear timeout once response is received
       clearTimeout(timeoutID);
-  
+
       if (!response.ok) {
         throw new Error(`Failed to fetch invoice. HTTP error! status: ${response.status}`);
       }
-  
+
       const data = await response.json();
       return data.pr;
     } catch (error) {
@@ -816,24 +816,26 @@ const Wallet = () => {
     modal.style.display = 'none';
   }
 
-  function showNumericInputModal() {
+  function showSendNutsModal() {
     return new Promise((resolve) => {
-      const modal = document.getElementById('numeric_input_modal');
-      const input = document.getElementById('numeric_input_amount');
-      const submitButton = document.getElementById('numeric_input_submit');
+        const modal = document.getElementById('send_nuts_modal');
+        const amount = document.getElementById('send_nuts_amount');
+        const message = document.getElementById('send_nuts_message');
+        const submitButton = document.getElementById('send_nuts_submit');
 
-      modal.style.display = 'block';
+        modal.style.display = 'block';
 
-      submitButton.onclick = () => {
-        const value = input.value;
-        resolve(value);
-      };
+        submitButton.onclick = () => {
+            const value = amount.value;
+            const msg = message.value;
+            resolve({ amount: value, message: msg }); // Resolve with an object
+        };
     });
-  }
+}
 
-  function closeNumericInputModal() {
-    const modal = document.getElementById('numeric_input_modal');
-    document.getElementById('numeric_input_amount').value = '';
+  function closeSendNutsModal() {
+    const modal = document.getElementById('send_nuts_modal');
+    document.getElementById('send_nuts_amount').value = '';
     modal.style.display = 'none';
   }
 
@@ -1127,7 +1129,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.81</small></h6>
+        <h6>bullishNuts <small>v0.0.82</small></h6>
         <br></br>
 
         <div className="section">
@@ -1190,13 +1192,16 @@ const Wallet = () => {
           </div>
         </div>
 
-        {/* Numeric input modal */}
-        <div id="numeric_input_modal" className="modal">
+        {/* Send Nuts modal */}
+        <div id="send_nuts_modal" className="modal">
           <div className="modal-content">
-            <span className="close-button" onClick={closeNumericInputModal}>&times;</span>
-            <label htmlFor="numeric_input_amount">Enter amount:</label>
-            <input type="number" id="numeric_input_amount" inputMode="decimal" min="1" />
-            <button className="styled-button" id="numeric_input_submit">OK</button>
+            <span className="close-button" onClick={closeSendNutsModal}>&times;</span>
+            <h2>Send Nuts</h2>
+            <label htmlFor="send_nuts_amount">Amount</label>
+            <input type="number" id="send_nuts_amount" inputMode="decimal" min="1" placeholder="Enter amount of sats" />
+            <label htmlFor="send_nuts_message">Message</label>
+            <textarea id="send_nuts_message" placeholder="Optional"></textarea>
+            <button className="styled-button" id="send_nuts_submit">OK</button>
           </div>
         </div>
 
@@ -1231,20 +1236,6 @@ const Wallet = () => {
             <button className="styled-button" onClick={createInvoiceButtonClicked}>Create invoice</button>
           </div>
         </div>
-
-        {/* <div className="section">
-          <h2>Mint</h2>
-          <a href="https://bitcoinmints.com/">View list of available mints</a>
-          <input
-            type="text"
-            name="mintUrl"
-            value={formData.mintUrl}
-            onChange={handleChange}
-          />
-          <button className="styled-button" onClick={handleSetMint}>
-            Set Mint
-          </button>
-        </div> */}
 
         <div className="section">
           <Contacts onContactSelect={handleContactSelect} updateContacts={updateContacts} />

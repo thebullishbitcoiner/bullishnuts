@@ -2,8 +2,10 @@ import React, { useState, useEffect } from "react";
 import useMultiMintStorage from "@/hooks/useMultiMintStorage";
 import { CashuMint } from "@cashu/cashu-ts";
 
-const Mints = ({ onMintChange }) => {
-    const { getMintBalance, balance } = useMultiMintStorage();
+const Mints = ({ onMintChange, balance }) => {
+    
+    const { getMintBalance } = useMultiMintStorage();
+    
     const [mintNames, setMintNames] = useState([]);
     const [activeMint, setLocalActiveMint] = useState(null); // Local state for activeMint
     const [showModal, setShowModal] = useState(false); // State for showing/hiding modal
@@ -55,7 +57,6 @@ const Mints = ({ onMintChange }) => {
         }
     };
     
-
     // Fetch mint names and activeMint on mount
     useEffect(() => {
         fetchMintNames();
@@ -83,6 +84,7 @@ const Mints = ({ onMintChange }) => {
 
     // Effect to re-fetch mint names and balances when the balance changes
     useEffect(() => {
+        console.log("Balance changed:", balance);
         fetchMintNames(); // Re-fetch mint names and balances when balance changes
     }, [balance]);
 
@@ -156,7 +158,6 @@ const Mints = ({ onMintChange }) => {
         }
     };
     
-
     function showToast(message, duration = 4000) {
         const toast = document.getElementById("toast");
         toast.textContent = message;

@@ -407,7 +407,7 @@ main {
   }
 
   .select_contact_modal {
-    display: flex;
+    display: block;
     justify-content: center;
     align-items: center;
     position: fixed;
@@ -442,7 +442,7 @@ main {
 
   .select_contact_button {
     border: 1px solid #ff9900;
-    background-color: #804d00;
+    background-color: #583500;
     padding: 13px;
     padding-top: 9px;
     padding-bottom: 7px;
@@ -562,7 +562,7 @@ main {
     border-radius: 50%;
     outline: none;
     cursor: pointer;
-    background-color: #000;
+    background-color: #111111;
     position: relative;
     margin-left: -7px;
     margin-top: 7px;
@@ -575,7 +575,7 @@ main {
   input[type="radio"]:checked::after {
     content: '✓';
     font-size: 21px;
-    color: #000;
+    color: #111111;
     position: absolute;
     top: -5px;
     left: 3px;
