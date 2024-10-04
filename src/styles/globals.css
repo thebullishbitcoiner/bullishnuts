@@ -639,6 +639,21 @@ main {
     }
   }
 
+  /* QR CODE */
 
+  /* Ensure the parent div has a defined width */
+#qrcode {
+  width: 100%; /* Set to full width of the parent */
+  display: flex; /* Align items inside */
+  justify-content: center; /* Center the QR code */
+  overflow: hidden; /* Hide any overflow */
+}
+
+/* Ensure the canvas respects the width of the parent */
+canvas {
+  width: 100% !important; /* Force the canvas to take up 100% of its parent */
+  height: auto; /* Maintain aspect ratio */
+  max-width: 100%; /* Prevent it from exceeding the parent width */
+}
 
 }

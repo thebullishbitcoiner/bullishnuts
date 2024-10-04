@@ -6,6 +6,7 @@ import LightningModal from '@/components/LightningModal';
 import { getDecodedToken, encodeJsonToBase64 } from "@/hooks/CashuDecoder";
 import Mints from "@/components/Mints";
 import EcashOrLightning from "@/components/EcashOrLightning";
+import QRCode from 'qrcode';
 
 //Nostr
 import { finalizeEvent, generateSecretKey, getPublicKey } from 'nostr-tools/pure';
@@ -690,11 +691,52 @@ const Wallet = () => {
     window.location.reload();
   }
 
-  function showInvoiceModal(invoice) {
+  // function showInvoiceModal(invoice) {
+  //   const modal = document.getElementById('invoiceModal');
+
+  //   const invoiceText = document.getElementById('invoiceText');
+  //   invoiceText.value = invoice;
+
+  //   modal.style.display = 'block';
+  // }
+
+  async function showInvoiceModal(invoice) {
     const modal = document.getElementById('invoiceModal');
-    const invoiceText = document.getElementById('invoiceText');
-    invoiceText.value = invoice;
-    modal.style.display = 'block';
+    const qrcodeDiv = document.getElementById('qrcode');
+
+    // Clear any existing QR code (if needed)
+    qrcodeDiv.innerHTML = "";
+
+    try {
+      // Create a canvas element and append it to the qrcodeDiv
+      const canvas = document.createElement('canvas');
+      qrcodeDiv.appendChild(canvas);
+
+      // Get the width of the parent div and set it to the canvas
+      const parentWidth = qrcodeDiv.clientWidth;
+
+      // Ensure canvas styling respects the parent div's width
+      canvas.style.width = "100%";
+      canvas.style.maxWidth = `${parentWidth}px`; // Limit to parent width
+
+      // Generate the QR code with adjusted width and color options
+      await QRCode.toCanvas(canvas, invoice, {
+        width: parentWidth, // Adjust width dynamically based on parent div
+        margin: 4, // Optional: Add some margin around the QR code
+        color: {
+          dark: "#FF9900",  // Dots
+          light: "#000000"  // Background
+        },
+      });
+
+      // Display the modal and set the invoice text
+      const invoiceText = document.getElementById('invoiceText');
+      invoiceText.value = invoice;
+
+      modal.style.display = 'block';
+    } catch (error) {
+      console.error("Failed to generate QR Code:", error);
+    }
   }
 
   function closeInvoiceModal() {
@@ -818,20 +860,20 @@ const Wallet = () => {
 
   function showSendNutsModal() {
     return new Promise((resolve) => {
-        const modal = document.getElementById('send_nuts_modal');
-        const amount = document.getElementById('send_nuts_amount');
-        const message = document.getElementById('send_nuts_message');
-        const submitButton = document.getElementById('send_nuts_submit');
+      const modal = document.getElementById('send_nuts_modal');
+      const amount = document.getElementById('send_nuts_amount');
+      const message = document.getElementById('send_nuts_message');
+      const submitButton = document.getElementById('send_nuts_submit');
 
-        modal.style.display = 'block';
+      modal.style.display = 'block';
 
-        submitButton.onclick = () => {
-            const value = amount.value;
-            const msg = message.value;
-            resolve({ amount: value, message: msg }); // Resolve with an object
-        };
+      submitButton.onclick = () => {
+        const value = amount.value;
+        const msg = message.value;
+        resolve({ amount: value, message: msg }); // Resolve with an object
+      };
     });
-}
+  }
 
   function closeSendNutsModal() {
     const modal = document.getElementById('send_nuts_modal');
@@ -1123,13 +1165,14 @@ const Wallet = () => {
         <div id="invoiceModal" className="modal">
           <div className="modal-content">
             <span className="close-button" onClick={closeInvoiceModal}>&times;</span>
-            <p>Invoice:</p>
+            <p>Invoice</p>
+            <div id="qrcode"></div>
             <textarea id="invoiceText" readOnly></textarea>
             <button id="copyButton" className="styled-button" onClick={copyToClipboard}>Copy</button>
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.82</small></h6>
+        <h6>bullishNuts <small>v0.0.83</small></h6>
         <br></br>
 
         <div className="section">
