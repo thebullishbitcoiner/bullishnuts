@@ -703,41 +703,42 @@ const Wallet = () => {
   async function showInvoiceModal(invoice) {
     const modal = document.getElementById('invoiceModal');
     const qrcodeDiv = document.getElementById('qrcode');
-
-    // Clear any existing QR code (if needed)
+  
+    if (!modal || !qrcodeDiv) {
+      console.error("Modal or QR Code div not found.");
+      return;
+    }
+  
+    // Remove any existing QR code
     qrcodeDiv.innerHTML = "";
-
+  
+    // Create a canvas element manually
+    const canvas = document.createElement('canvas');
+    qrcodeDiv.appendChild(canvas);
+  
     try {
-      // Create a canvas element and append it to the qrcodeDiv
-      const canvas = document.createElement('canvas');
-      qrcodeDiv.appendChild(canvas);
-
-      // Get the width of the parent div and set it to the canvas
-      const parentWidth = qrcodeDiv.clientWidth;
-
-      // Ensure canvas styling respects the parent div's width
-      canvas.style.width = "100%";
-      canvas.style.maxWidth = `${parentWidth}px`; // Limit to parent width
-
-      // Generate the QR code with adjusted width and color options
+      // Generate QR code directly on the canvas
       await QRCode.toCanvas(canvas, invoice, {
-        width: parentWidth, // Adjust width dynamically based on parent div
-        margin: 4, // Optional: Add some margin around the QR code
+        width: 268,  // Set a static width for testing
         color: {
-          dark: "#FF9900",  // Dots
-          light: "#000000"  // Background
+          dark: "#000000",  // Dots
+          light: "#FF9900"  // Background
         },
       });
+  
+      console.log("QR code generated successfully on canvas.");
 
-      // Display the modal and set the invoice text
-      const invoiceText = document.getElementById('invoiceText');
-      invoiceText.value = invoice;
-
+        const invoiceText = document.getElementById('invoiceText');
+    invoiceText.value = invoice;
+  
+      // Show the modal after generating the QR code
       modal.style.display = 'block';
     } catch (error) {
-      console.error("Failed to generate QR Code:", error);
+      console.error("Error generating QR code:", error);
     }
   }
+  
+  
 
   function closeInvoiceModal() {
     const modal = document.getElementById('invoiceModal');
@@ -1172,7 +1173,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.83</small></h6>
+        <h6>bullishNuts <small>v0.0.84</small></h6>
         <br></br>
 
         <div className="section">
