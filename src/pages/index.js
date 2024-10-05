@@ -1,5 +1,5 @@
 import useMultiMintStorage from "@/hooks/useMultiMintStorage";
-import { CashuMint, CashuWallet, getEncodedToken, getDecodedToken } from "@cashu/cashu-ts";
+import { CashuMint, CashuWallet, getEncodedToken, getDecodedToken, getEncodedTokenV4 } from "@cashu/cashu-ts";
 import React, { useState, useEffect } from "react";
 import Contacts from "@/components/Contacts";
 import LightningModal from '@/components/LightningModal';
@@ -228,14 +228,14 @@ const Wallet = () => {
 
     try {
       const { send, returnChange } = await wallet.send(amount, proofs);
-
-      const encodedToken = getEncodedToken({
+      const tokenData = {
         token: [{ proofs: send, mint: wallet.mint.mintUrl }],
-      });
+      };
+      const encodedToken = getEncodedToken(tokenData)
 
       //Close the sats input modal and display the cashu token modal
       closeSendEcashModal();
-      showCashuTokenModal(encodedToken);
+      showCashuTokenModal(tokenData);
 
       //Add token to local storage
       storeJSON(encodedToken);
@@ -246,7 +246,7 @@ const Wallet = () => {
       storeJSON(encodedToken);
     } catch (error) {
       console.error(error);
-      setDataOutput({ error: "Failed to swap tokens", details: error });
+      setDataOutput({ error: "Failed to send ecash", details: error });
     }
   }
 
@@ -691,13 +691,7 @@ const Wallet = () => {
   }
 
   async function showInvoiceModal(invoice) {
-
     const qrcodeDiv = document.getElementById('invoice_qrcode');
-
-    if (!modal || !qrcodeDiv) {
-      console.error("Modal or QR Code div not found.");
-      return;
-    }
 
     // Remove any existing QR code
     qrcodeDiv.innerHTML = "";
@@ -803,23 +797,66 @@ const Wallet = () => {
     }
   }
 
-  async function showCashuTokenModal(token) {
-    // Display the cashun token string
-    document.getElementById('send_cashu_token').value = token;
+  async function showCashuTokenModal(tokenData) {
+    // Store the current token data in the hidden input
+    document.getElementById('current_token_data').value = JSON.stringify(tokenData);
+
+    // Get and show V4 token by default
+    const encodedTokenV4 = getEncodedTokenV4(tokenData);
+    document.getElementById('send_cashu_token').value = encodedTokenV4;
 
     // Get the div that will contain the QR code
-    const qrcodeDiv = document.getElementById('cashu_token_qrcode');
+    const qrCodeDiv = document.getElementById('cashu_token_qrcode');
 
+    await generateQR(qrCodeDiv, encodedTokenV4);
+
+    const modal = document.getElementById('cashu_token_modal');
+    modal.style.display = 'block';
+  }
+
+  // Function to handle toggling between V3 and V4 token formats
+  async function handleToggleToken() {
+    // Retrieve the token data from the hidden input
+    const tokenData = JSON.parse(document.getElementById('current_token_data').value);
+
+    if (!tokenData) {
+      console.error("Token data is undefined");
+      return; // Exit if tokenData is not set
+    }
+
+    const toggleButton = document.getElementById('toggle_token_button');
+    const currentVersion = toggleButton.getAttribute('data-version'); // Get the current version from the data attribute
+
+    let encodedToken;
+    if (currentVersion === 'V4') {
+        encodedToken = getEncodedToken(tokenData); // Get the V3 token
+        toggleButton.setAttribute('data-version', 'V3'); // Update the data attribute to V3
+        toggleButton.innerText = 'V4'; // Update button text
+    } else {
+        encodedToken = getEncodedTokenV4(tokenData); // Get the V4 token
+        toggleButton.setAttribute('data-version', 'V4'); // Update the data attribute to V4
+        toggleButton.innerText = 'V3'; // Update button text
+    }
+
+    // Display the token in the textarea
+    document.getElementById('send_cashu_token').value = encodedToken;
+
+    const qrCodeDiv = document.getElementById('cashu_token_qrcode');
+    await generateQR(qrCodeDiv, encodedToken); // Generate the QR code for the V3 token
+  }
+
+  // This function creates a QR code from the encoded token, puts it in a canvas, and add that canvas as a child to the div passed
+  async function generateQR(qrCodeDiv, encodedToken) {
     // Remove any existing QR code
-    qrcodeDiv.innerHTML = "";
+    qrCodeDiv.innerHTML = "";
 
     // Create a canvas element manually
     const canvas = document.createElement('canvas');
-    qrcodeDiv.appendChild(canvas);
+    qrCodeDiv.appendChild(canvas);
 
     try {
       // Generate QR code directly on the canvas
-      await QRCode.toCanvas(canvas, token, {
+      await QRCode.toCanvas(canvas, encodedToken, {
         width: 268,  // Set a static width for testing
         color: {
           dark: "#000000",  // Dots
@@ -829,9 +866,6 @@ const Wallet = () => {
     } catch (error) {
       console.error("Error generating QR code:", error);
     }
-
-    const modal = document.getElementById('cashu_token_modal');
-    modal.style.display = 'block';
   }
 
   function closeCashuTokenModal() {
@@ -1187,7 +1221,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.1.0</small></h6>
+        <h6>bullishNuts <small>v0.1.1</small></h6>
         <br></br>
 
         <div className="section">
@@ -1233,11 +1267,13 @@ const Wallet = () => {
         {/* Cashu token modal */}
         <div id="cashu_token_modal" className="modal">
           <div className="modal-content">
+            <input type="hidden" id="current_token_data" />
             <span className="close-button" onClick={closeCashuTokenModal}>&times;</span>
             <h2>Cashu token</h2>
             <div id="cashu_token_qrcode"></div>
             <textarea id="send_cashu_token" readOnly></textarea>
             <button id="copy_token_button" className="styled-button" onClick={copyCashuToken}>Copy</button>
+            <button id="toggle_token_button" className="styled-button" data-version="V4" onClick={handleToggleToken}>V3</button>
           </div>
         </div>
 

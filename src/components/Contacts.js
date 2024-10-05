@@ -40,7 +40,7 @@ const Contacts = ({ onContactSelect, updateContacts }) => {
                 }}>+</button>
             </div>
             {contacts.length === 0 ? ( // Check if contacts array is empty
-                <p>Add contacts by name and npub. This will allow you to send Lightning payments to their <a href="https://npub.cash/">npub.cash</a> address.</p> 
+                <p>Add contacts by name and npub. This will allow you to send Lightning payments to their <a href="https://npub.cash/">npub.cash</a> address.</p>
             ) : (
                 contacts
                     .map((contact, index) => ({ contact, index })) // Create an array of objects with contact and original index
