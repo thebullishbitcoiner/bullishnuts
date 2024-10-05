@@ -198,7 +198,7 @@ const Wallet = () => {
           return;
         } catch (error) {
           console.error(error);
-          setDataOutput({ error: "Failed to receive token from a different mint.", details: error });
+          setDataOutput({ error: "Failed to receive ecash.", details: error });
         }
       }
 
@@ -691,31 +691,22 @@ const Wallet = () => {
     window.location.reload();
   }
 
-  // function showInvoiceModal(invoice) {
-  //   const modal = document.getElementById('invoiceModal');
-
-  //   const invoiceText = document.getElementById('invoiceText');
-  //   invoiceText.value = invoice;
-
-  //   modal.style.display = 'block';
-  // }
-
   async function showInvoiceModal(invoice) {
-    const modal = document.getElementById('invoiceModal');
-    const qrcodeDiv = document.getElementById('qrcode');
-  
+
+    const qrcodeDiv = document.getElementById('invoice_qrcode');
+
     if (!modal || !qrcodeDiv) {
       console.error("Modal or QR Code div not found.");
       return;
     }
-  
+
     // Remove any existing QR code
     qrcodeDiv.innerHTML = "";
-  
+
     // Create a canvas element manually
     const canvas = document.createElement('canvas');
     qrcodeDiv.appendChild(canvas);
-  
+
     try {
       // Generate QR code directly on the canvas
       await QRCode.toCanvas(canvas, invoice, {
@@ -725,20 +716,19 @@ const Wallet = () => {
           light: "#FF9900"  // Background
         },
       });
-  
+
       console.log("QR code generated successfully on canvas.");
 
-        const invoiceText = document.getElementById('invoiceText');
-    invoiceText.value = invoice;
-  
+      const invoiceText = document.getElementById('invoiceText');
+      invoiceText.value = invoice;
+
       // Show the modal after generating the QR code
+      const modal = document.getElementById('invoiceModal');
       modal.style.display = 'block';
     } catch (error) {
       console.error("Error generating QR code:", error);
     }
   }
-  
-  
 
   function closeInvoiceModal() {
     const modal = document.getElementById('invoiceModal');
@@ -814,9 +804,34 @@ const Wallet = () => {
     }
   }
 
-  function showCashuTokenModal(token) {
-    const modal = document.getElementById('cashu_token_modal');
+  async function showCashuTokenModal(token) {
+    // Display the cashun token string
     document.getElementById('send_cashu_token').value = token;
+
+    // Get the div that will contain the QR code
+    const qrcodeDiv = document.getElementById('cashu_token_qrcode');
+
+    // Remove any existing QR code
+    qrcodeDiv.innerHTML = "";
+
+    // Create a canvas element manually
+    const canvas = document.createElement('canvas');
+    qrcodeDiv.appendChild(canvas);
+
+    try {
+      // Generate QR code directly on the canvas
+      await QRCode.toCanvas(canvas, token, {
+        width: 268,  // Set a static width for testing
+        color: {
+          dark: "#000000",  // Dots
+          light: "#FF9900"  // Background
+        },
+      });
+    } catch (error) {
+      console.error("Error generating QR code:", error);
+    }
+
+    const modal = document.getElementById('cashu_token_modal');
     modal.style.display = 'block';
   }
 
@@ -1167,13 +1182,13 @@ const Wallet = () => {
           <div className="modal-content">
             <span className="close-button" onClick={closeInvoiceModal}>&times;</span>
             <p>Invoice</p>
-            <div id="qrcode"></div>
+            <div id="invoice_qrcode"></div>
             <textarea id="invoiceText" readOnly></textarea>
             <button id="copyButton" className="styled-button" onClick={copyToClipboard}>Copy</button>
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.84</small></h6>
+        <h6>bullishNuts <small>v0.0.85</small></h6>
         <br></br>
 
         <div className="section">
@@ -1220,7 +1235,8 @@ const Wallet = () => {
         <div id="cashu_token_modal" className="modal">
           <div className="modal-content">
             <span className="close-button" onClick={closeCashuTokenModal}>&times;</span>
-            <p>Cashu token:</p>
+            <h2>Cashu token</h2>
+            <div id="cashu_token_qrcode"></div>
             <textarea id="send_cashu_token" readOnly></textarea>
             <button id="copy_token_button" className="styled-button" onClick={copyCashuToken}>Copy</button>
           </div>
