@@ -36,26 +36,29 @@ const Contacts = ({ onContactSelect, updateContacts }) => {
             <div className="header">
                 <h2>Contacts</h2>
                 <button className="add-button" onClick={() => {
-                    console.log("Button clicked");
                     setIsModalOpen(true);
                 }}>+</button>
             </div>
-            {contacts
-                .map((contact, index) => ({ contact, index })) // Create an array of objects with contact and original index
-                .slice() // Create a shallow copy of the array
-                .sort((a, b) => {
-                    const nameA = a.contact.name.toUpperCase(); // Ignore case
-                    const nameB = b.contact.name.toUpperCase(); // Ignore case
-                    if (nameA < nameB) return -1;
-                    if (nameA > nameB) return 1;
-                    return 0;
-                })
-                .map(({ contact, index }) => (
-                    <div className="contact-row" key={index}>
-                        <span onClick={() => onContactSelect(contact)}>{contact.name}</span>
-                        <button className="delete-button" onClick={() => confirmDeleteContact(index)}>×</button>
-                    </div>
-                ))}
+            {contacts.length === 0 ? ( // Check if contacts array is empty
+                <p>Add contacts by name and npub. This will allow you to send Lightning payments to their <a href="https://npub.cash/">npub.cash</a> address.</p> 
+            ) : (
+                contacts
+                    .map((contact, index) => ({ contact, index })) // Create an array of objects with contact and original index
+                    .slice() // Create a shallow copy of the array
+                    .sort((a, b) => {
+                        const nameA = a.contact.name.toUpperCase(); // Ignore case
+                        const nameB = b.contact.name.toUpperCase(); // Ignore case
+                        if (nameA < nameB) return -1;
+                        if (nameA > nameB) return 1;
+                        return 0;
+                    })
+                    .map(({ contact, index }) => (
+                        <div className="contact-row" key={index}>
+                            <span onClick={() => onContactSelect(contact)}>{contact.name}</span>
+                            <button className="delete-button" onClick={() => confirmDeleteContact(index)}>×</button>
+                        </div>
+                    ))
+            )}
             {isModalOpen && <ContactModal onClose={() => setIsModalOpen(false)} onSave={addContact} />}
             {isConfirmModalOpen && (
                 <div className="delete_contact_modal">
@@ -67,6 +70,7 @@ const Contacts = ({ onContactSelect, updateContacts }) => {
                 </div>
             )}
         </div>
+
     );
 };
 

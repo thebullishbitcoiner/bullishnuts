@@ -1,9 +1,8 @@
 import useMultiMintStorage from "@/hooks/useMultiMintStorage";
-import { CashuMint, CashuWallet, getEncodedToken } from "@cashu/cashu-ts";
+import { CashuMint, CashuWallet, getEncodedToken, getDecodedToken } from "@cashu/cashu-ts";
 import React, { useState, useEffect } from "react";
 import Contacts from "@/components/Contacts";
 import LightningModal from '@/components/LightningModal';
-import { getDecodedToken, encodeJsonToBase64 } from "@/hooks/CashuDecoder";
 import Mints from "@/components/Mints";
 import EcashOrLightning from "@/components/EcashOrLightning";
 import QRCode from 'qrcode';
@@ -1188,7 +1187,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.0.85</small></h6>
+        <h6>bullishNuts <small>v0.1.0</small></h6>
         <br></br>
 
         <div className="section">
