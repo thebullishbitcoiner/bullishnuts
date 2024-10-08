@@ -23,7 +23,7 @@ const LightningModal = ({ contacts, onClose, onSend }) => {
                         rows="4"
                         cols="42"
                     ></textarea>
-                    <button className="select_contact_button" onClick={() => setIsContactModalOpen(true)}>👤</button>
+                    <button className="select_contact_button" onClick={() => setIsContactModalOpen(true)}>𓅦</button>
                 </div>
                 <button className="styled-button" onClick={() => onSend(invoiceOrAddress)}>Send</button>
             </div>
