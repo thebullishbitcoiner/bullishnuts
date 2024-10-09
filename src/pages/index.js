@@ -12,6 +12,7 @@ import { finalizeEvent, generateSecretKey, getPublicKey } from 'nostr-tools/pure
 import crypto from 'crypto'
 import * as secp from '@noble/secp256k1'
 import { Relay } from 'nostr-tools/relay'
+import { RedirectType } from "next/navigation";
 
 const Wallet = () => {
   const [isLightningModalOpen, setIsLightningModalOpen] = useState(false);
@@ -68,10 +69,10 @@ const Wallet = () => {
       setFormData((prevData) => ({ ...prevData, mintUrl: url }));
     }
     else {
-      showMessageWithGif("bullishNuts is an ecash wallet that's in its early beta phase. " +
-        "Please use at your own risk with a small amount of sats at a time. " +
-        "Your first mint will be automatically added once you redeem a token. " +
-        "Send me a DM on Nostr if you need one. 🥜");
+      showMessageModal("bullishNuts is an ecash wallet that's in its early beta phase. Please <b>use at your own risk</b> with a small amount of sats at a time.\n\n" +
+        "Since it is a progressive web app (PWA), your ecash tokens are stored in your browser's local storage. " +
+        "Keep that in mind and sweep your sats out before deleting your browser data.\n\n" + 
+        "Lastly, reach out on Nostr if you run into any issues. Have fun playing with your bitcoin! 🤙\n\n");
     }
   }, []);
 
@@ -798,17 +799,31 @@ const Wallet = () => {
   }
 
   async function showCashuTokenModal(tokenData) {
+    let encodedToken;
+
+    try {
+      encodedToken = getEncodedTokenV4(tokenData);
+    }
+    catch (error) {
+      showToast("Unable to generate V4 token. Falling back to V3.");
+      console.log(error);
+      encodedToken = getEncodedToken(tokenData);
+
+      // Set the toggle button to indicate V3 is active
+      const toggleButton = document.getElementById('toggle_token_button');
+      toggleButton.setAttribute('data-version', 'V3'); // Update the data attribute to V3
+      toggleButton.innerText = 'V4'; // Update button text
+    }
+
+    document.getElementById('send_cashu_token').value = encodedToken;
+
     // Store the current token data in the hidden input
     document.getElementById('current_token_data').value = JSON.stringify(tokenData);
-
-    // Get and show V4 token by default
-    const encodedTokenV4 = getEncodedTokenV4(tokenData);
-    document.getElementById('send_cashu_token').value = encodedTokenV4;
 
     // Get the div that will contain the QR code
     const qrCodeDiv = document.getElementById('cashu_token_qrcode');
 
-    await generateQR(qrCodeDiv, encodedTokenV4);
+    await generateQR(qrCodeDiv, encodedToken);
 
     const modal = document.getElementById('cashu_token_modal');
     modal.style.display = 'block';
@@ -827,22 +842,29 @@ const Wallet = () => {
     const toggleButton = document.getElementById('toggle_token_button');
     const currentVersion = toggleButton.getAttribute('data-version'); // Get the current version from the data attribute
 
-    let encodedToken;
-    if (currentVersion === 'V4') {
+    try {
+      let encodedToken;
+
+      if (currentVersion === 'V4') {
         encodedToken = getEncodedToken(tokenData); // Get the V3 token
         toggleButton.setAttribute('data-version', 'V3'); // Update the data attribute to V3
         toggleButton.innerText = 'V4'; // Update button text
-    } else {
+      } else {
         encodedToken = getEncodedTokenV4(tokenData); // Get the V4 token
         toggleButton.setAttribute('data-version', 'V4'); // Update the data attribute to V4
         toggleButton.innerText = 'V3'; // Update button text
+      }
+
+      // Display the token in the textarea
+      document.getElementById('send_cashu_token').value = encodedToken;
+
+      const qrCodeDiv = document.getElementById('cashu_token_qrcode');
+      await generateQR(qrCodeDiv, encodedToken); // Generate the QR code
+    } catch (error) {
+      showToast("Unable to toggle the token format.");
+      console.log(error);
     }
 
-    // Display the token in the textarea
-    document.getElementById('send_cashu_token').value = encodedToken;
-
-    const qrCodeDiv = document.getElementById('cashu_token_qrcode');
-    await generateQR(qrCodeDiv, encodedToken); // Generate the QR code for the V3 token
   }
 
   // This function creates a QR code from the encoded token, puts it in a canvas, and add that canvas as a child to the div passed
@@ -988,27 +1010,36 @@ const Wallet = () => {
 
   function showMessageModal(message) {
     const modal = document.getElementById('message_modal');
-    document.getElementById('message').textContent = message;
+    
+    // Replace newline characters with <br> tags
+    const formattedMessage = message.replace(/\n/g, '<br>');
+    
+    document.getElementById('message').innerHTML = formattedMessage;
     modal.style.display = 'block';
-  }
+}
 
-  function showMessageWithGif(text) {
-    const messageElement = document.getElementById('message');
-    messageElement.textContent = ''; // Clear any existing text
 
-    let index = 0;
-    const interval = setInterval(() => {
-      if (index < text.length) {
-        messageElement.textContent += text[index];
-        index++;
-      } else {
-        clearInterval(interval);
-      }
-    }, 50); // Adjust the interval speed as needed
+function showMessageWithGif(text) {
+  const messageElement = document.getElementById('message');
+  messageElement.innerHTML = ''; // Clear any existing text
 
-    // Show the modal
-    document.getElementById('message_modal').style.display = 'block';
-  }
+  // Replace newline characters with <br> tags
+  const formattedText = text.replace(/\n/g, '<br>');
+
+  let index = 0;
+  const interval = setInterval(() => {
+    if (index < formattedText.length) {
+      messageElement.innerHTML += formattedText[index];
+      index++;
+    } else {
+      clearInterval(interval);
+    }
+  }, 50); // Adjust the interval speed as needed
+
+  // Show the modal
+  document.getElementById('message_modal').style.display = 'block';
+}
+
 
   function closeMessageModal() {
     const modal = document.getElementById('message_modal');
@@ -1221,7 +1252,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.1.2</small></h6>
+        <h6>bullishNuts <small>v0.1.3</small></h6>
         <br></br>
 
         <div className="section">
