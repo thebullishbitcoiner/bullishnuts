@@ -12,7 +12,6 @@ import { finalizeEvent, generateSecretKey, getPublicKey } from 'nostr-tools/pure
 import crypto from 'crypto'
 import * as secp from '@noble/secp256k1'
 import { Relay } from 'nostr-tools/relay'
-import { RedirectType } from "next/navigation";
 
 const Wallet = () => {
   const [isLightningModalOpen, setIsLightningModalOpen] = useState(false);
