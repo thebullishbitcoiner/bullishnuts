@@ -25,8 +25,12 @@ main {
   margin-bottom: 21px;
   background-color: #000000;
   padding: 21px;
-  border: 1px solid #ff9900;
   width: 100%;
+  border: 2px solid black;
+  box-shadow: 0 1px 0 1px #ff9900,
+      inset 0 1px 0 1px #ff9900,
+      0 0 0 1px #ff9900,
+      inset 0 0 0 1px #ff9900;
 }
 
 .section p {
@@ -82,6 +86,7 @@ main {
 .styled-button {
   flex: 1;
   min-width: 100px;
+  background-color: #211400;
   border: 1px solid #ff9900;
   border-radius: 0px;
   padding: 10px 20px;
@@ -118,39 +123,18 @@ main {
   transition: background-color 0.3s ease, transform 0.1s ease;
 }
 
-.full_width_button {
-  flex: 1;
-  width: 100%;
-  border: 1px solid #ff9900;
-  border-radius: 0px;
-  padding: 10px 20px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  margin: 4px 0px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.1s ease;
-}
-
-.full_width_button:active {
-  transform: scale(0.98);
-  /* Scale up slightly when clicked */
-}
-
-.full_width_button:hover {
-  background-color: rgba(255, 153, 0, 0.5);
-  /* #ff9900 with 50% transparency */
-}
-
 .data-display-container {
-  border: 1px solid #ff9900;
   background-color: black;
   padding: 21px;
   box-shadow: 0 0 10px rgba(110, 107, 107, 0.1);
   width: 100%;
   height: auto;
   overflow-y: auto;
+  border: 2px solid black;
+  box-shadow: 0 1px 0 1px #ff9900,
+      inset 0 1px 0 1px #ff9900,
+      0 0 0 1px #ff9900,
+      inset 0 0 0 1px #ff9900;
 }
 
 .data-display-container h2 {
@@ -203,7 +187,7 @@ main {
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0, 0, 0, 0.9);
+    background-color: rgba(0, 0, 0, .9);
   }
 
   .modal h2 {

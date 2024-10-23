@@ -1,0 +1,60 @@
+@font-face {
+    font-family: "Pokemon GB";
+    src: url("../fonts/Pokemon_Card_GB_Part_A.ttf") format("truetype");
+}
+
+.dialogbox {
+    cursor: default;
+    font-size: 12px;
+    font-family: "Pokemon GB", Monospace, sans-serif;
+    border-radius: 1px;
+    padding: 21px;
+    /* Change to fixed positioning */
+    position: fixed; /* Fixed positioning to stay in view */
+    top: 20px; /* Fixed 20px from the top */
+    left: 50%; /* Center horizontally */
+    transform: translateX(-50%); /* Adjust for the width of the dialog */
+    /* Width of the dialog */
+    width: 83vw;
+    /* Allow height to adjust based on content */
+    height: auto;
+    line-height: 16px;
+    /* No margin needed for fixed positioning */
+    background: black;
+    border: 2px solid black;
+    box-shadow: 0 1px 0 1px #ff9900,
+        inset 0 1px 0 1px #ff9900,
+        0 0 0 1px #ff9900,
+        inset 0 0 0 1px #ff9900;
+    /* Prevent text selection */
+    user-select: none;
+}
+
+.arrow {
+    width: 0;
+    height: 0;
+    border: 5px solid transparent;
+    border-top-color: #ff9900;
+    position: absolute;
+    /* Position it absolutely */
+    bottom: 3px;
+    /* Distance from the bottom */
+    right: 7px;
+    /* Distance from the right */
+    animation: bounce 0.3s ease-in-out infinite alternate;
+    /* Bouncing animation */
+    cursor: pointer;
+    /* Change cursor to pointer */
+}
+
+@keyframes bounce {
+    from {
+        transform: translateY(0);
+    }
+
+    to {
+        transform: translateY(-5px);
+    }
+
+    /* Adjust the bounce height */
+}

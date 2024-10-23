@@ -13,11 +13,16 @@ import crypto from 'crypto'
 import * as secp from '@noble/secp256k1'
 import { Relay } from 'nostr-tools/relay'
 
+import TypewriterModal from '@/components/TypewriterModal';
+
 const Wallet = () => {
   const [isLightningModalOpen, setIsLightningModalOpen] = useState(false);
   const [isEcashOrLightningOpen, setIsEcashOrLightningOpen] = useState(false);
   const [ecashOrLightningModalLabel, setEcashOrLightningModalLabel] = useState("");
   const [contacts, setContacts] = useState([]);
+
+  const [typewriterMessages, setTypewriterMessages] = useState([]);
+  const [isTypewriterModalOpen, setIsTypewriterModalOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -68,10 +73,15 @@ const Wallet = () => {
       setFormData((prevData) => ({ ...prevData, mintUrl: url }));
     }
     else {
-      showMessageModal("bullishNuts is an ecash wallet that's in its early beta phase. Please <b>use at your own risk</b> with a small amount of sats at a time.\n\n" +
-        "Since it is a progressive web app (PWA), your ecash tokens are stored in your browser's local storage. " +
-        "Keep that in mind and sweep your sats out before deleting your browser data.\n\n" + 
-        "Lastly, reach out on Nostr if you run into any issues. Have fun playing with your bitcoin! 🤙\n\n");
+      const introMessages = [
+        "bullishNuts is an ecash wallet that's in its early beta phase with the goal of making your interactions with Cashu simple and fun!",
+        "Since this is a progressive web app (PWA), you can easily add this app to your device's home screen for quick access, just like a native app!",
+        "Also, since it's a PWA, your ecash tokens are stored in your browser's local storage. Keep that in mind and sweep your sats out before deleting your browser data.",
+        "Please use at your own risk with a small amount of sats at a time.",
+        "Lastly, reach out on Nostr if you run into any issues.",
+        "Have fun playing with your bitcoin! 🤙"
+      ];
+      showTypewriterModal(introMessages);
     }
   }, []);
 
@@ -1009,35 +1019,50 @@ const Wallet = () => {
 
   function showMessageModal(message) {
     const modal = document.getElementById('message_modal');
-    
+
     // Replace newline characters with <br> tags
     const formattedMessage = message.replace(/\n/g, '<br>');
-    
+
     document.getElementById('message').innerHTML = formattedMessage;
     modal.style.display = 'block';
-}
+  }
 
+  const showTypewriterModal = (messagesArray) => {
+    setTypewriterMessages(messagesArray);
 
-function showMessageWithGif(text) {
-  const messageElement = document.getElementById('message');
-  messageElement.innerHTML = ''; // Clear any existing text
+    const modal = document.getElementById('typewriter_modal');
+    modal.style.display = 'block';
 
-  // Replace newline characters with <br> tags
-  const formattedText = text.replace(/\n/g, '<br>');
+    setIsTypewriterModalOpen(true);
+  };
 
-  let index = 0;
-  const interval = setInterval(() => {
-    if (index < formattedText.length) {
-      messageElement.innerHTML += formattedText[index];
-      index++;
-    } else {
-      clearInterval(interval);
-    }
-  }, 50); // Adjust the interval speed as needed
+  const closeTypewriterModal = () => {
+    const modal = document.getElementById('typewriter_modal');
+    modal.style.display = 'none';
 
-  // Show the modal
-  document.getElementById('message_modal').style.display = 'block';
-}
+    setIsTypewriterModalOpen(false);
+  };
+
+  function showMessageWithGif(text) {
+    const messageElement = document.getElementById('message');
+    messageElement.innerHTML = ''; // Clear any existing text
+
+    // Replace newline characters with <br> tags
+    const formattedText = text.replace(/\n/g, '<br>');
+
+    let index = 0;
+    const interval = setInterval(() => {
+      if (index < formattedText.length) {
+        messageElement.innerHTML += formattedText[index];
+        index++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 50); // Adjust the interval speed as needed
+
+    // Show the modal
+    document.getElementById('message_modal').style.display = 'block';
+  }
 
 
   function closeMessageModal() {
@@ -1240,6 +1265,15 @@ function showMessageWithGif(text) {
           </div>
         </div>
 
+        <div id="typewriter_modal" className="modal">
+          {isTypewriterModalOpen && (
+            <TypewriterModal
+              messages={typewriterMessages}
+              onClose={closeTypewriterModal}
+            />
+          )}
+        </div>
+
         {/* Invoice modal */}
         <div id="invoiceModal" className="modal">
           <div className="modal-content">
@@ -1251,7 +1285,7 @@ function showMessageWithGif(text) {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.1.3</small></h6>
+        <h6>bullishNuts <small>v0.2.0</small></h6>
         <br></br>
 
         <div className="section">
@@ -1380,14 +1414,19 @@ function showMessageWithGif(text) {
           <h2>Advanced</h2>
           <p>Data Output</p>
           <pre id="data-output" className="data-output">{JSON.stringify(dataOutput, null, 2)}</pre>
-          <button className="full_width_button" onClick={checkProofs}>Check Proofs</button>
-          <button className="full_width_button" onClick={exportJSON}>Export JSON Logs</button>
+          <div className="button-container">
+            <button className="styled-button" onClick={checkProofs}>Check Proofs</button>
+          </div>
+          <div className="button-container">
+            <button className="styled-button" onClick={exportJSON}>Export JSON Logs</button>
+          </div>
+
         </div>
 
         <br></br>
 
         <div className="section">
-          <small>Made with <button onClick={startEmojiRain}>🐂</button> by <a href="https://thebullishbitcoiner.com/">thebullishbitcoiner</a></small>
+          <small>Made with <button onClick={startEmojiRain}>🐂</button> by <a href="https://primal.net/thebullishbitcoiner">thebullishbitcoiner</a></small>
         </div>
 
       </div>
