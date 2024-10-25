@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import useMultiMintStorage from "@/hooks/useMultiMintStorage";
 import { CashuMint } from "@cashu/cashu-ts";
+import { PlusIcon, CrossIcon } from '@bitcoin-design/bitcoin-icons-react/filled'
 
 const Mints = ({ onMintChange, balance }) => {
-    
+
     const { getMintBalance } = useMultiMintStorage();
-    
+
     const [mintNames, setMintNames] = useState([]);
     const [activeMint, setLocalActiveMint] = useState(null); // Local state for activeMint
     const [showModal, setShowModal] = useState(false); // State for showing/hiding modal
@@ -16,25 +17,25 @@ const Mints = ({ onMintChange, balance }) => {
         if (typeof window !== "undefined" && localStorage.getItem("proofsByMint")) {
             const storedProofsByMint = JSON.parse(localStorage.getItem("proofsByMint")) || {};
             const mintURLs = Object.keys(storedProofsByMint);
-    
+
             // Retrieve the activeMint from localStorage, if any
             const storedActiveMint = JSON.parse(localStorage.getItem("activeMint"));
             let localActiveMint = storedActiveMint ? storedActiveMint.url : null;
-    
+
             const mintNamesPromises = mintURLs.map(async (mintUrl) => {
                 try {
                     const storedMintInfo = JSON.parse(localStorage.getItem("mintInfo")) || {};
-    
+
                     // If the mint info for this URL is not in localStorage, fetch and store it
                     if (!storedMintInfo[mintUrl]) {
                         const mint = new CashuMint(mintUrl);
                         const info = await mint.getInfo();
-    
+
                         // Store the fetched mint info in localStorage
                         storedMintInfo[mintUrl] = info;
                         localStorage.setItem("mintInfo", JSON.stringify(storedMintInfo));
                     }
-    
+
                     // Use the info from localStorage
                     const mintInfo = storedMintInfo[mintUrl];
                     return { mintUrl, name: mintInfo.name || mintUrl }; // Fallback to URL if no name is provided
@@ -43,10 +44,10 @@ const Mints = ({ onMintChange, balance }) => {
                     return { mintUrl, name: mintUrl }; // Fallback in case of an error
                 }
             });
-    
+
             const mintNamesWithInfo = await Promise.all(mintNamesPromises);
             setMintNames(mintNamesWithInfo);
-    
+
             // Set the first mint as active if there's no active mint set yet in localStorage
             if (mintNamesWithInfo.length > 0 && !localActiveMint) {
                 const firstMint = mintNamesWithInfo[0].mintUrl;
@@ -56,7 +57,7 @@ const Mints = ({ onMintChange, balance }) => {
             }
         }
     };
-    
+
     // Fetch mint names and activeMint on mount
     useEffect(() => {
         fetchMintNames();
@@ -127,26 +128,26 @@ const Mints = ({ onMintChange, balance }) => {
             showToast("Please enter a valid mint URL.");
             return;
         }
-    
+
         try {
             // Update proofsByMint and mintInfo in localStorage
             const storedProofsByMint = JSON.parse(localStorage.getItem("proofsByMint")) || {};
             const storedMintInfo = JSON.parse(localStorage.getItem("mintInfo")) || {};
-    
+
             // Add new mint entry with empty proofs array
             storedProofsByMint[newMintURL] = [];
-    
+
             // Get mint info 
             const mint = new CashuMint(newMintURL);
             const info = await mint.getInfo();
-    
+
             // Add fetched mint info to mintInfo
             storedMintInfo[newMintURL] = info;
-    
+
             // Save the updated data to localStorage
             localStorage.setItem("proofsByMint", JSON.stringify(storedProofsByMint));
             localStorage.setItem("mintInfo", JSON.stringify(storedMintInfo));
-    
+
             // Re-fetch mint names and hide the modal
             await fetchMintNames(); // Ensure state updates after data is stored
             setShowModal(false);
@@ -157,7 +158,7 @@ const Mints = ({ onMintChange, balance }) => {
             showToast("Failed to add mint. Please check the URL and try again.");
         }
     };
-    
+
     function showToast(message, duration = 4000) {
         const toast = document.getElementById("toast");
         toast.textContent = message;
@@ -173,7 +174,7 @@ const Mints = ({ onMintChange, balance }) => {
             <div className="header">
                 <h2>Mints</h2>
                 {/* Add mint button */}
-                <button className="add-button" onClick={() => { setShowModal(true); }}>+</button>
+                <button className="add-button" onClick={() => { setShowModal(true); }}><PlusIcon style={{ height: "21px", width: "21px" }} /></button>
             </div>
             <div className="mints-list">
                 {mintNames.length > 0 ? (
@@ -198,7 +199,9 @@ const Mints = ({ onMintChange, balance }) => {
                                     </span>
                                 </div>
                             </div>
-                            <button className="delete-button" onClick={() => handleDeleteMint(mint.mintUrl)}>×</button>
+                            <button className="delete-button" onClick={() => handleDeleteMint(mint.mintUrl)}>
+                                <CrossIcon style={{ height: "21px", width: "21px" }} />
+                            </button>
                         </div>
                     ))
                 ) : (

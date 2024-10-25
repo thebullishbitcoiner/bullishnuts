@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ContactModal from './ContactModal';
+import { PlusIcon, CrossIcon } from '@bitcoin-design/bitcoin-icons-react/filled'
 
 const Contacts = ({ onContactSelect, updateContacts }) => {
     const [contacts, setContacts] = useState([]);
@@ -35,9 +36,7 @@ const Contacts = ({ onContactSelect, updateContacts }) => {
         <div className="contacts-container">
             <div className="header">
                 <h2>Contacts</h2>
-                <button className="add-button" onClick={() => {
-                    setIsModalOpen(true);
-                }}>+</button>
+                <button className="add-button" onClick={() => { setIsModalOpen(true); }}><PlusIcon style={{ height: "21px", width: "21px" }} /></button>
             </div>
             {contacts.length === 0 ? ( // Check if contacts array is empty
                 <p>Add contacts by name and npub. This will allow you to send Lightning payments to their <a href="https://npub.cash/">npub.cash</a> address.</p>
@@ -55,7 +54,9 @@ const Contacts = ({ onContactSelect, updateContacts }) => {
                     .map(({ contact, index }) => (
                         <div className="contact-row" key={index}>
                             <span onClick={() => onContactSelect(contact)}>{contact.name}</span>
-                            <button className="delete-button" onClick={() => confirmDeleteContact(index)}>×</button>
+                            <button className="delete-button" onClick={() => confirmDeleteContact(index)}>
+                                <CrossIcon style={{ height: "21px", width: "21px" }} />
+                            </button>
                         </div>
                     ))
             )}
