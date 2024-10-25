@@ -1,6 +1,6 @@
 import useMultiMintStorage from "@/hooks/useMultiMintStorage";
 import { CashuMint, CashuWallet, getEncodedToken, getDecodedToken, getEncodedTokenV4 } from "@cashu/cashu-ts";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Contacts from "@/components/Contacts";
 import LightningModal from '@/components/LightningModal';
 import Mints from "@/components/Mints";
@@ -25,7 +25,11 @@ const Wallet = () => {
   const [typewriterMessages, setTypewriterMessages] = useState([]);
   const [isTypewriterModalOpen, setIsTypewriterModalOpen] = useState(false);
 
-  const jsConfetti = new JSConfetti();
+  const jsConfettiRef = useRef(null); // Create a ref to store the jsConfetti instance
+
+  useEffect(() => {
+    jsConfettiRef.current = new JSConfetti(); // Initialize the instance
+  }, []); // Runs only once when the component mounts
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -1162,10 +1166,12 @@ const Wallet = () => {
   }
 
   function showConfetti() {
-    jsConfetti.addConfetti({
-      emojis: ['🥜', '⚡️'],
-      emojiSize: 100,
-    });
+    if (jsConfettiRef.current) {
+      jsConfettiRef.current.addConfetti({
+        emojis: ['🥜', '⚡️'],
+        emojiSize: 100,
+      });
+    }
   }
 
   async function checkProofs() {
@@ -1262,7 +1268,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h2><b>bullishNuts</b> <small>v0.2.3</small></h2>
+        <h2><b>bullishNuts</b> <small>v0.2.4</small></h2>
         <br></br>
 
         <div className="section">
