@@ -6,6 +6,7 @@ import LightningModal from '@/components/LightningModal';
 import Mints from "@/components/Mints";
 import EcashOrLightning from "@/components/EcashOrLightning";
 import QRCode from 'qrcode';
+import JSConfetti from 'js-confetti'
 
 //Nostr
 import { finalizeEvent, generateSecretKey, getPublicKey } from 'nostr-tools/pure';
@@ -23,6 +24,8 @@ const Wallet = () => {
 
   const [typewriterMessages, setTypewriterMessages] = useState([]);
   const [isTypewriterModalOpen, setIsTypewriterModalOpen] = useState(false);
+
+  const jsConfetti = new JSConfetti();
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -1158,37 +1161,11 @@ const Wallet = () => {
     }
   }
 
-  function startEmojiRain() {
-    const emojiContainer = document.createElement('div');
-    emojiContainer.id = 'emoji-container';
-    document.body.appendChild(emojiContainer);
-
-    emojiInterval = setInterval(() => {
-      const emoji = document.createElement('div');
-      emoji.className = 'emoji';
-      emoji.textContent = Math.random() > 0.5 ? '🥜' : '⚡';
-      emoji.style.left = `${Math.random() * 100}vw`;
-      emoji.style.animationDuration = `${Math.random() * 3 + 2}s`;
-      emoji.style.fontSize = `${Math.random() * 2 + 1}rem`; // Random size between 1rem and 3rem
-      emojiContainer.appendChild(emoji);
-
-      // Remove emoji after animation ends
-      emoji.addEventListener('animationend', () => {
-        emoji.remove();
-      });
-    }, 21);
-
-    // Stop emoji rain after a few seconds
-    setTimeout(stopEmojiRain, 1000);
-  }
-
-  function stopEmojiRain() {
-    clearInterval(emojiInterval);
-
-    // Remove the emoji container after a while to ensure all animations are done
-    setTimeout(() => {
-      document.getElementById('emoji-container').remove();
-    }, 3000); // Extended to allow all emojis to fall
+  function showConfetti() {
+    jsConfetti.addConfetti({
+      emojis: ['🥜', '⚡️'],
+      emojiSize: 100,
+    });
   }
 
   async function checkProofs() {
@@ -1285,7 +1262,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h6>bullishNuts <small>v0.2.2</small></h6>
+        <h2><b>bullishNuts</b> <small>v0.2.3</small></h2>
         <br></br>
 
         <div className="section">
@@ -1426,7 +1403,7 @@ const Wallet = () => {
         <br></br>
 
         <div className="section">
-          <small>Made with <button onClick={startEmojiRain}>🐂</button> by <a href="https://primal.net/thebullishbitcoiner">thebullishbitcoiner</a></small>
+          <small>Made with <button onClick={showConfetti}>🐂</button> by <a href="https://primal.net/thebullishbitcoiner">thebullishbitcoiner</a></small>
         </div>
 
       </div>
