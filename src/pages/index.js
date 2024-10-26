@@ -479,7 +479,8 @@ const Wallet = () => {
 
       if (isPaid) {
         waitingModal.style.display = 'none';
-        makeDeezNutsRain(quote.amount);
+        showConfetti(quote.amount);
+        //makeDeezNutsRain(quote.amount);
         const message = quote.amount + ' sat(s) sent to ' + lightningAddress;
         showToast(message);
         removeProofs(proofs, url);
@@ -582,7 +583,8 @@ const Wallet = () => {
       await relay.publish(signedEvent)
 
       removeProofs(proofs, url);
-      showToast("Succesfully sent nuts!");
+      showToast("Succesfully sent nuts! Thank you!");
+      showConfetti(amount);
     } catch (error) {
       console.error(error);
       setDataOutput({ error: true, details: error });
@@ -1165,11 +1167,12 @@ const Wallet = () => {
     }
   }
 
-  function showConfetti() {
+  function showConfetti(confettiNumber = 21) {
     if (jsConfettiRef.current) {
       jsConfettiRef.current.addConfetti({
-        emojis: ['🥜', '⚡️'],
+        emojis: ['🐂', '🥜', '⚡️'],
         emojiSize: 100,
+        confettiNumber: confettiNumber,
       });
     }
   }
@@ -1268,7 +1271,7 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h2><b>bullishNuts</b> <small>v0.2.5</small></h2>
+        <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b> <small>v0.2.6</small></h2>
         <br></br>
 
         <div className="section">
@@ -1409,7 +1412,7 @@ const Wallet = () => {
         <br></br>
 
         <div className="section">
-          <small>Made with <button onClick={showConfetti}>🐂</button> by <a href="https://primal.net/thebullishbitcoiner">thebullishbitcoiner</a></small>
+          <small>Made with 🐂 by <a href="https://primal.net/thebullishbitcoiner">thebullishbitcoiner</a></small>
         </div>
 
       </div>
