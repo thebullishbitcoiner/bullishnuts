@@ -21,6 +21,32 @@ main {
   max-width: 100%;
 }
 
+.app_header {
+  display: flex;
+  justify-content: space-between; /* Space between the header and refresh icon */
+  align-items: center; /* Center items vertically */
+ 
+  padding-bottom: 15px;
+  width: 100%; /* Ensure it takes the full width */
+  box-sizing: border-box; /* Include padding in width calculation */
+}
+
+.app_header h2 {
+  margin: 0; /* Remove default margin from h2 */
+  display: flex; /* Ensure the content inside h2 stays on one line */
+  align-items: center; /* Center align items vertically */
+}
+
+.app_header #refresh-icon {
+  cursor: pointer; /* Change cursor to pointer for clickable icon */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s, transform 0.3s;
+}
+
+.app_header #refresh-icon:hover {
+  transform: rotate(180deg);
+}
+
 .section {
   margin-bottom: 21px;
   background-color: #000000;
@@ -89,15 +115,18 @@ main {
   background-color: #211400;
   border: 1px solid #ff9900;
   border-radius: 0px;
-  padding: 10px 20px;
-  text-align: center;
+  padding: 10px; /* Adjust padding as needed */
+  text-align: center; /* Center text horizontally */
   text-decoration: none;
-  display: inline-block;
+  display: inline-flex; /* Use inline-flex for layout */
+  align-items: center; /* Center items vertically */
+  justify-content: center; /* Center items horizontally */
   font-size: 16px;
   margin: 4px 2px;
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.1s ease;
 }
+
 
 .styled-button:active {
   transform: scale(0.98);
@@ -160,21 +189,6 @@ main {
 @layer utilities {
   .text-balance {
     text-wrap: balance;
-  }
-
-  #refresh-icon {
-    position: absolute;
-    top: 15px;
-    right: 21px;
-    font-size: 24px;
-    cursor: pointer;
-    padding: 10px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    transition: background-color 0.3s, transform 0.3s;
-  }
-
-  #refresh-icon:hover {
-    transform: rotate(180deg);
   }
 
   /* Modal styles */
@@ -311,11 +325,11 @@ main {
     font-family: 'Courier New', Courier, monospace;
   }
 
-  .header {
+  .box_header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 0px;
   }
 
   .add-button {
@@ -487,10 +501,6 @@ main {
       opacity: 0;
       /* Fully transparent at the end of the fall */
     }
-  }
-
-  .mints-list {
-    margin-top: 20px;
   }
 
   .mint-row {

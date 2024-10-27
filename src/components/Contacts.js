@@ -34,7 +34,7 @@ const Contacts = ({ onContactSelect, updateContacts }) => {
 
     return (
         <div className="contacts-container">
-            <div className="header">
+            <div className="box_header">
                 <h2>Contacts</h2>
                 <button className="add-button" onClick={() => { setIsModalOpen(true); }}><PlusIcon style={{ height: "21px", width: "21px" }} /></button>
             </div>

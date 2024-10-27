@@ -171,12 +171,12 @@ const Mints = ({ onMintChange, balance }) => {
 
     return (
         <div>
-            <div className="header">
+            <div className="box_header">
                 <h2>Mints</h2>
                 {/* Add mint button */}
                 <button className="add-button" onClick={() => { setShowModal(true); }}><PlusIcon style={{ height: "21px", width: "21px" }} /></button>
             </div>
-            <div className="mints-list">
+            <div>
                 {mintNames.length > 0 ? (
                     mintNames.map((mint, index) => (
                         <div key={index} className="mint-row">

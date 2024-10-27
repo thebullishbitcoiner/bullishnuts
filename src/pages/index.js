@@ -6,7 +6,7 @@ import LightningModal from '@/components/LightningModal';
 import Mints from "@/components/Mints";
 import EcashOrLightning from "@/components/EcashOrLightning";
 import QRCode from 'qrcode';
-import JSConfetti from 'js-confetti'
+import JSConfetti from 'js-confetti';
 
 //Nostr
 import { finalizeEvent, generateSecretKey, getPublicKey } from 'nostr-tools/pure';
@@ -15,6 +15,7 @@ import * as secp from '@noble/secp256k1'
 import { Relay } from 'nostr-tools/relay'
 
 import TypewriterModal from '@/components/TypewriterModal';
+import { RefreshIcon, SendIcon, ReceiveIcon, LightningIcon } from "@bitcoin-design/bitcoin-icons-react/filled";
 
 const Wallet = () => {
   const [isLightningModalOpen, setIsLightningModalOpen] = useState(false);
@@ -1239,7 +1240,11 @@ const Wallet = () => {
 
       <div className="cashu-operations-container">
 
-        <div id="refresh-icon" onClick={refreshPage}>⟳</div>
+        <div className="app_header">
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '3px' }}>v0.2.7</small></h2>
+          <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
+        </div>
+
         <div id="toast" className="toast">This is a toast message.</div>
 
         {/* Message modal */}
@@ -1271,15 +1276,12 @@ const Wallet = () => {
           </div>
         </div>
 
-        <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b> <small>v0.2.6</small></h2>
-        <br></br>
-
         <div className="section">
           <h2>Balance</h2>
           <p>{balance} sats</p>
           <div className="button-container">
-            <button className="styled-button" onClick={() => openEcashOrLightningModal('Send')}>Send</button>
-            <button className="styled-button" onClick={() => openEcashOrLightningModal('Receive')}>Receive</button>
+            <button className="styled-button" onClick={() => openEcashOrLightningModal('Send')}>Send<SendIcon style={{ height: '21px', width: '21px', marginLeft: '5px' }} /></button>
+            <button className="styled-button" onClick={() => openEcashOrLightningModal('Receive')}>Receive<ReceiveIcon style={{ height: '21px', width: '21px', marginLeft: '5px' }} /></button>
           </div>
           <EcashOrLightning
             isOpen={isEcashOrLightningOpen}
@@ -1389,7 +1391,7 @@ const Wallet = () => {
         <div className="section">
           <h2>Donate</h2>
           <div className="button-container">
-            <button className="styled-button" onClick={zapDeezNuts} >ZAP DEEZ NUTS ⚡</button>
+            <button className="styled-button" onClick={zapDeezNuts} >ZAP DEEZ NUTS<LightningIcon style={{ height: '21px', width: '21px', marginLeft: '3px' }} /></button>
           </div>
           <div className="button-container">
             <button className="styled-button" onClick={payToPubkey} >SEND NUTS 🥜</button>
