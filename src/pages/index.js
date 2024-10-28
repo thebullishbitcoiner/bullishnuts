@@ -966,9 +966,13 @@ const Wallet = () => {
   }
 
   function closeSendNutsModal() {
+    // Hide modal
     const modal = document.getElementById('send_nuts_modal');
-    document.getElementById('send_nuts_amount').value = '';
     modal.style.display = 'none';
+
+    // Clear inputs
+    document.getElementById('send_nuts_amount').value = '';
+    document.getElementById('send_nuts_message').value = '';
   }
 
   //Receive modals
@@ -1241,7 +1245,7 @@ const Wallet = () => {
       <div className="cashu-operations-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '3px' }}>v0.2.7</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '2px' }}>v0.2.8</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
