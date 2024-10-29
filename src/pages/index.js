@@ -1,10 +1,14 @@
 import useMultiMintStorage from "@/hooks/useMultiMintStorage";
 import { CashuMint, CashuWallet, getEncodedToken, getDecodedToken, getEncodedTokenV4 } from "@cashu/cashu-ts";
 import React, { useState, useEffect, useRef } from "react";
+
+// Custom components
 import Contacts from "@/components/Contacts";
 import LightningModal from '@/components/LightningModal';
 import Mints from "@/components/Mints";
 import EcashOrLightning from "@/components/EcashOrLightning";
+import Transactions from "@/components/Transactions";
+
 import QRCode from 'qrcode';
 import JSConfetti from 'js-confetti';
 
@@ -260,8 +264,29 @@ const Wallet = () => {
 
       removeProofs(proofs, wallet.mint.mintUrl);
       addProofs(returnChange, wallet.mint.mintUrl);
+
+      const timestamp = getTimestamp();
+
+      // Create a transaction object
+      const transaction = {
+        action: "send",
+        type: "ecash",
+        mint: wallet.mint.mintUrl,
+        amount: amount,
+        created: timestamp,
+        token: encodedToken,
+      };
+
+      // Retrieve existing transactions from local storage
+      const existingTransactions = JSON.parse(localStorage.getItem("transactions")) || [];
+
+      // Add the new transaction to the beginning of the array
+      existingTransactions.unshift(transaction);
+
+      // Store the updated transactions array back in local storage
+      localStorage.setItem("transactions", JSON.stringify(existingTransactions));
+
       setDataOutput(encodedToken);
-      storeJSON(encodedToken);
     } catch (error) {
       console.error(error);
       setDataOutput({ error: "Failed to send ecash", details: error });
@@ -913,6 +938,7 @@ const Wallet = () => {
     document.getElementById('send_cashu_token').value = '';
     const modal = document.getElementById('cashu_token_modal');
     modal.style.display = 'none';
+    refreshPage();
   }
 
   function closeSendEcashModal() {
@@ -1078,16 +1104,14 @@ const Wallet = () => {
     document.getElementById('message_modal').style.display = 'block';
   }
 
-
   function closeMessageModal() {
     const modal = document.getElementById('message_modal');
     modal.style.display = 'none';
   }
 
-  function getTimestamp_EST() {
+  function getTimestamp() {
     const date = new Date();
     const options = {
-      timeZone: 'America/New_York',
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
@@ -1112,9 +1136,7 @@ const Wallet = () => {
 
   function storeJSON(json) {
     // Generate a timestamp to use as the key
-    const timestamp = getTimestamp_EST();
-
-    new Date().toLocaleTimeString
+    const timestamp = getTimestamp();
 
     // Retrieve existing data from local storage
     const existingData = JSON.parse(localStorage.getItem('json')) || {};
@@ -1143,7 +1165,7 @@ const Wallet = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    const timestamp = getTimestamp_EST();
+    const timestamp = getTimestamp();
     a.download = `bullishNuts_logs_${timestamp}.json`;
     a.click();
     URL.revokeObjectURL(url);
@@ -1245,7 +1267,7 @@ const Wallet = () => {
       <div className="cashu-operations-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.9</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.10</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
@@ -1293,6 +1315,10 @@ const Wallet = () => {
             onOptionSelect={handleOptionSelect}
             label={ecashOrLightningModalLabel}
           />
+        </div>
+
+        <div className="section">
+          <Transactions />
         </div>
 
         <div className="section">
