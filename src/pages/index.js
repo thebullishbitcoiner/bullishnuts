@@ -26,6 +26,7 @@ const Wallet = () => {
   const [isEcashOrLightningOpen, setIsEcashOrLightningOpen] = useState(false);
   const [ecashOrLightningModalLabel, setEcashOrLightningModalLabel] = useState("");
   const [contacts, setContacts] = useState([]);
+  const [updateFlag_Transactions, setUpdateFlag_Transactions] = useState(0);
 
   const [typewriterMessages, setTypewriterMessages] = useState([]);
   const [isTypewriterModalOpen, setIsTypewriterModalOpen] = useState(false);
@@ -159,8 +160,9 @@ const Wallet = () => {
 
         //Add new proofs to existing ones
         addProofs(proofs, wallet.mint.mintUrl);
-
         closeInvoiceModal();
+        const totalAmount = getTotalAmountFromProofs(proofs);
+        addTransaction("receive", "Lightning", wallet.mint.mintUrl, totalAmount, "");
         showToast(`${amount} sat${amount !== 1 ? 's' : ''} received`);
 
         clearInterval(intervalId);
@@ -214,7 +216,9 @@ const Wallet = () => {
 
           addProofs(proofs, mintURL);
           closeReceiveEcashModal();
-          showToast('Ecash received!');
+          const totalAmount = getTotalAmountFromProofs(proofs);
+          addTransaction("receive", "Ecash", mintURL, totalAmount, token);
+          showToast(`Received ${totalAmount} ${totalAmount === 1 ? 'sat' : 'sats'}!`);
 
           return;
         } catch (error) {
@@ -225,9 +229,10 @@ const Wallet = () => {
 
       const proofs = await currentWallet.receive(token);
       addProofs(proofs, mintURL);
-
       closeReceiveEcashModal();
-      showToast('Ecash received!');
+      const totalAmount = getTotalAmountFromProofs(proofs);
+      addTransaction("receive", "Ecash", mintURL, totalAmount, token);
+      showToast(`Received ${totalAmount} ${totalAmount === 1 ? 'sat' : 'sats'}!`);
 
       setDataOutput(proofs);
       storeJSON(proofs);
@@ -237,6 +242,12 @@ const Wallet = () => {
       showToast("Failed to claim token");
     }
   }
+
+  const getTotalAmountFromProofs = (proofs) => {
+    return proofs.reduce((total, proof) => {
+      return total + proof.amount;
+    }, 0);
+  };
 
   async function handleSend_Ecash(amount) {
     const storedMintData = JSON.parse(localStorage.getItem("activeMint"));
@@ -264,33 +275,40 @@ const Wallet = () => {
 
       removeProofs(proofs, wallet.mint.mintUrl);
       addProofs(returnChange, wallet.mint.mintUrl);
-
-      const timestamp = getTimestamp();
-
-      // Create a transaction object
-      const transaction = {
-        action: "send",
-        type: "ecash",
-        mint: wallet.mint.mintUrl,
-        amount: amount,
-        created: timestamp,
-        token: encodedToken,
-      };
-
-      // Retrieve existing transactions from local storage
-      const existingTransactions = JSON.parse(localStorage.getItem("transactions")) || [];
-
-      // Add the new transaction to the beginning of the array
-      existingTransactions.unshift(transaction);
-
-      // Store the updated transactions array back in local storage
-      localStorage.setItem("transactions", JSON.stringify(existingTransactions));
+      addTransaction("send", "Ecash", wallet.mint.mintUrl, amount, encodedToken);
 
       setDataOutput(encodedToken);
     } catch (error) {
       console.error(error);
       setDataOutput({ error: "Failed to send ecash", details: error });
     }
+  }
+
+  // Handles adding a transaction to localStorage
+  function addTransaction(action, type, mint, amount, token) {
+    const timestamp = getTimestamp();
+
+    // Create a transaction object
+    const transaction = {
+      action: action,
+      type: type,
+      mint: mint,
+      amount: amount,
+      created: timestamp,
+      token: token,
+    };
+
+    // Retrieve existing transactions from local storage
+    const existingTransactions = JSON.parse(localStorage.getItem("transactions")) || [];
+
+    // Add the new transaction to the beginning of the array
+    existingTransactions.unshift(transaction);
+
+    // Store the updated transactions array back in local storage
+    localStorage.setItem("transactions", JSON.stringify(existingTransactions));
+
+    // Increment the updateFlag to trigger a re-fetch in Transactions
+    setUpdateFlag_Transactions(prev => prev + 1);
   }
 
   async function handleSend_Lightning() {
@@ -321,9 +339,10 @@ const Wallet = () => {
           showToast('Invoice paid!');
           removeProofs(proofs, wallet.mint.mintUrl);
 
+          addTransaction("send", "Lightning", wallet.mint.mintUrl, amount, "");
+
           var changeArray = { "change": change };
           storeJSON(changeArray);
-
           addProofs(change, wallet.mint.mintUrl);
         }
       }
@@ -908,7 +927,6 @@ const Wallet = () => {
       showToast("Unable to toggle the token format.");
       console.log(error);
     }
-
   }
 
   // This function creates a QR code from the encoded token, puts it in a canvas, and add that canvas as a child to the div passed
@@ -938,7 +956,6 @@ const Wallet = () => {
     document.getElementById('send_cashu_token').value = '';
     const modal = document.getElementById('cashu_token_modal');
     modal.style.display = 'none';
-    refreshPage();
   }
 
   function closeSendEcashModal() {
@@ -1267,7 +1284,7 @@ const Wallet = () => {
       <div className="cashu-operations-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.10</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.11</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
@@ -1318,7 +1335,9 @@ const Wallet = () => {
         </div>
 
         <div className="section">
-          <Transactions />
+          <Transactions
+            updateFlag_Transactions={updateFlag_Transactions}
+          />
         </div>
 
         <div className="section">

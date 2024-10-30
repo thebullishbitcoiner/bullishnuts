@@ -23,7 +23,7 @@ const timeAgo = (date) => {
     return `${years} year${years === 1 ? '' : 's'} ago`;
 };
 
-const Transactions = () => {
+const Transactions = ({updateFlag_Transactions}) => {
     const [transactions, setTransactions] = useState([]);
 
     const updateTransactions = () => {
@@ -34,22 +34,12 @@ const Transactions = () => {
     useEffect(() => {
         // Initial load of transactions
         updateTransactions();
-
-        // Listen for storage changes
-        const handleStorageChange = (event) => {
-            if (event.key === "transactions") {
-                updateTransactions();
-            }
-        };
-
-        // Add event listener for storage changes
-        window.addEventListener('storage', handleStorageChange);
-
-        // Cleanup the event listener on component unmount
-        return () => {
-            window.removeEventListener('storage', handleStorageChange);
-        };
     }, []);
+
+    useEffect(() => {
+        // Update transactions whenever updateFlag changes
+        updateTransactions();
+    }, [updateFlag_Transactions]);
 
     // Function to copy token to clipboard
     const copyToClipboard = (token) => {
@@ -80,8 +70,8 @@ const Transactions = () => {
                                     <ReceiveIcon style={{ height: '21px', width: '21px', marginRight: '10px' }} />
                                 )}
                                 <div>
-                                    <div>{transaction.type}</div>
-                                    <div style={{ fontSize: '0.8em', color: '#666' }}>{timeAgo(transaction.created)}</div> {/* Human-readable timestamp */}
+                                    <div style={{ marginTop: '2px' }}>{transaction.type}</div>
+                                    <div style={{ fontSize: '0.8em', color: '#666', marginTop: '-3px' }}>{timeAgo(transaction.created)}</div> {/* Human-readable timestamp */}
                                 </div>
                             </div>
                             <div>{transaction.amount} {transaction.amount === 1 ? 'sat' : 'sats'}</div> {/* Append "sat" or "sats" */}
