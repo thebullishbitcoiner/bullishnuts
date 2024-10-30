@@ -23,7 +23,7 @@ const timeAgo = (date) => {
     return `${years} year${years === 1 ? '' : 's'} ago`;
 };
 
-const Transactions = ({updateFlag_Transactions}) => {
+const Transactions = ({ updateFlag_Transactions }) => {
     const [transactions, setTransactions] = useState([]);
 
     const updateTransactions = () => {
@@ -45,7 +45,7 @@ const Transactions = ({updateFlag_Transactions}) => {
     const copyToClipboard = (token) => {
         navigator.clipboard.writeText(token)
             .then(() => {
-                alert(`Token copied to clipboard!`); 
+                alert(`Token copied to clipboard!`);
             })
             .catch(err => {
                 console.error('Failed to copy: ', err);
@@ -55,30 +55,35 @@ const Transactions = ({updateFlag_Transactions}) => {
     return (
         <div>
             <h2>Transactions</h2>
-            <div style={{ maxHeight: '222px', overflowY: 'auto', border: '1px solid #ff9900', borderRadius: '0px', padding: '10px' }}>
-                <ul style={{ listStyleType: 'none', padding: 0 }}>
-                    {transactions.map((transaction, index) => (
-                        <li
-                            key={index}
-                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', cursor: 'pointer' }}
-                            onClick={() => copyToClipboard(transaction.token)} // Copy token directly
-                        >
-                            <div style={{ display: 'flex', alignItems: 'center' }}>
-                                {transaction.action === "send" ? (
-                                    <SendIcon style={{ height: '21px', width: '21px', marginRight: '10px' }} />
-                                ) : (
-                                    <ReceiveIcon style={{ height: '21px', width: '21px', marginRight: '10px' }} />
-                                )}
-                                <div>
-                                    <div style={{ marginTop: '2px' }}>{transaction.type}</div>
-                                    <div style={{ fontSize: '0.8em', color: '#666', marginTop: '-3px' }}>{timeAgo(transaction.created)}</div> {/* Human-readable timestamp */}
+            {/* Display message if no transactions */}
+            {transactions.length === 0 ? (
+                <p>No transactions yet.</p>
+            ) : (
+                <div style={{ maxHeight: '222px', overflowY: 'auto', border: '1px solid #ff9900', borderRadius: '0px', padding: '10px' }}>
+                    <ul style={{ listStyleType: 'none', padding: 0 }}>
+                        {transactions.map((transaction, index) => (
+                            <li
+                                key={index}
+                                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', cursor: 'pointer' }}
+                                onClick={() => copyToClipboard(transaction.token)} // Copy token directly
+                            >
+                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                    {transaction.action === "send" ? (
+                                        <SendIcon style={{ height: '21px', width: '21px', marginRight: '10px' }} />
+                                    ) : (
+                                        <ReceiveIcon style={{ height: '21px', width: '21px', marginRight: '10px' }} />
+                                    )}
+                                    <div>
+                                        <div style={{ marginTop: '2px' }}>{transaction.type}</div>
+                                        <div style={{ fontSize: '0.8em', color: '#666', marginTop: '-3px' }}>{timeAgo(transaction.created)}</div> {/* Human-readable timestamp */}
+                                    </div>
                                 </div>
-                            </div>
-                            <div>{transaction.amount} {transaction.amount === 1 ? 'sat' : 'sats'}</div> {/* Append "sat" or "sats" */}
-                        </li>
-                    ))}
-                </ul>
-            </div>
+                                <div>{transaction.amount} {transaction.amount === 1 ? 'sat' : 'sats'}</div> {/* Append "sat" or "sats" */}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
         </div>
     );
 };
