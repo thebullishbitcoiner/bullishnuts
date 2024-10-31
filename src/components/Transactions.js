@@ -41,11 +41,11 @@ const Transactions = ({ updateFlag_Transactions }) => {
         updateTransactions();
     }, [updateFlag_Transactions]);
 
-    // Function to copy token to clipboard
-    const copyToClipboard = (token) => {
-        navigator.clipboard.writeText(token)
+    // Function to copy token or invoice to clipboard
+    const copyToClipboard = (content, type) => {
+        navigator.clipboard.writeText(content)
             .then(() => {
-                alert(`Token copied to clipboard!`);
+                alert(`${type} copied to clipboard!`);
             })
             .catch(err => {
                 console.error('Failed to copy: ', err);
@@ -65,7 +65,11 @@ const Transactions = ({ updateFlag_Transactions }) => {
                             <li
                                 key={index}
                                 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', cursor: 'pointer' }}
-                                onClick={() => copyToClipboard(transaction.token)} // Copy token directly
+                                onClick={() => {
+                                    const contentToCopy = transaction.type === 'Ecash' ? transaction.token : transaction.invoice;
+                                    const typeToCopy = transaction.type === 'Ecash' ? 'Token' : 'Invoice';
+                                    copyToClipboard(contentToCopy, typeToCopy);
+                                }}
                             >
                                 <div style={{ display: 'flex', alignItems: 'center' }}>
                                     {transaction.action === "send" ? (

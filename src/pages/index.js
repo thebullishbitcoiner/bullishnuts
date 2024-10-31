@@ -19,7 +19,7 @@ import * as secp from '@noble/secp256k1'
 import { Relay } from 'nostr-tools/relay'
 
 import TypewriterModal from '@/components/TypewriterModal';
-import { RefreshIcon, SendIcon, ReceiveIcon, LightningIcon } from "@bitcoin-design/bitcoin-icons-react/filled";
+import { RefreshIcon, SendIcon, ReceiveIcon, LightningIcon, CheckIcon, ExportIcon } from "@bitcoin-design/bitcoin-icons-react/filled";
 
 const Wallet = () => {
   const [isLightningModalOpen, setIsLightningModalOpen] = useState(false);
@@ -162,7 +162,7 @@ const Wallet = () => {
         addProofs(proofs, wallet.mint.mintUrl);
         closeInvoiceModal();
         const totalAmount = getTotalAmountFromProofs(proofs);
-        addTransaction("receive", "Lightning", wallet.mint.mintUrl, totalAmount, "");
+        addTransaction_Lightning("receive", wallet.mint.mintUrl, quote.request, totalAmount, "--");
         showToast(`${amount} sat${amount !== 1 ? 's' : ''} received`);
 
         clearInterval(intervalId);
@@ -217,7 +217,7 @@ const Wallet = () => {
           addProofs(proofs, mintURL);
           closeReceiveEcashModal();
           const totalAmount = getTotalAmountFromProofs(proofs);
-          addTransaction("receive", "Ecash", mintURL, totalAmount, token);
+          addTransaction_Ecash("receive", mintURL, totalAmount, token);
           showToast(`Received ${totalAmount} ${totalAmount === 1 ? 'sat' : 'sats'}!`);
 
           return;
@@ -231,7 +231,7 @@ const Wallet = () => {
       addProofs(proofs, mintURL);
       closeReceiveEcashModal();
       const totalAmount = getTotalAmountFromProofs(proofs);
-      addTransaction("receive", "Ecash", mintURL, totalAmount, token);
+      addTransaction_Ecash("receive", mintURL, totalAmount, token);
       showToast(`Received ${totalAmount} ${totalAmount === 1 ? 'sat' : 'sats'}!`);
 
       setDataOutput(proofs);
@@ -275,7 +275,7 @@ const Wallet = () => {
 
       removeProofs(proofs, wallet.mint.mintUrl);
       addProofs(returnChange, wallet.mint.mintUrl);
-      addTransaction("send", "Ecash", wallet.mint.mintUrl, amount, encodedToken);
+      addTransaction_Ecash("send", wallet.mint.mintUrl, amount, encodedToken);
 
       setDataOutput(encodedToken);
     } catch (error) {
@@ -285,17 +285,42 @@ const Wallet = () => {
   }
 
   // Handles adding a transaction to localStorage
-  function addTransaction(action, type, mint, amount, token) {
+  function addTransaction_Ecash(action, mint, amount, token) {
     const timestamp = getTimestamp();
 
-    // Create a transaction object
     const transaction = {
+      type: "Ecash",
+      created: timestamp,
       action: action,
-      type: type,
       mint: mint,
       amount: amount,
-      created: timestamp,
       token: token,
+    };
+
+    // Retrieve existing transactions from local storage
+    const existingTransactions = JSON.parse(localStorage.getItem("transactions")) || [];
+
+    // Add the new transaction to the beginning of the array
+    existingTransactions.unshift(transaction);
+
+    // Store the updated transactions array back in local storage
+    localStorage.setItem("transactions", JSON.stringify(existingTransactions));
+
+    // Increment the updateFlag to trigger a re-fetch in Transactions
+    setUpdateFlag_Transactions(prev => prev + 1);
+  }
+
+  function addTransaction_Lightning(action, mint, invoice, amount, fee) {
+    const timestamp = getTimestamp();
+
+    const transaction = {
+      type: "Lightning",
+      created: timestamp,
+      action: action,
+      mint: mint,
+      invoice: invoice,
+      amount: amount,
+      fee: fee,
     };
 
     // Retrieve existing transactions from local storage
@@ -339,7 +364,7 @@ const Wallet = () => {
           showToast('Invoice paid!');
           removeProofs(proofs, wallet.mint.mintUrl);
 
-          addTransaction("send", "Lightning", wallet.mint.mintUrl, amount, "");
+          addTransaction_Lightning("send", wallet.mint.mintUrl, invoice, amount, quote.fee_reserve);
 
           var changeArray = { "change": change };
           storeJSON(changeArray);
@@ -439,14 +464,16 @@ const Wallet = () => {
 
         if (isPaid) {
           waitingModal.style.display = 'none';
+
           const message = quote.amount + ' sat(s) sent to ' + input;
           showToast(message);
+          
           removeProofs(proofs, wallet.mint.mintUrl);
-
           var changeArray = { "change": change };
           storeJSON(changeArray);
-
           addProofs(change, wallet.mint.mintUrl);
+
+          addTransaction_Lightning("send", wallet.mint.mintUrl, invoice, quote.amount, quote.fee_reserve);
         }
       } catch (error) {
         // Handle error, whether it's a timeout or another issue
@@ -1284,7 +1311,7 @@ const Wallet = () => {
       <div className="cashu-operations-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.12</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.13</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
@@ -1452,10 +1479,10 @@ const Wallet = () => {
           <p>Data Output</p>
           <pre id="data-output" className="data-output">{JSON.stringify(dataOutput, null, 2)}</pre>
           <div className="button-container">
-            <button className="styled-button" onClick={checkProofs}>Check Proofs</button>
+            <button className="styled-button" onClick={checkProofs}>Check Proofs<CheckIcon style={{ height: '21px', width: '21px', marginLeft: '3px' }} /></button>
           </div>
           <div className="button-container">
-            <button className="styled-button" onClick={exportJSON}>Export JSON Logs</button>
+            <button className="styled-button" onClick={exportJSON}>Export JSON Logs<ExportIcon style={{ height: '21px', width: '21px', marginLeft: '3px' }} /></button>
           </div>
 
         </div>
