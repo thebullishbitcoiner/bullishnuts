@@ -23,8 +23,56 @@ const timeAgo = (date) => {
     return `${years} year${years === 1 ? '' : 's'} ago`;
 };
 
+// Modal component to display transaction details
+const Modal = ({ transaction, onClose }) => {
+    if (!transaction) return null;
+
+    return (
+        <div className='transaction_modal'>
+            <div className='modal-content'>
+                <span className="close-button" onClick={onClose}>&times;</span>
+                <h2>Transaction Details</h2>
+                <p><strong>Type:</strong> {transaction.type}</p>
+                <p><strong>Action:</strong> {transaction.action}</p>
+                <p><strong>Amount:</strong> {transaction.amount} {transaction.amount === 1 ? 'sat' : 'sats'}</p>
+                <p><strong>Created:</strong> {timeAgo(transaction.created)}</p>
+
+                {/* Conditionally render properties based on transaction type */}
+                {transaction.type === "Ecash" && (
+                    <>
+                        <p><strong>Mint:</strong> {transaction.mint}</p>
+                        <p><strong>Token:</strong></p>
+                        <textarea
+                            readOnly
+                            value={transaction.token}
+                            rows={3}
+                            style={{ width: '100%', resize: 'none' }}
+                        />
+                    </>
+                )}
+                {transaction.type === "Lightning" && (
+                    <>
+                        <p><strong>Mint:</strong> {transaction.mint}</p>
+                        <p><strong>Fee:</strong> {transaction.fee} {transaction.fee === 1 ? 'sat' : 'sats'}</p>
+                        <p><strong>Invoice:</strong></p>
+                        <textarea
+                            readOnly
+                            value={transaction.invoice}
+                            rows={3}
+                            style={{ width: '100%', resize: 'none' }}
+                        />
+                    </>
+                )}
+            </div>
+        </div>
+    );
+};
+
+
 const Transactions = ({ updateFlag_Transactions }) => {
     const [transactions, setTransactions] = useState([]);
+    const [selectedTransaction, setSelectedTransaction] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const updateTransactions = () => {
         const storedTransactions = JSON.parse(localStorage.getItem("transactions")) || [];
@@ -41,15 +89,14 @@ const Transactions = ({ updateFlag_Transactions }) => {
         updateTransactions();
     }, [updateFlag_Transactions]);
 
-    // Function to copy token or invoice to clipboard
-    const copyToClipboard = (content, type) => {
-        navigator.clipboard.writeText(content)
-            .then(() => {
-                alert(`${type} copied to clipboard!`);
-            })
-            .catch(err => {
-                console.error('Failed to copy: ', err);
-            });
+    const handleTransactionClick = (transaction) => {
+        setSelectedTransaction(transaction);
+        setIsModalOpen(true);
+    };
+
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setSelectedTransaction(null);
     };
 
     return (
@@ -65,11 +112,7 @@ const Transactions = ({ updateFlag_Transactions }) => {
                             <li
                                 key={index}
                                 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', cursor: 'pointer' }}
-                                onClick={() => {
-                                    const contentToCopy = transaction.type === 'Ecash' ? transaction.token : transaction.invoice;
-                                    const typeToCopy = transaction.type === 'Ecash' ? 'Token' : 'Invoice';
-                                    copyToClipboard(contentToCopy, typeToCopy);
-                                }}
+                                onClick={() => handleTransactionClick(transaction)}
                             >
                                 <div style={{ display: 'flex', alignItems: 'center' }}>
                                     {transaction.action === "send" ? (
@@ -88,8 +131,13 @@ const Transactions = ({ updateFlag_Transactions }) => {
                     </ul>
                 </div>
             )}
+            {/* Modal for displaying transaction details */}
+            {isModalOpen && (
+                <Modal transaction={selectedTransaction} onClose={closeModal} />
+            )}
         </div>
     );
 };
 
 export default Transactions;
+
