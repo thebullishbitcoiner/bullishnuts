@@ -162,7 +162,7 @@ const Wallet = () => {
         addProofs(proofs, wallet.mint.mintUrl);
         closeInvoiceModal();
         const totalAmount = getTotalAmountFromProofs(proofs);
-        addTransaction_Lightning("receive", wallet.mint.mintUrl, quote.request, totalAmount, "--");
+        addTransaction_Lightning("Receive", wallet.mint.mintUrl, quote.request, totalAmount, "--");
         showToast(`${amount} sat${amount !== 1 ? 's' : ''} received`);
 
         clearInterval(intervalId);
@@ -217,7 +217,7 @@ const Wallet = () => {
           addProofs(proofs, mintURL);
           closeReceiveEcashModal();
           const totalAmount = getTotalAmountFromProofs(proofs);
-          addTransaction_Ecash("receive", mintURL, totalAmount, token);
+          addTransaction_Ecash("Receive", mintURL, totalAmount, token);
           showToast(`Received ${totalAmount} ${totalAmount === 1 ? 'sat' : 'sats'}!`);
 
           return;
@@ -231,7 +231,7 @@ const Wallet = () => {
       addProofs(proofs, mintURL);
       closeReceiveEcashModal();
       const totalAmount = getTotalAmountFromProofs(proofs);
-      addTransaction_Ecash("receive", mintURL, totalAmount, token);
+      addTransaction_Ecash("Receive", mintURL, totalAmount, token);
       showToast(`Received ${totalAmount} ${totalAmount === 1 ? 'sat' : 'sats'}!`);
 
       setDataOutput(proofs);
@@ -275,7 +275,7 @@ const Wallet = () => {
 
       removeProofs(proofs, wallet.mint.mintUrl);
       addProofs(returnChange, wallet.mint.mintUrl);
-      addTransaction_Ecash("send", wallet.mint.mintUrl, amount, encodedToken);
+      addTransaction_Ecash("Send", wallet.mint.mintUrl, amount, encodedToken);
 
       setDataOutput(encodedToken);
     } catch (error) {
@@ -364,7 +364,7 @@ const Wallet = () => {
           showToast('Invoice paid!');
           removeProofs(proofs, wallet.mint.mintUrl);
 
-          addTransaction_Lightning("send", wallet.mint.mintUrl, invoice, amount, quote.fee_reserve);
+          addTransaction_Lightning("Send", wallet.mint.mintUrl, invoice, amount, quote.fee_reserve);
 
           var changeArray = { "change": change };
           storeJSON(changeArray);
@@ -473,7 +473,7 @@ const Wallet = () => {
           storeJSON(changeArray);
           addProofs(change, wallet.mint.mintUrl);
 
-          addTransaction_Lightning("send", wallet.mint.mintUrl, invoice, quote.amount, quote.fee_reserve);
+          addTransaction_Lightning("Send", wallet.mint.mintUrl, invoice, quote.amount, quote.fee_reserve);
         }
       } catch (error) {
         // Handle error, whether it's a timeout or another issue
@@ -1311,7 +1311,7 @@ const Wallet = () => {
       <div className="cashu-operations-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.14</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.15</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 

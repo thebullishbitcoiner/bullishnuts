@@ -36,7 +36,7 @@ const Contacts = ({ onContactSelect, updateContacts }) => {
         <div className="contacts-container">
             <div className="box_header">
                 <h2>Contacts</h2>
-                <button className="add-button" onClick={() => { setIsModalOpen(true); }}><PlusIcon style={{ height: "21px", width: "21px" }} /></button>
+                <button onClick={() => { setIsModalOpen(true); }}><PlusIcon style={{ height: "21px", width: "21px", marginBottom: "10px" }} /></button>
             </div>
             {contacts.length === 0 ? ( // Check if contacts array is empty
                 <p>Add contacts by name and npub. This will allow you to send Lightning payments to their <a href="https://npub.cash/">npub.cash</a> address.</p>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import useMultiMintStorage from "@/hooks/useMultiMintStorage";
 import { CashuMint } from "@cashu/cashu-ts";
-import { PlusIcon, CrossIcon } from '@bitcoin-design/bitcoin-icons-react/filled'
+import { InfoCircleIcon, PlusIcon, CrossIcon } from '@bitcoin-design/bitcoin-icons-react/filled'
 
 const Mints = ({ onMintChange, balance }) => {
 
@@ -172,9 +172,8 @@ const Mints = ({ onMintChange, balance }) => {
     return (
         <div>
             <div className="box_header">
-                <h2>Mints</h2>
-                {/* Add mint button */}
-                <button className="add-button" onClick={() => { setShowModal(true); }}><PlusIcon style={{ height: "21px", width: "21px" }} /></button>
+                <h2 >Mints</h2>
+                <button onClick={() => { setShowModal(true); }}><PlusIcon style={{ height: "21px", width: "21px", marginBottom: "10px" }} /></button>
             </div>
             <div>
                 {mintNames.length > 0 ? (

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { SendIcon, ReceiveIcon } from "@bitcoin-design/bitcoin-icons-react/filled";
+import { TrashIcon, SendIcon, ReceiveIcon } from "@bitcoin-design/bitcoin-icons-react/filled";
 
 // Function to convert timestamp to human-readable format
 const timeAgo = (date) => {
@@ -23,9 +23,48 @@ const timeAgo = (date) => {
     return `${years} year${years === 1 ? '' : 's'} ago`;
 };
 
+function formatTimestamp(timestamp) {
+    // Create a Date object from the timestamp
+    const date = new Date(timestamp.replace(' ', 'T')); // Replace space with 'T' for proper parsing
+
+    // Define arrays for month names
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    // Extract date components
+    const year = date.getFullYear();
+    const month = monthNames[date.getMonth()]; // Get month name
+    const day = date.getDate();
+    let hour = date.getHours();
+    const minute = date.getMinutes();
+
+    // Determine AM/PM and convert to 12-hour format
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    hour = hour % 12; // Convert to 12-hour format
+    hour = hour ? hour : 12; // The hour '0' should be '12'
+
+    // Format minute to always have two digits
+    const formattedMinute = minute < 10 ? '0' + minute : minute;
+
+    // Construct the final formatted string
+    return `${month} ${day}, ${year} @ ${hour}:${formattedMinute} ${ampm}`;
+}
+
 // Modal component to display transaction details
 const Modal = ({ transaction, onClose }) => {
+    const [copied, setCopied] = useState(false);
+
     if (!transaction) return null;
+
+    const copyToClipboard = (text) => {
+        navigator.clipboard.writeText(text)
+            .then(() => {
+                setCopied(true);
+                setTimeout(() => setCopied(false), 1000); // Hide after 2 seconds
+            })
+            .catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+    };
 
     return (
         <div className='transaction_modal'>
@@ -35,19 +74,23 @@ const Modal = ({ transaction, onClose }) => {
                 <p><strong>Type:</strong> {transaction.type}</p>
                 <p><strong>Action:</strong> {transaction.action}</p>
                 <p><strong>Amount:</strong> {transaction.amount} {transaction.amount === 1 ? 'sat' : 'sats'}</p>
-                <p><strong>Created:</strong> {timeAgo(transaction.created)}</p>
+                <p><strong>Created:</strong><br />{formatTimestamp(transaction.created)}</p>
 
                 {/* Conditionally render properties based on transaction type */}
                 {transaction.type === "Ecash" && (
                     <>
                         <p><strong>Mint:</strong> {transaction.mint}</p>
                         <p><strong>Token:</strong></p>
-                        <textarea
-                            readOnly
-                            value={transaction.token}
-                            rows={3}
-                            style={{ width: '100%', resize: 'none' }}
-                        />
+                        <div style={{ position: 'relative' }}>
+                            <textarea
+                                readOnly
+                                value={transaction.token}
+                                rows={3}
+                                style={{ width: '100%', resize: 'none', outline: 'none' }}
+                                onClick={() => copyToClipboard(transaction.token)}
+                            />
+                            {copied && <span className="copied-message">Copied!</span>}
+                        </div>
                     </>
                 )}
                 {transaction.type === "Lightning" && (
@@ -55,19 +98,22 @@ const Modal = ({ transaction, onClose }) => {
                         <p><strong>Mint:</strong> {transaction.mint}</p>
                         <p><strong>Fee:</strong> {transaction.fee} {transaction.fee === 1 ? 'sat' : 'sats'}</p>
                         <p><strong>Invoice:</strong></p>
-                        <textarea
-                            readOnly
-                            value={transaction.invoice}
-                            rows={3}
-                            style={{ width: '100%', resize: 'none' }}
-                        />
+                        <div style={{ position: 'relative' }}>
+                            <textarea
+                                readOnly
+                                value={transaction.invoice}
+                                rows={3}
+                                style={{ width: '100%', resize: 'none', outline: 'none' }}
+                                onClick={() => copyToClipboard(transaction.invoice)}
+                            />
+                            {copied && <span className="copied-message">Copied!</span>}
+                        </div>
                     </>
                 )}
             </div>
         </div>
     );
 };
-
 
 const Transactions = ({ updateFlag_Transactions }) => {
     const [transactions, setTransactions] = useState([]);
@@ -77,6 +123,14 @@ const Transactions = ({ updateFlag_Transactions }) => {
     const updateTransactions = () => {
         const storedTransactions = JSON.parse(localStorage.getItem("transactions")) || [];
         setTransactions(storedTransactions);
+    };
+
+    const clearTransactions = () => {
+        const confirmDelete = window.confirm("Are you sure you want to delete all transactions?");
+        if (confirmDelete) {
+            localStorage.removeItem('transactions'); 
+            updateTransactions();
+        } 
     };
 
     useEffect(() => {
@@ -101,7 +155,10 @@ const Transactions = ({ updateFlag_Transactions }) => {
 
     return (
         <div>
-            <h2>Transactions</h2>
+             <div className="box_header">
+                <h2>Transactions</h2>
+                <button onClick={clearTransactions}><TrashIcon style={{ height: "21px", width: "21px", marginBottom: "15px" }} /></button>
+            </div>
             {/* Display message if no transactions */}
             {transactions.length === 0 ? (
                 <p>No transactions yet.</p>
