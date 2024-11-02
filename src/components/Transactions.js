@@ -51,10 +51,8 @@ function formatTimestamp(timestamp) {
 }
 
 // Modal component to display transaction details
-const Modal = ({ transaction, onClose }) => {
+const Modal = ({ transaction, onClose, isOpen }) => {
     const [copied, setCopied] = useState(false);
-
-    if (!transaction) return null;
 
     const copyToClipboard = (text) => {
         navigator.clipboard.writeText(text)
@@ -67,7 +65,6 @@ const Modal = ({ transaction, onClose }) => {
             });
     };
 
-    // Function to generate QR code
     const generateQR = async (text) => {
         const qrcodeDiv = document.getElementById('qrcode');
 
@@ -76,6 +73,7 @@ const Modal = ({ transaction, onClose }) => {
 
         // Create a canvas element manually
         const canvas = document.createElement('canvas');
+
         qrcodeDiv.appendChild(canvas);
 
         // Add click event to the canvas to copy the appropriate text
@@ -100,11 +98,14 @@ const Modal = ({ transaction, onClose }) => {
 
     // Effect to generate QR code when the modal opens or transaction changes
     useEffect(() => {
-        if (transaction) {
+        if (isOpen && transaction) {
             const textToEncode = transaction.type === "Ecash" ? transaction.token : transaction.invoice;
             generateQR(textToEncode);
         }
-    }, [transaction]); // Run effect when transaction changes
+    }, [isOpen, transaction]); // Run effect when isOpen or transaction changes
+
+    // If the modal is not open, return null
+    if (!isOpen) return null;
 
     return (
         <div className='transaction_modal'>
@@ -113,41 +114,33 @@ const Modal = ({ transaction, onClose }) => {
                 <h2>Transaction Details</h2>
 
                 <div id="qrcode" style={{ position: 'relative' }}>
-                    {/* The "Copied!" message will be positioned absolutely over the canvas */}
                     {copied && (
                         <span className="copied-message" style={{
                             position: 'absolute',
-                            top: '0px', // Adjust as needed
+                            top: '0px',
                             left: '50%',
                             transform: 'translateX(-50%)',
                             backgroundColor: 'rgba(0, 0, 0, 0.8)',
                             padding: '5px',
                             paddingBottom: '21px',
-                            zIndex: 10 // Ensure it appears above the canvas
+                            zIndex: 10
                         }}>
                             Copied!
                         </span>
                     )}
                 </div>
 
-                <p style={{ marginTop: "5px", marginBottom: '0px' }}>Type</p>
-                <input type="text" readOnly value={transaction.type} style={{ width: '100%' }} />
+                <p style={{ marginTop: '5px', marginBottom: '0px' }}>Type</p>
+                <input type="text" readOnly value={transaction.type} style={{ width: '100%', marginBottom: '5px' }} />
 
                 <p style={{ marginBottom: '0px' }}>{transaction.action}</p>
-                <input type="text" readOnly value={`${transaction.amount} ${transaction.amount === 1 ? 'sat' : 'sats'}`} style={{ width: '100%' }} />
+                <input type="text" readOnly value={`${transaction.amount} ${transaction.amount === 1 ? 'sat' : 'sats'}`} style={{ width: '100%', marginBottom: '5px' }} />
 
                 <p style={{ marginBottom: '0px' }}>Created</p>
-                <input type="text" readOnly value={formatTimestamp(transaction.created)} style={{ width: '100%' }} />
+                <input type="text" readOnly value={formatTimestamp(transaction.created)} style={{ width: '100%', marginBottom: '5px' }} />
 
                 <p style={{ marginBottom: '0px' }}>Mint</p>
-                <input type="text" readOnly value={transaction.mint} style={{ width: '100%' }} />
-
-                {/* Conditionally render properties based on transaction type */}
-                {transaction.type === "Ecash" && (
-                    <>
-
-                    </>
-                )}
+                <input type="text" readOnly value={transaction.mint} style={{ width: '100%', marginBottom: '5px' }} />
 
                 {transaction.type === "Lightning" && (
                     <>
@@ -159,6 +152,8 @@ const Modal = ({ transaction, onClose }) => {
         </div>
     );
 };
+
+
 
 const Transactions = ({ updateFlag_Transactions }) => {
     const [transactions, setTransactions] = useState([]);
@@ -233,10 +228,8 @@ const Transactions = ({ updateFlag_Transactions }) => {
                     </ul>
                 </div>
             )}
-            {/* Modal for displaying transaction details */}
-            {isModalOpen && (
-                <Modal transaction={selectedTransaction} onClose={closeModal} />
-            )}
+            {/* Always render the Modal, but control its visibility */}
+            <Modal transaction={selectedTransaction} onClose={closeModal} isOpen={isModalOpen} />
         </div>
     );
 };
