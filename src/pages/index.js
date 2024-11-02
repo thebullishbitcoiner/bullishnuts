@@ -8,6 +8,7 @@ import LightningModal from '@/components/LightningModal';
 import Mints from "@/components/Mints";
 import EcashOrLightning from "@/components/EcashOrLightning";
 import Transactions from "@/components/Transactions";
+import QRCodeScanner from '@/components/QRCodeScanner';
 
 import QRCode from 'qrcode';
 import JSConfetti from 'js-confetti';
@@ -19,7 +20,7 @@ import * as secp from '@noble/secp256k1'
 import { Relay } from 'nostr-tools/relay'
 
 import TypewriterModal from '@/components/TypewriterModal';
-import { RefreshIcon, SendIcon, ReceiveIcon, LightningIcon, CheckIcon, ExportIcon } from "@bitcoin-design/bitcoin-icons-react/filled";
+import { RefreshIcon, SendIcon, ReceiveIcon, LightningIcon, CheckIcon, ExportIcon, QrCodeIcon } from "@bitcoin-design/bitcoin-icons-react/filled";
 
 const Wallet = () => {
   const [isLightningModalOpen, setIsLightningModalOpen] = useState(false);
@@ -27,6 +28,7 @@ const Wallet = () => {
   const [ecashOrLightningModalLabel, setEcashOrLightningModalLabel] = useState("");
   const [contacts, setContacts] = useState([]);
   const [updateFlag_Transactions, setUpdateFlag_Transactions] = useState(0);
+  const [isScanQRModalOpen, setIsScanQRModalOpen] = useState(false);
 
   const [typewriterMessages, setTypewriterMessages] = useState([]);
   const [isTypewriterModalOpen, setIsTypewriterModalOpen] = useState(false);
@@ -467,7 +469,7 @@ const Wallet = () => {
 
           const message = quote.amount + ' sat(s) sent to ' + input;
           showToast(message);
-          
+
           removeProofs(proofs, wallet.mint.mintUrl);
           var changeArray = { "change": change };
           storeJSON(changeArray);
@@ -1301,6 +1303,14 @@ const Wallet = () => {
     ]);
   };
 
+  const showQRCodeScanner = () => {
+    setIsScanQRModalOpen(true);
+  };
+
+  const closeQRCodeScanner = () => {
+    setIsScanQRModalOpen(false);
+  }
+
   return (
     <main>
 
@@ -1309,7 +1319,7 @@ const Wallet = () => {
       <div className="cashu-operations-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.18</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.19</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
@@ -1348,8 +1358,20 @@ const Wallet = () => {
           <h2>Balance</h2>
           <p>{balance} sats</p>
           <div className="button-container">
-            <button className="styled-button" onClick={() => openEcashOrLightningModal('Send')}>Send<SendIcon style={{ height: '21px', width: '21px', marginLeft: '5px' }} /></button>
-            <button className="styled-button" onClick={() => openEcashOrLightningModal('Receive')}>Receive<ReceiveIcon style={{ height: '21px', width: '21px', marginLeft: '5px' }} /></button>
+            <button className="styled-button" onClick={() => openEcashOrLightningModal('Send')}>
+              Send<SendIcon style={{ height: '21px', width: '21px', marginLeft: '5px' }} />
+            </button>
+            <button onClick={showQRCodeScanner}>
+              <QrCodeIcon style={{ height: '42px', width: '42px' }} />
+            </button>
+            {isScanQRModalOpen &&
+              <QRCodeScanner
+                onClose={closeQRCodeScanner}
+                isScanQRModalOpen={isScanQRModalOpen}
+              />}
+            <button className="styled-button" onClick={() => openEcashOrLightningModal('Receive')}>
+              Receive<ReceiveIcon style={{ height: '21px', width: '21px', marginLeft: '5px' }} />
+            </button>
           </div>
           <EcashOrLightning
             isOpen={isEcashOrLightningOpen}
@@ -1377,7 +1399,7 @@ const Wallet = () => {
             contacts={contacts}
             onClose={() => setIsLightningModalOpen(false)}
             onSend={handleSend_Lightning}
-            isLightningModalOpen={isLightningModalOpen} 
+            isLightningModalOpen={isLightningModalOpen}
           />
         )}
 

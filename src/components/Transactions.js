@@ -153,8 +153,6 @@ const Modal = ({ transaction, onClose, isOpen }) => {
     );
 };
 
-
-
 const Transactions = ({ updateFlag_Transactions }) => {
     const [transactions, setTransactions] = useState([]);
     const [selectedTransaction, setSelectedTransaction] = useState(null);
