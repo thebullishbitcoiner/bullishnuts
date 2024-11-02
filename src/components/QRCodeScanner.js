@@ -20,6 +20,11 @@ const QRCodeScanner = ({ onClose = () => { }, isScanQRModalOpen }) => {
         willReadFrequently: true, // Set this attribute to true for performance
     };
 
+        // Video constraints to use the back camera
+        const videoConstraints = {
+            facingMode: { exact: "environment" } // Use the back camera
+        };
+
     return (
         <div id="scan_qr_modal" className="modal" style={{
             display: isScanQRModalOpen ? 'block' : 'none'
@@ -34,7 +39,8 @@ const QRCodeScanner = ({ onClose = () => { }, isScanQRModalOpen }) => {
                     onError={handleError}
                     onScan={handleScan}
                     style={{ width: '100%' }}
-                    canvasprops={canvasprops} // Pass the custom canvas props
+                    canvasprops={canvasprops}
+                    videoconstraints={videoConstraints} 
                 />
                 <textarea
                     value={data} // Use value prop instead of children
