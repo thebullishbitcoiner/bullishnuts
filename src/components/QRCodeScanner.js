@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import QrScanner from 'react-qr-scanner';
 import { CrossIcon } from "@bitcoin-design/bitcoin-icons-react/filled";
 
 const QRCodeScanner = ({ onClose = () => { }, isScanQRModalOpen }) => {
     const [data, setData] = useState('No data scanned yet');
+    const [isBackCamera, setIsBackCamera] = useState(true); // State to track camera
+    const [videoConstraints, setVideoConstraints] = useState({
+        facingMode: { exact: "environment" } // Default to back camera
+    });
 
     const handleScan = (data) => {
         if (data) {
@@ -20,10 +24,12 @@ const QRCodeScanner = ({ onClose = () => { }, isScanQRModalOpen }) => {
         willReadFrequently: true, // Set this attribute to true for performance
     };
 
-        // Video constraints to use the back camera
-        const videoConstraints = {
-            facingMode: { exact: "environment" } // Use the back camera
-        };
+    const toggleCamera = () => {
+        setIsBackCamera(prev => !prev);
+        setVideoConstraints(prev => ({
+            facingMode: prev.facingMode && prev.facingMode.exact === 'environment' ? { exact: 'user' } : { exact: 'environment' }
+        }));
+    };
 
     return (
         <div id="scan_qr_modal" className="modal" style={{
@@ -39,15 +45,17 @@ const QRCodeScanner = ({ onClose = () => { }, isScanQRModalOpen }) => {
                     onError={handleError}
                     onScan={handleScan}
                     style={{ width: '100%' }}
-                    canvasprops={canvasprops}
-                    videoconstraints={videoConstraints} 
+                    canvasProps={canvasprops}
+                    videoConstraints={videoConstraints} 
                 />
                 <textarea
                     value={data} // Use value prop instead of children
                     readOnly // Make it read-only if you don't want to allow editing
                     style={{ width: '100%', height: '100px', marginTop: '10px' }} // Adjust styles as needed
                 />
-
+                <button onClick={toggleCamera} style={{ marginTop: '10px' }}>
+                    {isBackCamera ? 'Switch to Front Camera' : 'Switch to Back Camera'}
+                </button>
             </div>
         </div>
     );
