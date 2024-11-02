@@ -10,7 +10,7 @@ const QRCodeScanner = ({ onClose = () => { }, isScanQRModalOpen }) => {
     useEffect(() => {
         // Initialize the QR scanner
         const qrScanner = new QrScanner(videoRef.current, result => {
-            setData(result); // Set scanned data as a string
+            setData(result.data); // Set scanned data as a string
         }, {
             facingMode: isBackCamera ? 'environment' : 'user',
         });
