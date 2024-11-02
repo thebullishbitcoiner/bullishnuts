@@ -992,9 +992,7 @@ const Wallet = () => {
   }
 
   function closeSendLightningModal() {
-    const modal = document.getElementById('send_lightning_modal');
     document.getElementById('send_lightning_input').value = '';
-    modal.style.display = 'none';
   }
 
   function showSendLightningAddressModal() {
@@ -1311,7 +1309,7 @@ const Wallet = () => {
       <div className="cashu-operations-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.15</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.16</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
@@ -1379,6 +1377,7 @@ const Wallet = () => {
             contacts={contacts}
             onClose={() => setIsLightningModalOpen(false)}
             onSend={handleSend_Lightning}
+            isLightningModalOpen={isLightningModalOpen} 
           />
         )}
 
@@ -1454,8 +1453,8 @@ const Wallet = () => {
         <div id="receive_lightning_modal" className="modal">
           <div className="modal-content">
             <span className="close-button" onClick={closeReceiveLightningModal}>&times;</span>
-            <label htmlFor="receive_lightning_amount">Enter amount of sats:</label>
-            <input type="number" id="receive_lightning_amount" inputMode="decimal" min="1" />
+            <h2>Receive Lightning</h2>
+            <input type="number" id="receive_lightning_amount" placeholder="Enter amount of sats" inputMode="decimal" min="1" />
             <button className="styled-button" onClick={createInvoiceButtonClicked}>Create invoice</button>
           </div>
         </div>
@@ -1479,10 +1478,10 @@ const Wallet = () => {
           <p>Data Output</p>
           <pre id="data-output" className="data-output">{JSON.stringify(dataOutput, null, 2)}</pre>
           <div className="button-container">
-            <button className="styled-button" onClick={checkProofs}>Check Proofs<CheckIcon style={{ height: '21px', width: '21px', marginLeft: '3px' }} /></button>
+            <button className="styled-button" onClick={checkProofs}>Check Proofs<CheckIcon style={{ height: '21px', width: '21px', marginLeft: '3px', marginBottom: '3px' }} /></button>
           </div>
           <div className="button-container">
-            <button className="styled-button" onClick={exportJSON}>Export JSON Logs<ExportIcon style={{ height: '21px', width: '21px', marginLeft: '3px' }} /></button>
+            <button className="styled-button" onClick={exportJSON}>Export JSON Logs<ExportIcon style={{ height: '21px', width: '21px', marginLeft: '3px', marginBottom: '3px' }} /></button>
           </div>
 
         </div>

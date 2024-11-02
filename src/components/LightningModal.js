@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const LightningModal = ({ contacts, onClose, onSend }) => {
+const LightningModal = ({ contacts, onClose, onSend, isLightningModalOpen }) => {
     const [invoiceOrAddress, setInvoiceOrAddress] = useState('');
     const [isContactModalOpen, setIsContactModalOpen] = useState(false);
 
@@ -10,7 +10,9 @@ const LightningModal = ({ contacts, onClose, onSend }) => {
     };
 
     return (
-        <div className="send_lightning_modal">
+        <div id="send_lightning_modal" className="modal" style={{
+            display: isLightningModalOpen ? 'block' : 'none'
+        }}>
             <div className="modal-content">
                 <span className="close-button" onClick={onClose}>&times;</span>
                 <h2>Send Lightning</h2>

@@ -71,17 +71,27 @@ const Modal = ({ transaction, onClose }) => {
             <div className='modal-content'>
                 <span className="close-button" onClick={onClose}>&times;</span>
                 <h2>Transaction Details</h2>
-                <p><strong>Type:</strong> {transaction.type}</p>
-                <p><strong>Action:</strong> {transaction.action}</p>
-                <p><strong>Amount:</strong> {transaction.amount} {transaction.amount === 1 ? 'sat' : 'sats'}</p>
-                <p><strong>Created:</strong><br />{formatTimestamp(transaction.created)}</p>
+
+                <p>Type</p>
+                <input type="text" readOnly value={transaction.type} style={{ width: '100%', marginTop: '-11px' }} />
+
+                <p>Action</p>
+                <input type="text" readOnly value={transaction.action} style={{ width: '100%', marginTop: '-11px' }} />
+
+                <p>Amount</p>
+                <input type="text" readOnly value={`${transaction.amount} ${transaction.amount === 1 ? 'sat' : 'sats'}`} style={{ width: '100%', marginTop: '-11px' }} />
+
+                <p>Created</p>
+                <input type="text" readOnly value={formatTimestamp(transaction.created)} style={{ width: '100%', marginTop: '-11px' }} />
 
                 {/* Conditionally render properties based on transaction type */}
                 {transaction.type === "Ecash" && (
                     <>
-                        <p><strong>Mint:</strong> {transaction.mint}</p>
-                        <p><strong>Token:</strong></p>
-                        <div style={{ position: 'relative' }}>
+                        <p>Mint</p>
+                        <input type="text" readOnly value={transaction.mint} style={{ width: '100%', marginTop: '-11px' }} />
+
+                        <p>Token</p>
+                        <div style={{ position: 'relative', marginTop: '-11px' }}>
                             <textarea
                                 readOnly
                                 value={transaction.token}
@@ -93,12 +103,17 @@ const Modal = ({ transaction, onClose }) => {
                         </div>
                     </>
                 )}
+
                 {transaction.type === "Lightning" && (
                     <>
-                        <p><strong>Mint:</strong> {transaction.mint}</p>
-                        <p><strong>Fee:</strong> {transaction.fee} {transaction.fee === 1 ? 'sat' : 'sats'}</p>
-                        <p><strong>Invoice:</strong></p>
-                        <div style={{ position: 'relative' }}>
+                        <p>Mint:</p>
+                        <input type="text" readOnly value={transaction.mint} style={{ width: '100%', marginTop: '-11px' }} />
+
+                        <p>Fee:</p>
+                        <input type="text" readOnly value={`${transaction.fee} ${transaction.fee === 1 ? 'sat' : 'sats'}`} style={{ width: '100%', marginTop: '-11px' }} />
+
+                        <p>Invoice</p>
+                        <div style={{ position: 'relative', marginTop: '-11px' }}>
                             <textarea
                                 readOnly
                                 value={transaction.invoice}
@@ -128,9 +143,9 @@ const Transactions = ({ updateFlag_Transactions }) => {
     const clearTransactions = () => {
         const confirmDelete = window.confirm("Are you sure you want to delete all transactions?");
         if (confirmDelete) {
-            localStorage.removeItem('transactions'); 
+            localStorage.removeItem('transactions');
             updateTransactions();
-        } 
+        }
     };
 
     useEffect(() => {
@@ -155,7 +170,7 @@ const Transactions = ({ updateFlag_Transactions }) => {
 
     return (
         <div>
-             <div className="box_header">
+            <div className="box_header">
                 <h2>Transactions</h2>
                 <button onClick={clearTransactions}><TrashIcon style={{ height: "21px", width: "21px", marginBottom: "15px" }} /></button>
             </div>
@@ -172,7 +187,7 @@ const Transactions = ({ updateFlag_Transactions }) => {
                                 onClick={() => handleTransactionClick(transaction)}
                             >
                                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                                    {transaction.action === "send" ? (
+                                    {transaction.action.toLowerCase() === "send" ? (
                                         <SendIcon style={{ height: '21px', width: '21px', marginRight: '10px' }} />
                                     ) : (
                                         <ReceiveIcon style={{ height: '21px', width: '21px', marginRight: '10px' }} />

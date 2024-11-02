@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  font-size: 16px; /* Default */
+}
+
 body {
   color: #ff9900;
   background: black;
@@ -76,9 +80,10 @@ main {
 }
 
 .section h2 {
+  margin-top: -3px;
   margin-bottom: 10px;
   font-weight: bold;
-  font-size: large;
+  font-size: 1rem;
 }
 
 .section label {
@@ -134,7 +139,7 @@ main {
   /* Center items vertically */
   justify-content: center;
   /* Center items horizontally */
-  font-size: 16px;
+  font-size: 1rem;
   margin: 4px 2px;
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.1s ease;
@@ -160,7 +165,6 @@ main {
   text-align: center;
   text-decoration: none;
   display: inline-block;
-  font-size: 16px;
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.1s ease;
 }
@@ -182,7 +186,6 @@ main {
 .data-display-container h2 {
   margin-bottom: 10px;
   font-weight: bold;
-  font-size: large;
 }
 
 .data-output {
@@ -219,7 +222,6 @@ main {
 
   .modal h2 {
     font-weight: bold;
-    font-size: large;
     margin-bottom: 10px;
   }
 
@@ -315,7 +317,7 @@ main {
     left: 50%;
     top: 10px;
     transform: translateX(-50%);
-    font-size: 12px;
+    font-size: 0.875rem;
     opacity: 0;
     transition: opacity 0.5s, visibility 0.5s, top 0.5s;
     word-wrap: break-word;
@@ -344,7 +346,7 @@ main {
     align-items: center;
     margin-bottom: 0px;
   }
-  
+
   .contact-row {
     display: flex;
     justify-content: space-between;
@@ -353,15 +355,6 @@ main {
     padding-bottom: 10px;
     padding-left: 5px;
     padding-right: 1px;
-  }
-
-  .delete-button {
-    background: none;
-    border: none;
-    color: #ff9900;
-    font-size: 1.2rem;
-    cursor: pointer;
-    transition: color 0.3s ease;
   }
 
   .add_contact_modal {
@@ -456,10 +449,11 @@ main {
 
   .select_contact_button {
     border: 1px solid #ff9900;
-    background-color: #583500;
+    background-color: #2b1b00;
     padding: 13px;
     padding-top: 9px;
     padding-bottom: 7px;
+    margin-top: 10px;
     margin-left: 5px;
     cursor: pointer;
     transition: background-color 0.3s ease;
@@ -561,7 +555,7 @@ main {
     margin-left: 7px;
     text-align: center;
     border-radius: 4px;
-    font-size: 14px;
+    font-size: 0.875rem;
   }
 
   input[type="radio"] {

@@ -198,7 +198,7 @@ const Mints = ({ onMintChange, balance }) => {
                                     </span>
                                 </div>
                             </div>
-                            <button className="delete-button" onClick={() => handleDeleteMint(mint.mintUrl)}>
+                            <button onClick={() => handleDeleteMint(mint.mintUrl)}>
                                 <CrossIcon style={{ height: "21px", width: "21px" }} />
                             </button>
                         </div>

@@ -54,7 +54,7 @@ const Contacts = ({ onContactSelect, updateContacts }) => {
                     .map(({ contact, index }) => (
                         <div className="contact-row" key={index}>
                             <span onClick={() => onContactSelect(contact)}>{contact.name}</span>
-                            <button className="delete-button" onClick={() => confirmDeleteContact(index)}>
+                            <button onClick={() => confirmDeleteContact(index)}>
                                 <CrossIcon style={{ height: "21px", width: "21px" }} />
                             </button>
                         </div>
