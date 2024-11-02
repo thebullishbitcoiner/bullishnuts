@@ -10,6 +10,7 @@ const LightningModal = ({ contacts, onClose, onSend, isLightningModalOpen }) => 
     };
 
     return (
+        /* The isLightningModalOpen prop is used the to determine whether or not to display the modal */
         <div id="send_lightning_modal" className="modal" style={{
             display: isLightningModalOpen ? 'block' : 'none'
         }}>

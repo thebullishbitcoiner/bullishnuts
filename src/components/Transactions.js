@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import QRCode from 'qrcode';
 import { TrashIcon, SendIcon, ReceiveIcon } from "@bitcoin-design/bitcoin-icons-react/filled";
 
 // Function to convert timestamp to human-readable format
@@ -59,12 +60,51 @@ const Modal = ({ transaction, onClose }) => {
         navigator.clipboard.writeText(text)
             .then(() => {
                 setCopied(true);
-                setTimeout(() => setCopied(false), 1000); // Hide after 2 seconds
+                setTimeout(() => setCopied(false), 1000); // Hide after 1 second
             })
             .catch(err => {
                 console.error('Failed to copy: ', err);
             });
     };
+
+    // Function to generate QR code
+    const generateQR = async (text) => {
+        const qrcodeDiv = document.getElementById('qrcode');
+
+        // Remove any existing QR code
+        qrcodeDiv.innerHTML = "";
+
+        // Create a canvas element manually
+        const canvas = document.createElement('canvas');
+        qrcodeDiv.appendChild(canvas);
+
+        // Add click event to the canvas to copy the appropriate text
+        canvas.addEventListener('click', () => {
+            const textToCopy = transaction.type === "Ecash" ? transaction.token : transaction.invoice;
+            copyToClipboard(textToCopy);
+        });
+
+        try {
+            // Generate QR code directly on the canvas
+            await QRCode.toCanvas(canvas, text, {
+                width: 268,  // Set a static width for testing
+                color: {
+                    dark: "#000000",  // Dots
+                    light: "#FF9900"  // Background
+                },
+            });
+        } catch (error) {
+            console.error("Error generating QR code:", error);
+        }
+    };
+
+    // Effect to generate QR code when the modal opens or transaction changes
+    useEffect(() => {
+        if (transaction) {
+            const textToEncode = transaction.type === "Ecash" ? transaction.token : transaction.invoice;
+            generateQR(textToEncode);
+        }
+    }, [transaction]); // Run effect when transaction changes
 
     return (
         <div className='transaction_modal'>
@@ -72,57 +112,47 @@ const Modal = ({ transaction, onClose }) => {
                 <span className="close-button" onClick={onClose}>&times;</span>
                 <h2>Transaction Details</h2>
 
-                <p>Type</p>
-                <input type="text" readOnly value={transaction.type} style={{ width: '100%', marginTop: '-11px' }} />
+                <div id="qrcode" style={{ position: 'relative' }}>
+                    {/* The "Copied!" message will be positioned absolutely over the canvas */}
+                    {copied && (
+                        <span className="copied-message" style={{
+                            position: 'absolute',
+                            top: '0px', // Adjust as needed
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: '5px',
+                            paddingBottom: '21px',
+                            zIndex: 10 // Ensure it appears above the canvas
+                        }}>
+                            Copied!
+                        </span>
+                    )}
+                </div>
 
-                <p>Action</p>
-                <input type="text" readOnly value={transaction.action} style={{ width: '100%', marginTop: '-11px' }} />
+                <p style={{ marginTop: "5px", marginBottom: '0px' }}>Type</p>
+                <input type="text" readOnly value={transaction.type} style={{ width: '100%' }} />
 
-                <p>Amount</p>
-                <input type="text" readOnly value={`${transaction.amount} ${transaction.amount === 1 ? 'sat' : 'sats'}`} style={{ width: '100%', marginTop: '-11px' }} />
+                <p style={{ marginBottom: '0px' }}>{transaction.action}</p>
+                <input type="text" readOnly value={`${transaction.amount} ${transaction.amount === 1 ? 'sat' : 'sats'}`} style={{ width: '100%' }} />
 
-                <p>Created</p>
-                <input type="text" readOnly value={formatTimestamp(transaction.created)} style={{ width: '100%', marginTop: '-11px' }} />
+                <p style={{ marginBottom: '0px' }}>Created</p>
+                <input type="text" readOnly value={formatTimestamp(transaction.created)} style={{ width: '100%' }} />
+
+                <p style={{ marginBottom: '0px' }}>Mint</p>
+                <input type="text" readOnly value={transaction.mint} style={{ width: '100%' }} />
 
                 {/* Conditionally render properties based on transaction type */}
                 {transaction.type === "Ecash" && (
                     <>
-                        <p>Mint</p>
-                        <input type="text" readOnly value={transaction.mint} style={{ width: '100%', marginTop: '-11px' }} />
 
-                        <p>Token</p>
-                        <div style={{ position: 'relative', marginTop: '-11px' }}>
-                            <textarea
-                                readOnly
-                                value={transaction.token}
-                                rows={3}
-                                style={{ width: '100%', resize: 'none', outline: 'none' }}
-                                onClick={() => copyToClipboard(transaction.token)}
-                            />
-                            {copied && <span className="copied-message">Copied!</span>}
-                        </div>
                     </>
                 )}
 
                 {transaction.type === "Lightning" && (
                     <>
-                        <p>Mint:</p>
-                        <input type="text" readOnly value={transaction.mint} style={{ width: '100%', marginTop: '-11px' }} />
-
-                        <p>Fee:</p>
-                        <input type="text" readOnly value={`${transaction.fee} ${transaction.fee === 1 ? 'sat' : 'sats'}`} style={{ width: '100%', marginTop: '-11px' }} />
-
-                        <p>Invoice</p>
-                        <div style={{ position: 'relative', marginTop: '-11px' }}>
-                            <textarea
-                                readOnly
-                                value={transaction.invoice}
-                                rows={3}
-                                style={{ width: '100%', resize: 'none', outline: 'none' }}
-                                onClick={() => copyToClipboard(transaction.invoice)}
-                            />
-                            {copied && <span className="copied-message">Copied!</span>}
-                        </div>
+                        <p style={{ marginBottom: '0px' }}>Fee</p>
+                        <input type="text" readOnly value={`${transaction.fee} ${transaction.fee === 1 ? 'sat' : 'sats'}`} style={{ width: '100%' }} />
                     </>
                 )}
             </div>
