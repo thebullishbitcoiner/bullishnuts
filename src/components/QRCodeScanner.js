@@ -9,7 +9,9 @@ const QRCodeScanner = ({ onClose = () => { }, isScanQRModalOpen }) => {
 
     useEffect(() => {
         // Initialize the QR scanner
-        const qrScanner = new QrScanner(videoRef.current, result => setData(result), {
+        const qrScanner = new QrScanner(videoRef.current, result => {
+            setData(result); // Set scanned data as a string
+        }, {
             facingMode: isBackCamera ? 'environment' : 'user',
         });
 
@@ -35,7 +37,10 @@ const QRCodeScanner = ({ onClose = () => { }, isScanQRModalOpen }) => {
                 <button onClick={onClose}>
                     <CrossIcon style={{ height: '21px', width: '21px', position: 'absolute', top: '15px', right: '15px' }} />
                 </button>
-                <video ref={videoRef} style={{ width: '100%' }} />
+                <div className="scanner-container">
+                    <video ref={videoRef} style={{ width: '100%' }} />
+                    <div className="highlight-scan-region" />
+                </div>
                 <textarea
                     value={data} // Use value prop instead of children
                     readOnly // Make it read-only if you don't want to allow editing
