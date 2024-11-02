@@ -4,15 +4,15 @@ import { CrossIcon } from "@bitcoin-design/bitcoin-icons-react/filled";
 
 const QRCodeScanner = ({ onClose = () => { }, isScanQRModalOpen }) => {
     const [data, setData] = useState('No data scanned yet');
-    const [isBackCamera, setIsBackCamera] = useState(true); // State to track camera
     const videoRef = useRef(null); // Reference for the video element
 
     useEffect(() => {
-        // Initialize the QR scanner
+        // Initialize the QR scanner to always use the back camera
         const qrScanner = new QrScanner(videoRef.current, result => {
             setData(result.data); // Set scanned data as a string
+            qrScanner.stop(); // Stop scanning once data has been set
         }, {
-            facingMode: isBackCamera ? 'environment' : 'user',
+            facingMode: 'environment', // Always use the back camera
         });
 
         // Start scanning
@@ -22,11 +22,7 @@ const QRCodeScanner = ({ onClose = () => { }, isScanQRModalOpen }) => {
         return () => {
             qrScanner.stop();
         };
-    }, [isBackCamera]); // Re-run effect when camera mode changes
-
-    const toggleCamera = () => {
-        setIsBackCamera(prev => !prev);
-    };
+    }, []); // No dependencies, runs only once on mount
 
     return (
         <div id="scan_qr_modal" className="modal" style={{
@@ -44,11 +40,8 @@ const QRCodeScanner = ({ onClose = () => { }, isScanQRModalOpen }) => {
                 <textarea
                     value={data} // Use value prop instead of children
                     readOnly // Make it read-only if you don't want to allow editing
-                    style={{ width: '100%', height: '100px', marginTop: '10px' }} // Adjust styles as needed
+                    style={{ width: '100%', height: '200px', marginTop: '10px' }} // Adjust styles as needed
                 />
-                <button onClick={toggleCamera} style={{ marginTop: '10px' }}>
-                    {isBackCamera ? 'Switch to Front Camera' : 'Switch to Back Camera'}
-                </button>
             </div>
         </div>
     );
