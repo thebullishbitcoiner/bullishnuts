@@ -11,26 +11,26 @@ const TypewriterModal = ({ messages, onClose }) => {
     if (currentMessageIndex < messages.length) {
       const message = messages[currentMessageIndex];
       let charIndex = 0;
-
+  
       // Start with the first character displayed
       setDisplayedText(message.charAt(0)); // Display the first character immediately
-
+  
       // Typing effect
       const interval = setInterval(() => {
+        charIndex++;
         if (charIndex < message.length) {
           setDisplayedText((prev) => prev + message[charIndex]);
-          charIndex++;
         } else {
           clearInterval(interval);
           setIsTyping(false); // Stop typing when the message is fully displayed
         }
       }, 50); // Adjust typing speed here
-
+  
       setTypeInterval(interval); // Store the interval ID
-
+  
       return () => clearInterval(interval); // Cleanup on unmount or when message changes
     }
-  }, [currentMessageIndex, messages]);
+  }, [currentMessageIndex, messages]);  
 
   const handleTap = () => {
     if (isTyping) {
