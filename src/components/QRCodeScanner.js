@@ -39,47 +39,6 @@ const QRCodeScanner = ({ onClose = () => { }, isScanQRModalOpen }) => {
                 </button>
                 <div className="scanner-container" style={{ position: 'relative', width: '100%', height: '100%', maxWidth: '400px', maxHeight: '400px' }}>
                     <video ref={videoRef} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    {/* Highlight corners with yellow right angles */}
-                    <div style={{
-                        position: 'absolute',
-                        top: '0',
-                        left: '0',
-                        width: '30px',
-                        height: '30px',
-                        borderTop: '5px solid #ff9900',
-                        borderLeft: '5px solid #ff9900',
-                        backgroundColor: 'transparent',
-                    }} />
-                    <div style={{
-                        position: 'absolute',
-                        top: '0',
-                        right: '0',
-                        width: '30px',
-                        height: '30px',
-                        borderTop: '5px solid #ff9900',
-                        borderRight: '5px solid #ff9900',
-                        backgroundColor: 'transparent',
-                    }} />
-                    <div style={{
-                        position: 'absolute',
-                        bottom: '0',
-                        left: '0',
-                        width: '30px',
-                        height: '30px',
-                        borderBottom: '5px solid #ff9900',
-                        borderLeft: '5px solid #ff9900',
-                        backgroundColor: 'transparent',
-                    }} />
-                    <div style={{
-                        position: 'absolute',
-                        bottom: '0',
-                        right: '0',
-                        width: '30px',
-                        height: '30px',
-                        borderBottom: '5px solid #ff9900',
-                        borderRight: '5px solid #ff9900',
-                        backgroundColor: 'transparent',
-                    }} />
                 </div>
                 <textarea
                     value={data} // Use value prop instead of children
