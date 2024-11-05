@@ -23,6 +23,7 @@ import TypewriterModal from '@/components/TypewriterModal';
 import { RefreshIcon, SendIcon, ReceiveIcon, LightningIcon, CheckIcon, ExportIcon, QrCodeIcon } from "@bitcoin-design/bitcoin-icons-react/filled";
 
 const Wallet = () => {
+  const [isBalanceHidden, setIsBalanceHidden] = useState(true);
   const [isLightningModalOpen, setIsLightningModalOpen] = useState(false);
   const [isEcashOrLightningOpen, setIsEcashOrLightningOpen] = useState(false);
   const [ecashOrLightningModalLabel, setEcashOrLightningModalLabel] = useState("");
@@ -1333,6 +1334,10 @@ const Wallet = () => {
     setIsScanQRModalOpen(false);
   }
 
+  const toggleBalance = () => {
+    setIsBalanceHidden(!isBalanceHidden);
+  };
+
   return (
     <main>
 
@@ -1341,7 +1346,7 @@ const Wallet = () => {
       <div className="cashu-operations-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.29</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.30</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
@@ -1378,7 +1383,7 @@ const Wallet = () => {
 
         <div className="section">
           <h2>Balance</h2>
-          <p>{balance} sats</p>
+          <p style={{ fontSize: '21px' }} onClick={toggleBalance}>{isBalanceHidden ? '***' : `${balance} sats`}</p>
           <div className="button-container">
             <button className="styled-button" onClick={() => openEcashOrLightningModal('Send')}>
               Send<SendIcon style={{ height: '21px', width: '21px', marginLeft: '5px' }} />
