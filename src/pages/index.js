@@ -1353,7 +1353,7 @@ const Wallet = () => {
       <div className="cashu-operations-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.31</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.32</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
@@ -1395,7 +1395,7 @@ const Wallet = () => {
             <button className="styled-button" onClick={() => openEcashOrLightningModal('Send')}>
               Send<SendIcon style={{ height: '21px', width: '21px', marginLeft: '5px' }} />
             </button>
-            <button onClick={showQRCodeScanner}>
+            <button className="qr-code-button" onClick={showQRCodeScanner}>
               <QrCodeIcon style={{ height: '42px', width: '42px' }} />
             </button>
             {isScanQRModalOpen &&

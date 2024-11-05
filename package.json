@@ -11,6 +11,8 @@
   "dependencies": {
     "@bitcoin-design/bitcoin-icons-react": "^0.1.10",
     "@cashu/cashu-ts": "^1.1.0",
+    "@fortawesome/free-regular-svg-icons": "^6.6.0",
+    "@fortawesome/react-fontawesome": "^0.2.2",
     "@noble/secp256k1": "^2.1.0",
     "bitcoin-qr": "^1.4.1",
     "js-confetti": "^0.12.0",

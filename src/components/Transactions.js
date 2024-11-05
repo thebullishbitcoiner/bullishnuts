@@ -201,7 +201,7 @@ const Transactions = ({ updateFlag_Transactions }) => {
             {transactions.length === 0 ? (
                 <p>No transactions yet.</p>
             ) : (
-                <div style={{ maxHeight: '215px', overflowY: 'auto', border: '1px solid #ff9900', borderRadius: '0px', padding: '10px' }}>
+                <div style={{ maxHeight: '210px', overflowY: 'auto', border: '1px solid #ff9900', borderRadius: '0px', padding: '10px' }}>
                     <ul style={{ listStyleType: 'none', padding: 0 }}>
                         {transactions.map((transaction, index) => (
                             <li

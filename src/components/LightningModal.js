@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faClipboard } from '@fortawesome/free-regular-svg-icons';
 
 const LightningModal = ({ contacts, onClose, onSend, isLightningModalOpen }) => {
     const [invoiceOrAddress, setInvoiceOrAddress] = useState('');
@@ -8,6 +10,16 @@ const LightningModal = ({ contacts, onClose, onSend, isLightningModalOpen }) => 
         setInvoiceOrAddress(`${contact.npub}@npub.cash`);
         setIsContactModalOpen(false);
     };
+
+    function pasteFromClipboard() {
+        navigator.clipboard.readText()
+          .then(text => {
+            setInvoiceOrAddress(text);
+          })
+          .catch(err => {
+            console.error('Failed to read clipboard contents: ', err);
+          });
+      }
 
     return (
         /* The isLightningModalOpen prop is used the to determine whether or not to display the modal */
@@ -26,7 +38,12 @@ const LightningModal = ({ contacts, onClose, onSend, isLightningModalOpen }) => 
                         rows="4"
                         cols="42"
                     ></textarea>
-                    <button className="select_contact_button" onClick={() => setIsContactModalOpen(true)}>𓅦</button>
+                    <div className="stacked_button_container">
+                        <button className="square_button" onClick={() => setIsContactModalOpen(true)}>𓅦</button>
+                        <button className='square_button' onClick={pasteFromClipboard}>
+                            <FontAwesomeIcon icon={faClipboard} />
+                        </button>
+                    </div>
                 </div>
                 <button className="styled-button" onClick={() => onSend(invoiceOrAddress)}>Send</button>
             </div>
