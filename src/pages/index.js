@@ -382,7 +382,7 @@ const Wallet = () => {
             showToast('Invoice paid!');
             removeProofs(proofs, wallet.mint.mintUrl);
 
-            addTransaction_Lightning("Send", wallet.mint.mintUrl, invoice, amount, quote.fee_reserve);
+            addTransaction_Lightning("Send", wallet.mint.mintUrl, invoice, quote.amount, quote.fee_reserve);
 
             var changeArray = { "change": change };
             storeJSON(changeArray);
@@ -1353,7 +1353,7 @@ const Wallet = () => {
       <div className="cashu-operations-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.34</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.35</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
