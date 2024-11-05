@@ -90,11 +90,10 @@ const Wallet = () => {
     else {
       const introMessages = [
         "bullishNuts is an ecash wallet that's in its early beta phase with the goal of making your interactions with Cashu simple and fun!",
-        "Since this is a progressive web app (PWA), you can easily add this app to your device's home screen for quick access, just like a native app!",
+        "Since this is a progressive web app (PWA), you can easily add it to your device's home screen for quick access, just like a native app!",
         "Also, since it's a PWA, your ecash tokens are stored in your browser's local storage. Keep that in mind and sweep your sats out before deleting your browser data.",
         "Please use at your own risk with a small amount of sats at a time.",
-        "Lastly, reach out on Nostr if you run into any issues.",
-        "Have fun playing with your bitcoin! 🤙"
+        "Lastly, reach out on Nostr if you run into any issues. 🤙"
       ];
       showTypewriterModal(introMessages);
     }
@@ -346,31 +345,52 @@ const Wallet = () => {
       if (isInvoiceBolt11) {
         invoice = input;
 
-        const quote = await wallet.createMeltQuote(invoice);
+        const waitingModal = document.getElementById('waiting_modal');
+        document.getElementById('waiting_message').textContent = "Getting melt quote...";
+        waitingModal.style.display = 'block';
 
-        setDataOutput([{ "got melt quote": quote }]);
+        const quote = await wallet.createMeltQuote(invoice);
         storeJSON(quote);
 
         const amount = quote.amount + quote.fee_reserve;
         const proofs = getProofsByAmount(amount, wallet.mint.mintUrl, wallet.keys.id);
         if (proofs.length === 0) {
+          waitingModal.style.display = 'none';
           showToast("Insufficient balance");
           return;
         }
-        const { isPaid, preimage, change } = await wallet.meltTokens(quote, proofs, {
-          keysetId: wallet.keys.id,
-        });
-        if (isPaid) {
-          setIsLightningModalOpen(false);
-          //closeSendLightningModal();
-          showToast('Invoice paid!');
-          removeProofs(proofs, wallet.mint.mintUrl);
 
-          addTransaction_Lightning("Send", wallet.mint.mintUrl, invoice, amount, quote.fee_reserve);
+        document.getElementById('waiting_message').textContent = "Paying invoice...";
 
-          var changeArray = { "change": change };
-          storeJSON(changeArray);
-          addProofs(change, wallet.mint.mintUrl);
+        try {
+          // Set a timeout of 10 seconds (10000 milliseconds) for meltTokens
+          const { isPaid, preimage, change } = await withTimeout(
+            wallet.meltTokens(quote, proofs, { keysetId: wallet.keys.id }),
+            5000
+          );
+
+          if (isPaid) {
+            waitingModal.style.display = 'none';
+
+            setIsLightningModalOpen(false);
+            showToast('Invoice paid!');
+            removeProofs(proofs, wallet.mint.mintUrl);
+
+            addTransaction_Lightning("Send", wallet.mint.mintUrl, invoice, amount, quote.fee_reserve);
+
+            var changeArray = { "change": change };
+            storeJSON(changeArray);
+            addProofs(change, wallet.mint.mintUrl);
+          }
+        } catch (error) {
+          // Handle error, whether it's a timeout or another issue
+          waitingModal.style.display = 'none';
+          console.error("Error occurred:", error.message);
+          if (error.message === "Operation timed out") {
+            showToast("Payment timed out.");
+          } else {
+            showToast(`Payment failed: ${error.message}`);
+          }
         }
       }
       else { //It must be a Lightning address (but we will check)
@@ -479,6 +499,7 @@ const Wallet = () => {
         }
       } catch (error) {
         // Handle error, whether it's a timeout or another issue
+        waitingModal.style.display = 'none';
         console.error("Error occurred:", error.message);
         if (error.message === "Operation timed out") {
           showToast("Payment timed out.");
@@ -1275,6 +1296,7 @@ const Wallet = () => {
     const action = ecashOrLightningModalLabel;
     console.log(`Selected ${option} for ${action}`);
     setIsEcashOrLightningOpen(false); // Close modal after selection
+
     if (action === "Send") {
       if (option === "Ecash") {
         showSendEcashModal();
@@ -1319,7 +1341,7 @@ const Wallet = () => {
       <div className="cashu-operations-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.28</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.29</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
