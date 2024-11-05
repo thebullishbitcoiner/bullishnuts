@@ -1242,29 +1242,6 @@ const Wallet = () => {
     URL.revokeObjectURL(url);
   };
 
-  let emojiInterval;
-
-  function makeDeezNutsRain(amount) {
-    const emojiContainer = document.createElement('div');
-    emojiContainer.id = 'emoji-container';
-    document.body.appendChild(emojiContainer);
-
-    for (let i = 0; i < amount; i++) {
-      const emoji = document.createElement('div');
-      emoji.className = 'emoji';
-      emoji.textContent = Math.random() > 0.5 ? '🥜' : '⚡';
-      emoji.style.left = `${Math.random() * 100}vw`;
-      emoji.style.animationDuration = `${Math.random() * 3 + 2}s`;
-      emoji.style.fontSize = `${Math.random() * 2 + 1}rem`; // Random size between 1rem and 3rem
-      emojiContainer.appendChild(emoji);
-
-      // Remove emoji after animation ends
-      emoji.addEventListener('animationend', () => {
-        emoji.remove();
-      });
-    }
-  }
-
   function showConfetti(confettiNumber = 21) {
     if (jsConfettiRef.current) {
       jsConfettiRef.current.addConfetti({
@@ -1348,12 +1325,10 @@ const Wallet = () => {
   return (
     <main>
 
-      <div id="emoji-container"></div>
-
       <div className="cashu-operations-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.39</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.40</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
