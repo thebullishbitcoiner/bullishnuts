@@ -372,7 +372,7 @@ const Wallet = () => {
           // Set a timeout of 10 seconds (10000 milliseconds) for meltTokens
           const { isPaid, preimage, change } = await withTimeout(
             wallet.meltTokens(quote, proofs, { keysetId: wallet.keys.id }),
-            5000
+            10000
           );
 
           if (isPaid) {
@@ -482,7 +482,7 @@ const Wallet = () => {
         // Set a timeout of 10 seconds (10000 milliseconds) for meltTokens
         const { isPaid, preimage, change } = await withTimeout(
           wallet.meltTokens(quote, proofs, { keysetId: wallet.keys.id }),
-          5000
+          10000
         );
 
         // Handle the result if meltTokens succeeds within the timeout
@@ -1353,7 +1353,7 @@ const Wallet = () => {
       <div className="cashu-operations-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.33</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.34</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
