@@ -53,9 +53,25 @@ main {
   transform: rotate(180deg);
 }
 
+.centered-container {
+  padding: 21px;
+  margin-bottom: 21px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 2px solid black;
+  box-shadow: 0 1px 0 1px #ff9900,
+    inset 0 1px 0 1px #ff9900,
+    0 0 0 1px #ff9900,
+    inset 0 0 0 1px #ff9900;
+}
+
+.centered-container a {
+  text-decoration: underline;
+}
+
 .section {
   margin-bottom: 21px;
-  background-color: #000000;
   padding: 21px;
   width: 100%;
   border: 2px solid black;
@@ -692,17 +708,26 @@ main {
   }
 
   .qr-code-button {
-    display: flex; /* Use flexbox for centering */
-    justify-content: center; /* Center horizontally */
-    align-items: center; /* Center vertically */
-    width: 45px; /* Set a fixed width for the button */
-    height: 45px; /* Set a fixed height for the button */
-    border: none; /* Remove default border */
-    background-color: transparent; /* Make background transparent or set your desired color */
-    cursor: pointer; /* Change cursor to pointer on hover */
-    padding: 0; /* Remove default padding */
+    display: flex;
+    /* Use flexbox for centering */
+    justify-content: center;
+    /* Center horizontally */
+    align-items: center;
+    /* Center vertically */
+    width: 45px;
+    /* Set a fixed width for the button */
+    height: 45px;
+    /* Set a fixed height for the button */
+    border: none;
+    /* Remove default border */
+    background-color: transparent;
+    /* Make background transparent or set your desired color */
+    cursor: pointer;
+    /* Change cursor to pointer on hover */
+    padding: 0;
+    /* Remove default padding */
   }
-  
+
   .qr-code-button:hover {
     background-color: rgba(255, 153, 0, 0.5);
   }
