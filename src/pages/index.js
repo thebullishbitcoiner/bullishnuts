@@ -1353,7 +1353,7 @@ const Wallet = () => {
       <div className="cashu-operations-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.32</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.33</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
@@ -1393,7 +1393,7 @@ const Wallet = () => {
           <p style={{ fontSize: '21px' }} onClick={toggleBalance}>{isBalanceHidden ? '***' : `${balance} sats`}</p>
           <div className="button-container">
             <button className="styled-button" onClick={() => openEcashOrLightningModal('Send')}>
-              Send<SendIcon style={{ height: '21px', width: '21px', marginLeft: '5px' }} />
+              Send<SendIcon style={{ height: '21px', width: '21px', minHeight: '21px', minWidth: '21px', marginLeft: '5px' }} />
             </button>
             <button className="qr-code-button" onClick={showQRCodeScanner}>
               <QrCodeIcon style={{ height: '42px', width: '42px' }} />
@@ -1404,7 +1404,7 @@ const Wallet = () => {
                 isScanQRModalOpen={isScanQRModalOpen}
               />}
             <button className="styled-button" onClick={() => openEcashOrLightningModal('Receive')}>
-              Receive<ReceiveIcon style={{ height: '21px', width: '21px', marginLeft: '5px' }} />
+              Receive<ReceiveIcon style={{ height: '21px', width: '21px', minHeight: '21px', minWidth: '21px', marginLeft: '5px' }} />
             </button>
           </div>
           <EcashOrLightning
