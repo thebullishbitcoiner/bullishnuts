@@ -473,6 +473,9 @@ main {
     margin-left: 5px;
     margin-bottom: 5px;
     cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
   .input-group {

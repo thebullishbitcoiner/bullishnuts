@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClipboard } from '@fortawesome/free-regular-svg-icons';
+import { AddressBookIcon } from "@bitcoin-design/bitcoin-icons-react/filled";
 
 const LightningModal = ({ contacts, onClose, onSend, isLightningModalOpen }) => {
     const [invoiceOrAddress, setInvoiceOrAddress] = useState('');
@@ -13,13 +14,13 @@ const LightningModal = ({ contacts, onClose, onSend, isLightningModalOpen }) => 
 
     function pasteFromClipboard() {
         navigator.clipboard.readText()
-          .then(text => {
-            setInvoiceOrAddress(text);
-          })
-          .catch(err => {
-            console.error('Failed to read clipboard contents: ', err);
-          });
-      }
+            .then(text => {
+                setInvoiceOrAddress(text);
+            })
+            .catch(err => {
+                console.error('Failed to read clipboard contents: ', err);
+            });
+    }
 
     return (
         /* The isLightningModalOpen prop is used the to determine whether or not to display the modal */
@@ -39,7 +40,9 @@ const LightningModal = ({ contacts, onClose, onSend, isLightningModalOpen }) => 
                         cols="42"
                     ></textarea>
                     <div className="stacked_button_container">
-                        <button className="square_button" onClick={() => setIsContactModalOpen(true)}>𓅦</button>
+                        <button className="square_button" onClick={() => setIsContactModalOpen(true)}>
+                            <AddressBookIcon style={{ height: "21px", width: "21px" }} />
+                        </button>
                         <button className='square_button' onClick={pasteFromClipboard}>
                             <FontAwesomeIcon icon={faClipboard} />
                         </button>

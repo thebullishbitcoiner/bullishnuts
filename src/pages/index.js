@@ -1353,7 +1353,7 @@ const Wallet = () => {
       <div className="cashu-operations-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.38</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.39</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
@@ -1545,7 +1545,7 @@ const Wallet = () => {
         <br></br>
 
         <div className="centered-container">
-          <small>Made with 🐂 by <a href="https://primal.net/thebullishbitcoiner">thebullishbitcoiner</a></small>
+          <p style={{ fontSize: '14px' }}>Made with 🐂 by <a href="https://primal.net/thebullishbitcoiner">thebullishbitcoiner</a></p>
         </div>
 
       </div>
