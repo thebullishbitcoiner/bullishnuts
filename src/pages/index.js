@@ -86,6 +86,11 @@ const Wallet = () => {
       const wallet = new CashuWallet(mint, { keys: keyset, unit: "sat" });
       setWallet(wallet);
 
+      const savedState = localStorage.getItem('isBalanceHidden');
+      if (savedState !== null) {
+          setIsBalanceHidden(savedState === 'true');
+      }
+
       setFormData((prevData) => ({ ...prevData, mintUrl: url }));
     }
     else {
@@ -1335,7 +1340,9 @@ const Wallet = () => {
   }
 
   const toggleBalance = () => {
-    setIsBalanceHidden(!isBalanceHidden);
+    const newState = !isBalanceHidden;
+    setIsBalanceHidden(newState);
+    localStorage.setItem('isBalanceHidden', newState);
   };
 
   return (
@@ -1346,7 +1353,7 @@ const Wallet = () => {
       <div className="cashu-operations-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.30</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.31</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
