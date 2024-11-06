@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
-import { TrashIcon, SendIcon, ReceiveIcon } from "@bitcoin-design/bitcoin-icons-react/filled";
+import { SendIcon, ReceiveIcon } from "@bitcoin-design/bitcoin-icons-react/filled";
+import { TrashIcon } from "@bitcoin-design/bitcoin-icons-react/outline";
 
 // Function to convert timestamp to human-readable format
 const timeAgo = (date) => {

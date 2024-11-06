@@ -1328,7 +1328,7 @@ const Wallet = () => {
       <div className="cashu-operations-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.40</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.41</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
@@ -1365,7 +1365,7 @@ const Wallet = () => {
 
         <div className="section">
           <h2>Balance</h2>
-          <p style={{ fontSize: '21px' }} onClick={toggleBalance}>{isBalanceHidden ? '***' : `${balance} sats`}</p>
+          <p style={{ fontSize: '21px' }} onClick={toggleBalance}>{isBalanceHidden ? '***' : `${balance} ${balance === 1 ? 'sat' : 'sats'}`}</p>
           <div className="button-container">
             <button className="styled-button" onClick={() => openEcashOrLightningModal('Send')}>
               Send<SendIcon style={{ height: '21px', width: '21px', minHeight: '21px', minWidth: '21px', marginLeft: '5px' }} />

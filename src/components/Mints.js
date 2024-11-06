@@ -1,16 +1,56 @@
 import React, { useState, useEffect } from "react";
 import useMultiMintStorage from "@/hooks/useMultiMintStorage";
 import { CashuMint } from "@cashu/cashu-ts";
-import { InfoCircleIcon, PlusIcon, CrossIcon } from '@bitcoin-design/bitcoin-icons-react/filled'
+import { PlusIcon, CrossIcon } from '@bitcoin-design/bitcoin-icons-react/filled'
+import { InfoCircleIcon } from '@bitcoin-design/bitcoin-icons-react/outline'
+
+const MintInfoModal = ({ mintInfo, onClose }) => {
+
+    if (!mintInfo) return null;
+
+    // Format the contact information into a string
+    const formattedContactInfo = mintInfo.contact.map(contact => {
+        return `${contact.method}: ${contact.info}`;
+    }).join('\n'); // Join with newline for better readability
+
+    return (
+        <div className="mint-info-modal">
+            <div className="modal-content">
+                <span className="close-button" onClick={onClose}>&times;</span>
+                <h2>{mintInfo.name}</h2>
+
+                <p style={{ marginTop: '5px', marginBottom: '0px' }}>Description</p>
+                <textarea readOnly value={mintInfo.description} style={{ width: '100%', height: '100px', marginBottom: '5px' }} />
+
+                <p style={{ marginTop: '5px', marginBottom: '0px' }}>Public Key</p>
+                <textarea readOnly value={mintInfo.pubkey} style={{ width: '100%', height: '100px', marginBottom: '5px' }} />
+
+                <p style={{ marginTop: '5px', marginBottom: '0px' }}>Version</p>
+                <input type="text" readOnly value={mintInfo.version} style={{ width: '100%', marginBottom: '5px' }} />
+
+                <p style={{ marginTop: '5px', marginBottom: '0px' }}>MOTD</p>
+                <textarea readOnly value={mintInfo.motd} style={{ width: '100%', height: '69px', marginBottom: '5px' }} />
+
+                <p style={{ marginTop: '5px', marginBottom: '0px' }}>Contact</p>
+                <textarea
+                    readOnly
+                    value={formattedContactInfo}
+                    style={{ width: '100%', height: '100px', resize: 'none' }} // Optional styling
+                />
+                {/* Add more fields as necessary */}
+            </div>
+        </div>
+    );
+};
 
 const Mints = ({ onMintChange, balance }) => {
 
     const { getMintBalance } = useMultiMintStorage();
-
     const [mintNames, setMintNames] = useState([]);
     const [activeMint, setLocalActiveMint] = useState(null); // Local state for activeMint
     const [showModal, setShowModal] = useState(false); // State for showing/hiding modal
     const [newMintURL, setNewMintURL] = useState(""); // State for holding new mint URL
+    const [selectedMintInfo, setSelectedMintInfo] = useState(null);
 
     // Fetch mint names and set activeMint if not already set
     const fetchMintNames = async () => {
@@ -169,6 +209,16 @@ const Mints = ({ onMintChange, balance }) => {
         }, duration);
     }
 
+    const showMintInfo = async (mintUrl) => {
+        const storedMintInfo = JSON.parse(localStorage.getItem("mintInfo")) || {};
+        const mintInfo = storedMintInfo[mintUrl];
+        setSelectedMintInfo(mintInfo);
+    };
+
+    const closeMintInfoModal = () => {
+        setSelectedMintInfo(null);
+    };
+
     return (
         <div>
             <div className="box_header">
@@ -198,6 +248,9 @@ const Mints = ({ onMintChange, balance }) => {
                                     </span>
                                 </div>
                             </div>
+                            <button onClick={() => showMintInfo(mint.mintUrl)}>
+                                <InfoCircleIcon style={{ height: "21px", width: "21px", marginRight: '5px' }} />
+                            </button>
                             <button onClick={() => handleDeleteMint(mint.mintUrl)}>
                                 <CrossIcon style={{ height: "21px", width: "21px" }} />
                             </button>
@@ -223,6 +276,11 @@ const Mints = ({ onMintChange, balance }) => {
                         <button className="styled-button" onClick={handleAddMint}>Submit</button>
                     </div>
                 </div>
+            )}
+
+            {/* Mint Info Modal */}
+            {selectedMintInfo && (
+                <MintInfoModal mintInfo={selectedMintInfo} onClose={closeMintInfoModal} />
             )}
 
             {/* Toast Notification */}
