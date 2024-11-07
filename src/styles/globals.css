@@ -57,6 +57,7 @@ main {
   padding: 21px;
   margin-bottom: 21px;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   border: 2px solid black;
@@ -128,9 +129,9 @@ main {
   display: flex;
   width: 100%;
   max-width: 1000px;
-  /* Adjust as necessary */
   margin: 0 auto;
   gap: 5px;
+  justify-content: center; 
 }
 
 .styled-button {
@@ -155,7 +156,6 @@ main {
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.1s ease;
 }
-
 
 .styled-button:active {
   transform: scale(0.98);

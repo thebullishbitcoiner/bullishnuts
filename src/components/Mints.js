@@ -20,16 +20,16 @@ const MintInfoModal = ({ mintInfo, onClose }) => {
                 <h2>{mintInfo.name}</h2>
 
                 <p style={{ marginTop: '5px', marginBottom: '0px' }}>Description</p>
-                <textarea readOnly value={mintInfo.description} style={{ width: '100%', height: '100px', marginBottom: '5px' }} />
+                <textarea readOnly value={mintInfo.description} style={{ width: '100%', height: '100px', marginBottom: '0px', resize: 'none' }} />
 
                 <p style={{ marginTop: '5px', marginBottom: '0px' }}>Public Key</p>
-                <textarea readOnly value={mintInfo.pubkey} style={{ width: '100%', height: '100px', marginBottom: '5px' }} />
+                <textarea readOnly value={mintInfo.pubkey} style={{ width: '100%', height: '90px', marginBottom: '0px', resize: 'none' }} />
 
                 <p style={{ marginTop: '5px', marginBottom: '0px' }}>Version</p>
                 <input type="text" readOnly value={mintInfo.version} style={{ width: '100%', marginBottom: '5px' }} />
 
-                <p style={{ marginTop: '5px', marginBottom: '0px' }}>MOTD</p>
-                <textarea readOnly value={mintInfo.motd} style={{ width: '100%', height: '69px', marginBottom: '5px' }} />
+                <p style={{ marginTop: '5px', marginBottom: '0px' }}>Message of the day</p>
+                <textarea readOnly value={mintInfo.motd} style={{ width: '100%', height: '42px', marginBottom: '0px', resize: 'none' }} />
 
                 <p style={{ marginTop: '5px', marginBottom: '0px' }}>Contact</p>
                 <textarea
@@ -48,9 +48,23 @@ const Mints = ({ onMintChange, balance }) => {
     const { getMintBalance } = useMultiMintStorage();
     const [mintNames, setMintNames] = useState([]);
     const [activeMint, setLocalActiveMint] = useState(null); // Local state for activeMint
-    const [showModal, setShowModal] = useState(false); // State for showing/hiding modal
+    const [showInfoModal, setshowInfoModal] = useState(false); // State for showing/hiding modal
     const [newMintURL, setNewMintURL] = useState(""); // State for holding new mint URL
     const [selectedMintInfo, setSelectedMintInfo] = useState(null);
+
+    useEffect(() => {
+        // Prevent scrolling when the modal is open
+        if (showInfoModal || selectedMintInfo) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'auto';
+        }
+
+        // Cleanup function to reset overflow when the component unmounts
+        return () => {
+            document.body.style.overflow = 'auto';
+        };
+    }, [showInfoModal, selectedMintInfo]);
 
     // Fetch mint names and set activeMint if not already set
     const fetchMintNames = async () => {
@@ -190,7 +204,7 @@ const Mints = ({ onMintChange, balance }) => {
 
             // Re-fetch mint names and hide the modal
             await fetchMintNames(); // Ensure state updates after data is stored
-            setShowModal(false);
+            setshowInfoModal(false);
             setNewMintURL("");
             showToast("Mint added successfully.");
         } catch (error) {
@@ -223,7 +237,7 @@ const Mints = ({ onMintChange, balance }) => {
         <div>
             <div className="box_header">
                 <h2 >Mints</h2>
-                <button onClick={() => { setShowModal(true); }}><PlusIcon style={{ height: "21px", width: "21px", marginBottom: "10px" }} /></button>
+                <button onClick={() => { setshowInfoModal(true); }}><PlusIcon style={{ height: "21px", width: "21px", marginBottom: "10px" }} /></button>
             </div>
             <div>
                 {mintNames.length > 0 ? (
@@ -262,10 +276,10 @@ const Mints = ({ onMintChange, balance }) => {
             </div>
 
             {/* Modal for adding new mints */}
-            {showModal && (
+            {showInfoModal && (
                 <div className="add_mint_modal">
                     <div className="modal-content">
-                        <span className="close-button" onClick={() => setShowModal(false)}>&times;</span>
+                        <span className="close-button" onClick={() => setshowInfoModal(false)}>&times;</span>
                         <h2>Add Mint</h2>
                         <input
                             type="text"

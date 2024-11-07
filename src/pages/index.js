@@ -20,6 +20,8 @@ import * as secp from '@noble/secp256k1'
 import { Relay } from 'nostr-tools/relay'
 
 import TypewriterModal from '@/components/TypewriterModal';
+
+// Icons
 import { RefreshIcon, SendIcon, ReceiveIcon, LightningIcon, CheckIcon, ExportIcon, QrCodeIcon } from "@bitcoin-design/bitcoin-icons-react/filled";
 
 const Wallet = () => {
@@ -88,7 +90,7 @@ const Wallet = () => {
 
       const savedState = localStorage.getItem('isBalanceHidden');
       if (savedState !== null) {
-          setIsBalanceHidden(savedState === 'true');
+        setIsBalanceHidden(savedState === 'true');
       }
 
       setFormData((prevData) => ({ ...prevData, mintUrl: url }));
@@ -1328,7 +1330,7 @@ const Wallet = () => {
       <div className="cashu-operations-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.41</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.42</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
@@ -1520,7 +1522,17 @@ const Wallet = () => {
         <br></br>
 
         <div className="centered-container">
-          <p style={{ fontSize: '14px' }}>Made with 🐂 by <a href="https://primal.net/thebullishbitcoiner">thebullishbitcoiner</a></p>
+          <p style={{ fontSize: '14px', marginBottom: '15px' }}>
+            Made with 🐂 by <a href="https://primal.net/thebullishbitcoiner">thebullishbitcoiner</a>
+          </p>
+          <div className="button-container">
+            <a href="https://github.com/thebullishbitcoiner/bullishnuts">
+              <img src="/images/github-orange-circle.png" alt="GitHub icon" style={{ height: '25px' }} />
+            </a>
+            <a href="https://nostr.com/npub1cashuq3y9av98ljm2y75z8cek39d8ux6jk3g6vafkl5j0uj4m5ks378fhq">
+              <img src="/images/nostr-orange-circle.png" alt="GitHub icon" style={{ height: '25px' }} />
+            </a>
+          </div>
         </div>
 
       </div>
