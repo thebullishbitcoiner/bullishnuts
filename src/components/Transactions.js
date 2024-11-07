@@ -51,8 +51,8 @@ function formatTimestamp(timestamp) {
     return `${month} ${day}, ${year} @ ${hour}:${formattedMinute} ${ampm}`;
 }
 
-// Modal component to display transaction details
-const Modal = ({ transaction, onClose, isOpen }) => {
+// Component to display transaction details
+const DetailsModal = ({ transaction, onClose, isOpen }) => {
     const [copied, setCopied] = useState(false);
 
     const copyToClipboard = (text) => {
@@ -157,7 +157,21 @@ const Modal = ({ transaction, onClose, isOpen }) => {
 const Transactions = ({ updateFlag_Transactions }) => {
     const [transactions, setTransactions] = useState([]);
     const [selectedTransaction, setSelectedTransaction] = useState(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [showDetailsModal, setShowDetailsModal] = useState(false);
+
+    useEffect(() => {
+        // Prevent scrolling when the modal is open
+        if (showDetailsModal || selectedTransaction) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'auto';
+        }
+
+        // Cleanup function to reset overflow when the component unmounts
+        return () => {
+            document.body.style.overflow = 'auto';
+        };
+    }, [showDetailsModal, selectedTransaction]);
 
     const updateTransactions = () => {
         const storedTransactions = JSON.parse(localStorage.getItem("transactions")) || [];
@@ -184,11 +198,11 @@ const Transactions = ({ updateFlag_Transactions }) => {
 
     const handleTransactionClick = (transaction) => {
         setSelectedTransaction(transaction);
-        setIsModalOpen(true);
+        setShowDetailsModal(true);
     };
 
     const closeModal = () => {
-        setIsModalOpen(false);
+        setShowDetailsModal(false);
         setSelectedTransaction(null);
     };
 
@@ -227,8 +241,8 @@ const Transactions = ({ updateFlag_Transactions }) => {
                     </ul>
                 </div>
             )}
-            {/* Always render the Modal, but control its visibility */}
-            <Modal transaction={selectedTransaction} onClose={closeModal} isOpen={isModalOpen} />
+            {/* Always render the DetailsModal, but control its visibility */}
+            <DetailsModal transaction={selectedTransaction} onClose={closeModal} isOpen={showDetailsModal} />
         </div>
     );
 };

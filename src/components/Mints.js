@@ -48,7 +48,7 @@ const Mints = ({ onMintChange, balance }) => {
     const { getMintBalance } = useMultiMintStorage();
     const [mintNames, setMintNames] = useState([]);
     const [activeMint, setLocalActiveMint] = useState(null); // Local state for activeMint
-    const [showInfoModal, setshowInfoModal] = useState(false); // State for showing/hiding modal
+    const [showInfoModal, setShowInfoModal] = useState(false); // State for showing/hiding modal
     const [newMintURL, setNewMintURL] = useState(""); // State for holding new mint URL
     const [selectedMintInfo, setSelectedMintInfo] = useState(null);
 
@@ -204,7 +204,7 @@ const Mints = ({ onMintChange, balance }) => {
 
             // Re-fetch mint names and hide the modal
             await fetchMintNames(); // Ensure state updates after data is stored
-            setshowInfoModal(false);
+            setShowInfoModal(false);
             setNewMintURL("");
             showToast("Mint added successfully.");
         } catch (error) {
@@ -237,7 +237,7 @@ const Mints = ({ onMintChange, balance }) => {
         <div>
             <div className="box_header">
                 <h2 >Mints</h2>
-                <button onClick={() => { setshowInfoModal(true); }}><PlusIcon style={{ height: "21px", width: "21px", marginBottom: "10px" }} /></button>
+                <button onClick={() => { setShowInfoModal(true); }}><PlusIcon style={{ height: "21px", width: "21px", marginBottom: "10px" }} /></button>
             </div>
             <div>
                 {mintNames.length > 0 ? (
@@ -279,7 +279,7 @@ const Mints = ({ onMintChange, balance }) => {
             {showInfoModal && (
                 <div className="add_mint_modal">
                     <div className="modal-content">
-                        <span className="close-button" onClick={() => setshowInfoModal(false)}>&times;</span>
+                        <span className="close-button" onClick={() => setShowInfoModal(false)}>&times;</span>
                         <h2>Add Mint</h2>
                         <input
                             type="text"

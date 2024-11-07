@@ -1330,7 +1330,7 @@ const Wallet = () => {
       <div className="cashu-operations-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.42</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.43</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
@@ -1522,10 +1522,7 @@ const Wallet = () => {
         <br></br>
 
         <div className="centered-container">
-          <p style={{ fontSize: '14px', marginBottom: '15px' }}>
-            Made with 🐂 by <a href="https://primal.net/thebullishbitcoiner">thebullishbitcoiner</a>
-          </p>
-          <div className="button-container">
+        <div className="button-container" style={{ marginBottom: '15px' }}>
             <a href="https://github.com/thebullishbitcoiner/bullishnuts">
               <img src="/images/github-orange-circle.png" alt="GitHub icon" style={{ height: '25px' }} />
             </a>
@@ -1533,6 +1530,10 @@ const Wallet = () => {
               <img src="/images/nostr-orange-circle.png" alt="GitHub icon" style={{ height: '25px' }} />
             </a>
           </div>
+          <p style={{ fontSize: '14px' }}>
+            Made with 🐂 by <a href="https://primal.net/thebullishbitcoiner">thebullishbitcoiner</a>
+          </p>
+        
         </div>
 
       </div>
