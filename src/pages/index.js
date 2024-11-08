@@ -146,14 +146,16 @@ const Wallet = () => {
 
   const handleQRScan = (data) => {
     setScannedData(data);
-    console.log("Scanned data:", data);
+    setDataOutput("Scanned data:", data);
     setIsScanQRModalOpen(false); // Close the modal after scanning
 
     // Handle scanned data
     if (isEcashToken(data)) {
-
+      showReceiveEcashModal(data);
     } else if (isLightningInvoice(data)) {
-
+      setDataOutput(data);
+      navigator.clipboard.writeText(data);
+      showToast("LN invoice copied to cliboard");
     }
   };
 
@@ -1382,7 +1384,7 @@ const Wallet = () => {
       <div className="app-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.48</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.49</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
