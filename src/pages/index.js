@@ -31,7 +31,10 @@ const Wallet = () => {
   const [ecashOrLightningModalLabel, setEcashOrLightningModalLabel] = useState("");
   const [contacts, setContacts] = useState([]);
   const [updateFlag_Transactions, setUpdateFlag_Transactions] = useState(0);
+
+  // For QRCodeScanner
   const [isScanQRModalOpen, setIsScanQRModalOpen] = useState(false);
+  const [scannedData, setScannedData] = useState('');
 
   const [typewriterMessages, setTypewriterMessages] = useState([]);
   const [isTypewriterModalOpen, setIsTypewriterModalOpen] = useState(false);
@@ -140,6 +143,42 @@ const Wallet = () => {
       throw error; // Rethrow or handle the error as needed
     }
   };
+
+  const handleQRScan = (data) => {
+    setScannedData(data);
+    console.log("Scanned data:", data);
+    setIsScanQRModalOpen(false); // Close the modal after scanning
+
+    // Handle scanned data
+    if (isEcashToken(data)) {
+
+    } else if (isLightningInvoice(data)) {
+
+    }
+  };
+
+  function isEcashToken(data) {
+    // Check if the token is a string and starts with "cashu"
+    return typeof data === 'string' && data.startsWith('cashu');
+  }
+
+  function isLightningInvoice(data) {
+    // Check if the data is a string and starts with "ln"
+    if (typeof data !== 'string' || !data.startsWith('ln')) {
+      return false;
+    }
+
+    // Check if the length of the invoice is reasonable (usually between 60 and 300 characters)
+    const length = data.length;
+    if (length < 60 || length > 300) {
+      return false;
+    }
+
+    // Optionally, you can add more checks for specific characteristics of Lightning invoices
+    // For example, you can check for valid characters (Base32) and structure
+    const base32Regex = /^[A-Z2-7]+=*$/; // Base32 character set
+    return base32Regex.test(data.slice(2)); // Skip the "ln" prefix
+  }
 
   async function handleReceive_Lightning(amount) {
     if (wallet === null) {
@@ -1109,10 +1148,23 @@ const Wallet = () => {
     }
   }
 
-  function showReceiveEcashModal() {
+  // function showReceiveEcashModal() {
+  //   const modal = document.getElementById('receive_ecash_modal');
+  //   modal.style.display = 'block';
+  // }
+
+  function showReceiveEcashModal(token) {
     const modal = document.getElementById('receive_ecash_modal');
+
+    // If a token is provided, set it in the textarea
+    if (token) {
+      document.getElementById('cashu_token').value = token;
+    }
+
+    // Display the modal
     modal.style.display = 'block';
   }
+
 
   function closeReceiveEcashModal() {
     const modal = document.getElementById('receive_ecash_modal');
@@ -1327,10 +1379,10 @@ const Wallet = () => {
   return (
     <main>
 
-      <div className="cashu-operations-container">
+      <div className="app-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.47</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.48</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
@@ -1379,6 +1431,7 @@ const Wallet = () => {
               <QRCodeScanner
                 onClose={closeQRCodeScanner}
                 isScanQRModalOpen={isScanQRModalOpen}
+                onScan={handleQRScan}
               />}
             <button className="styled-button" onClick={() => openEcashOrLightningModal('Receive')}>
               Receive<ReceiveIcon style={{ height: '21px', width: '21px', minHeight: '21px', minWidth: '21px', marginLeft: '5px' }} />
