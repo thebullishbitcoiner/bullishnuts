@@ -146,6 +146,7 @@ const Wallet = () => {
 
   const handleQRScan = (data) => {
     setScannedData(data);
+    showToast(data);
     setDataOutput(data);
     setIsScanQRModalOpen(false); // Close the modal after scanning
 
@@ -165,19 +166,7 @@ const Wallet = () => {
 
   function isLightningInvoice(data) {
     // Check if the data is a string and starts with "ln"
-    if (typeof data !== 'string' || !data.startsWith('ln')) {
-      return false;
-    }
-
-    // Remove the "ln" prefix for further checks
-    const invoiceBody = data.slice(2);
-
-    // Check if the invoice body contains valid characters (Base32) 
-    // and allow for a wider range of lengths
-    const base32Regex = /^[A-Z2-7=]+$/; // Base32 character set, allowing '='
-
-    // Return true if the invoice body matches the Base32 regex
-    return base32Regex.test(invoiceBody);
+    return typeof data === 'string' && data.startsWith('ln');
   }
 
   async function handleReceive_Lightning(amount) {
@@ -1382,7 +1371,7 @@ const Wallet = () => {
       <div className="app-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.50</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.51</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
