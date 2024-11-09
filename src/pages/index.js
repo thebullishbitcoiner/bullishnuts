@@ -26,13 +26,17 @@ import { RefreshIcon, SendIcon, ReceiveIcon, LightningIcon, CheckIcon, ExportIco
 
 const Wallet = () => {
   const [isBalanceHidden, setIsBalanceHidden] = useState(true);
+
+  // For LightningModal component
   const [isLightningModalOpen, setIsLightningModalOpen] = useState(false);
+  const [contacts, setContacts] = useState([]);
+  const [lightningModalInitValue, setLightningModalInitValue] = useState("");
+
   const [isEcashOrLightningOpen, setIsEcashOrLightningOpen] = useState(false);
   const [ecashOrLightningModalLabel, setEcashOrLightningModalLabel] = useState("");
-  const [contacts, setContacts] = useState([]);
   const [updateFlag_Transactions, setUpdateFlag_Transactions] = useState(0);
 
-  // For QRCodeScanner
+  // For QRCodeScanner component
   const [isScanQRModalOpen, setIsScanQRModalOpen] = useState(false);
   const [scannedData, setScannedData] = useState('');
 
@@ -154,8 +158,14 @@ const Wallet = () => {
     if (isEcashToken(data)) {
       showReceiveEcashModal(data);
     } else if (isLightningInvoice(data)) {
-      navigator.clipboard.writeText(data);
-      showToast("LN invoice copied to cliboard");
+      setLightningModalInitValue(data);
+      setIsLightningModalOpen(true);
+    } else if (data.startsWith('lightning:')) {
+      data = data.slice('lightning:'.length); // Remove the prefix
+      if (isValidLightningAddress(data)) {
+        setLightningModalInitValue(data);
+        setIsLightningModalOpen(true);
+      }
     }
   };
 
@@ -376,9 +386,8 @@ const Wallet = () => {
   async function handleSend_Lightning() {
     try {
       const input = document.getElementById('send_lightning_input').value;
-      const isInvoiceBolt11 = input.startsWith("lnbc");
       var invoice = "";
-      if (isInvoiceBolt11) {
+      if (isLightningInvoice(input)) {
         invoice = input;
 
         const waitingModal = document.getElementById('waiting_modal');
@@ -1137,11 +1146,6 @@ const Wallet = () => {
     }
   }
 
-  // function showReceiveEcashModal() {
-  //   const modal = document.getElementById('receive_ecash_modal');
-  //   modal.style.display = 'block';
-  // }
-
   function showReceiveEcashModal(token) {
     const modal = document.getElementById('receive_ecash_modal');
 
@@ -1371,7 +1375,7 @@ const Wallet = () => {
       <div className="app-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.51</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.52</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
@@ -1453,6 +1457,7 @@ const Wallet = () => {
             onClose={() => setIsLightningModalOpen(false)}
             onSend={handleSend_Lightning}
             isLightningModalOpen={isLightningModalOpen}
+            initialValue={lightningModalInitValue}
           />
         )}
 

@@ -1,11 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClipboard } from '@fortawesome/free-regular-svg-icons';
 import { AddressBookIcon } from "@bitcoin-design/bitcoin-icons-react/filled";
 
-const LightningModal = ({ contacts, onClose, onSend, isLightningModalOpen }) => {
+const LightningModal = ({ contacts, onClose, onSend, isLightningModalOpen, initialValue }) => {
     const [invoiceOrAddress, setInvoiceOrAddress] = useState('');
     const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+
+    // Effect to set the initial value when the modal opens
+    useEffect(() => {
+        if (isLightningModalOpen) {
+            setInvoiceOrAddress(initialValue || ''); // Set initial value or empty string
+        }
+    }, [isLightningModalOpen, initialValue]);
 
     const handleContactSelect = (contact) => {
         setInvoiceOrAddress(`${contact.npub}@npub.cash`);
@@ -23,7 +30,6 @@ const LightningModal = ({ contacts, onClose, onSend, isLightningModalOpen }) => 
     }
 
     return (
-        /* The isLightningModalOpen prop is used the to determine whether or not to display the modal */
         <div id="send_lightning_modal" className="modal" style={{
             display: isLightningModalOpen ? 'block' : 'none'
         }}>
