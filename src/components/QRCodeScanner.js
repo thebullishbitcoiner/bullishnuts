@@ -40,11 +40,6 @@ const QRCodeScanner = ({ onClose = () => { }, isScanQRModalOpen, onScan }) => {
                 <div className="scanner-container" style={{ position: 'relative', width: '100%', height: '100%', maxWidth: '400px', maxHeight: '400px' }}>
                     <video ref={videoRef} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
-                <textarea
-                    value={data} // Use value prop instead of children
-                    readOnly // Make it read-only if you don't want to allow editing
-                    style={{ width: '100%', height: '100px', marginTop: '10px' }} // Adjust styles as needed
-                />
             </div>
         </div>
     );
