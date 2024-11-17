@@ -153,9 +153,9 @@ const Wallet = () => {
     setIsScanQRModalOpen(false); // Close the modal after scanning
 
     // Handle scanned data
-    if (isEcashToken(data)) {
+    if (data.startsWith('cashu')) {  // Cashu token
       showReceiveEcashModal(data);
-    } else if (isLightningInvoice(data)) {
+    } else if (data.startsWith('ln')) {  // Lightning invoice
       setLightningModalInitValue(data);
       setIsLightningModalOpen(true);
     } else if (data.startsWith('lightning:')) {
@@ -164,13 +164,14 @@ const Wallet = () => {
         setLightningModalInitValue(data);
         setIsLightningModalOpen(true);
       }
+    } else if (data.startsWith("bitcoin:")) {  // BIP21 URI
+      const lightningInvoice = req.match(/lightning=([^&]+)/);
+      if (lightningInvoice) {
+        setLightningModalInitValue(data);
+        setIsLightningModalOpen(true);
+      }
     }
   };
-
-  function isEcashToken(data) {
-    // Check if the token is a string and starts with "cashu"
-    return typeof data === 'string' && data.startsWith('cashu');
-  }
 
   function isLightningInvoice(data) {
     // Check if the data is a string and starts with "ln"
@@ -1373,7 +1374,7 @@ const Wallet = () => {
       <div className="app-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.53</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.54</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
