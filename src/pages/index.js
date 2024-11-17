@@ -156,10 +156,10 @@ const Wallet = () => {
     // Handle scanned data
     if (data.startsWith('cashu')) {  // Cashu token
       showReceiveEcashModal(data);
-    } else if (data.startsWith('ln')) {  // Lightning invoice
+    } else if (data.toLowerCase().startsWith("lnbc")) { // Lightning invoice
       setLightningModalInitValue(data);
       setIsLightningModalOpen(true);
-    } else if (data.startsWith('lightning:')) {
+    } else if (data.toLowerCase().startsWith('lightning:')) {
       data = data.slice('lightning:'.length); // Remove the prefix
       if (isValidLightningAddress(data)) {
         setLightningModalInitValue(data);
@@ -167,7 +167,6 @@ const Wallet = () => {
       }
     } else if (data.startsWith("bitcoin:")) {  // BIP21 URI
       const lightningInvoice = req.match(/lightning=([^&]+)/);
-      setDataOutput(lightningInvoice);
       if (lightningInvoice) {
         setLightningModalInitValue(data);
         setIsLightningModalOpen(true);
@@ -1376,7 +1375,7 @@ const Wallet = () => {
       <div className="app-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.55</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.56</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
