@@ -64,13 +64,19 @@ const LightningModal = ({ contacts, onClose, onSend, isLightningModalOpen, initi
         }
     }
 
+    const handleClose = () => {
+        setInvoiceOrAddress(''); // Reset the invoice or address
+        setInvoiceInfo(''); // Reset the invoice info
+        setIsContactModalOpen(false); // Close the contact modal if it's open
+        onClose(); // Call the original onClose function
+    };
 
     return (
         <div id="send_lightning_modal" className="modal" style={{
             display: isLightningModalOpen ? 'block' : 'none'
         }}>
             <div className="modal-content">
-                <span className="close-button" onClick={onClose}>&times;</span>
+                <span className="close-button" onClick={handleClose}>&times;</span>
                 <h2>Send Lightning</h2>
                 <div className="input-container">
                     <textarea
@@ -91,7 +97,6 @@ const LightningModal = ({ contacts, onClose, onSend, isLightningModalOpen, initi
                 {/* Conditional rendering of the invoice info */}
                 {invoiceInfo && (
                     <textarea
-                        id="invoice_info"
                         value={invoiceInfo}
                         readOnly
                     ></textarea>
