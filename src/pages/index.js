@@ -166,9 +166,9 @@ const Wallet = () => {
         setIsLightningModalOpen(true);
       }
     } else if (data.startsWith("bitcoin:")) {  // BIP21 URI
-      const lightningInvoice = req.match(/lightning=([^&]+)/);
+      const lightningInvoice = data.match(/lightning=([^&]+)/);
       if (lightningInvoice) {
-        setLightningModalInitValue(data);
+        setLightningModalInitValue(lightningInvoice.toLowerCase());
         setIsLightningModalOpen(true);
       }
     }
@@ -1375,7 +1375,7 @@ const Wallet = () => {
       <div className="app-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.57</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.58</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
