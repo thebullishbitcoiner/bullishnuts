@@ -168,7 +168,7 @@ const Wallet = () => {
     } else if (data.startsWith("bitcoin:")) {  // BIP21 URI
       const lightningInvoice = data.match(/lightning=([^&]+)/);
       if (lightningInvoice) {
-        setLightningModalInitValue(lightningInvoice.toLowerCase());
+        setLightningModalInitValue(lightningInvoice[1].toLowerCase());  //The second element (index 1) is the captured group, which is the value of the lightning parameter
         setIsLightningModalOpen(true);
       }
     }
@@ -1375,7 +1375,7 @@ const Wallet = () => {
       <div className="app-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.58</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.59</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
