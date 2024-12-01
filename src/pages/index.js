@@ -18,6 +18,9 @@ import { finalizeEvent, generateSecretKey, getPublicKey } from 'nostr-tools/pure
 import crypto from 'crypto'
 import * as secp from '@noble/secp256k1'
 import { Relay } from 'nostr-tools/relay'
+import { SimplePool } from 'nostr-tools/pool'
+import { encode, decode } from 'bech32-buffer';
+import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
 
 import TypewriterModal from '@/components/TypewriterModal';
 
@@ -637,8 +640,11 @@ const Wallet = () => {
     }
   } // End zapDeezNuts
 
-  async function payToPubkey(pubkey) {
-    let { amount, message } = await showSendNutsModal();
+  async function sendNuts(npub = 'npub1cashuq3y9av98ljm2y75z8cek39d8ux6jk3g6vafkl5j0uj4m5ks378fhq') {
+    let decodedData = decode(npub);
+    let hexPubKey = bytesToHex(decodedData.data);
+
+    let { amount, message } = await showSendNutsModal(npub);
     closeSendNutsModal();
 
     const storedMintData = JSON.parse(localStorage.getItem("activeMint"));
@@ -664,25 +670,9 @@ const Wallet = () => {
       localStorage.setItem('secretKey', JSON.stringify(Array.from(secretKey)));
     }
 
-    let bullishNutsHex = 'c7617e02242f5853fe5b513d411f19b44ad3f0da95a28d33a9b7e927f255dd2d';
-    //let bullishHex = 'a10260a2aa2f092d85e2c0b82e95eac5f8c60ea19c68e4898719b58ccaa23e3e'
+    //let bullishNutsHex = 'c7617e02242f5853fe5b513d411f19b44ad3f0da95a28d33a9b7e927f255dd2d';
     let publicKey = getPublicKey(secretKey) // `publicKey` is a hex string
-
-    const relay = await Relay.connect('wss://relay.0xchat.com')
-    console.log(`connected to ${relay.url}`)
-
-    relay.subscribe([
-      {
-        kinds: [4],
-        authors: [publicKey],
-      },
-    ], {
-      onevent(event) {
-        console.log('got event:', event)
-      }
-    })
-
-    let sharedPoint = secp.getSharedSecret(secretKey, '02' + bullishNutsHex)
+    let sharedPoint = secp.getSharedSecret(secretKey, '02' + hexPubKey)
     let sharedX = sharedPoint.slice(1, 33)
 
     let iv = crypto.randomFillSync(new Uint8Array(16))
@@ -692,37 +682,41 @@ const Wallet = () => {
       iv
     )
 
-    const tempMint = new CashuMint(url);
-
     try {
-      const info = await tempMint.getInfo();
-      const { keysets } = await tempMint.getKeys();
-      const satKeyset = keysets.find((k) => k.unit === "sat");
-      let tempWallet = new CashuWallet(url, { keys: satKeyset, unit: "sat" });
-      const { send, returnChange } = await tempWallet.send(amount, proofs);
-      const encodedToken = getEncodedToken({
-        token: [{ proofs: send, mint: url }], memo: "BULLISH"
-      });
+      const { send, returnChange } = await wallet.send(amount, proofs);
+      const tokenData = {
+        token: [{ proofs: send, mint: wallet.mint.mintUrl }],
+      };
+      const encodedToken = getEncodedToken(tokenData)
 
-      sendEncryptedMessage(message);
-
-      let encryptedMessage = cipher.update(`${encodedToken}`, 'utf8', 'base64')
-      encryptedMessage += cipher.final('base64')
-      let ivBase64 = Buffer.from(iv.buffer).toString('base64')
-
-      let event = {
-        pubkey: [publicKey],
-        created_at: Math.floor(Date.now() / 1000),
-        kind: 4,
-        tags: [['p', bullishNutsHex]],
-        content: encryptedMessage + '?iv=' + ivBase64
+      // Send the message and token separately
+      if (message){
+        sendEncryptedMessage(hexPubKey, message);
       }
+      sendEncryptedMessage(hexPubKey, encodedToken);
 
-      // this assigns the pubkey, calculates the event id and signs the event in a single step
-      const signedEvent = finalizeEvent(event, secretKey)
-      await relay.publish(signedEvent)
+      // let encryptedMessage = cipher.update(`${encodedToken}`, 'utf8', 'base64')
+      // encryptedMessage += cipher.final('base64')
+      // let ivBase64 = Buffer.from(iv.buffer).toString('base64')
+
+      // let event = {
+      //   pubkey: [publicKey],
+      //   created_at: Math.floor(Date.now() / 1000),
+      //   kind: 4,
+      //   tags: [['p', hexPubKey]],
+      //   content: encryptedMessage + '?iv=' + ivBase64
+      // }
+
+      // // This assigns the pubkey, calculates the event id and signs the event in a single step
+      // const signedEvent = finalizeEvent(event, secretKey)
+
+      // // Try to publish to multiple relays
+      // const pool = new SimplePool();
+      // let relays = ['wss://relay.0xchat.com', 'wss://relay.damus.io', 'wss://relay.primal.net'];
+      // await Promise.any(pool.publish(relays, signedEvent));
 
       removeProofs(proofs, url);
+      addProofs(returnChange, wallet.mint.mintUrl);
       showToast("Succesfully sent nuts! Thank you!");
       showConfetti(amount);
     } catch (error) {
@@ -731,7 +725,11 @@ const Wallet = () => {
     }
   }
 
-  async function sendEncryptedMessage(message) {
+  /*
+   * Sends a NIP-04 DM to an Nostr user.
+   * Receiver should be in the hex pubkey format.
+   */
+  async function sendEncryptedMessage(receiver, message) {
     // Check if the secret key already exists in local storage
     let storedSecretKey = localStorage.getItem('secretKey');
     let secretKey;  // `secretKey` should be a Uint8Array
@@ -746,10 +744,8 @@ const Wallet = () => {
       localStorage.setItem('secretKey', JSON.stringify(Array.from(secretKey)));
     }
 
-    let bullishNutsHex = 'c7617e02242f5853fe5b513d411f19b44ad3f0da95a28d33a9b7e927f255dd2d';
     let publicKey = getPublicKey(secretKey) // `publicKey` is a hex string
-
-    let sharedPoint = secp.getSharedSecret(secretKey, '02' + bullishNutsHex)
+    let sharedPoint = secp.getSharedSecret(secretKey, '02' + receiver)
     let sharedX = sharedPoint.slice(1, 33)
 
     let iv = crypto.randomFillSync(new Uint8Array(16))
@@ -767,17 +763,23 @@ const Wallet = () => {
       pubkey: [publicKey],
       created_at: Math.floor(Date.now() / 1000),
       kind: 4,
-      tags: [['p', bullishNutsHex]],
+      tags: [['p', receiver]],
       content: encryptedMessage + '?iv=' + ivBase64
     }
 
     // this assigns the pubkey, calculates the event id and signs the event in a single step
     const signedEvent = finalizeEvent(event, secretKey)
 
-    const relay = await Relay.connect('wss://relay.0xchat.com')
-    console.log(`connected to ${relay.url}`)
-    relay.publish(signedEvent)
-  } // End sendEncryptedMessage()
+    // Try to publish to multiple relays
+    const pool = new SimplePool();
+    let relays = ['wss://relay.0xchat.com', 'wss://relay.damus.io', 'wss://relay.primal.net'];
+    try {
+      await Promise.any(pool.publish(relays, signedEvent));
+    } catch (error) {
+      console.error(error);
+      setDataOutput({ error: true, details: error });
+    }
+  }
 
   async function fetchInvoiceFromCallback(callbackURL, amount, timeout = 5000) {
     const url = new URL(callbackURL);
@@ -1084,18 +1086,17 @@ const Wallet = () => {
     modal.style.display = 'none';
   }
 
-  function showSendNutsModal() {
+  function showSendNutsModal(receiver) {
     return new Promise((resolve) => {
-      const modal = document.getElementById('send_nuts_modal');
-      const amount = document.getElementById('send_nuts_amount');
-      const message = document.getElementById('send_nuts_message');
-      const submitButton = document.getElementById('send_nuts_submit');
+      document.getElementById('send_nuts_receiver').value = receiver;
 
+      const modal = document.getElementById('send_nuts_modal');
       modal.style.display = 'block';
 
+      const submitButton = document.getElementById('send_nuts_submit');
       submitButton.onclick = () => {
-        const value = amount.value;
-        const msg = message.value;
+        const value = document.getElementById('send_nuts_amount').value;
+        const msg = document.getElementById('send_nuts_message').value;
         resolve({ amount: value, message: msg }); // Resolve with an object
       };
     });
@@ -1268,12 +1269,14 @@ const Wallet = () => {
 
   //Gets the npub for the selected contact, appends "@npub.cash", and copies it to the clipboard
   const handleContactSelect = (contact) => {
-    const contactAddress = `${contact.npub}@npub.cash`;
-    navigator.clipboard.writeText(contactAddress).then(() => {
-      showToast(`Copied to clipboard: ${contactAddress}`);
-    }).catch(err => {
-      showToast(`Failed to copy: ${err}`);
-    });
+    let npub = contact.npub;
+    sendNuts(npub);
+    // const contactAddress = `${contact.npub}@npub.cash`;
+    // navigator.clipboard.writeText(contactAddress).then(() => {
+    //   showToast(`Copied to clipboard: ${contactAddress}`);
+    // }).catch(err => {
+    //   showToast(`Failed to copy: ${err}`);
+    // });
   };
 
   const exportJSON = () => {
@@ -1375,7 +1378,7 @@ const Wallet = () => {
       <div className="app-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.60</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.61</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
@@ -1501,6 +1504,8 @@ const Wallet = () => {
             <h2>Send Nuts</h2>
             <label htmlFor="send_nuts_amount">Amount</label>
             <input type="number" id="send_nuts_amount" inputMode="decimal" min="1" placeholder="Enter amount of sats" />
+            <label htmlFor="send_nuts_receiver">Receiver</label>
+            <textarea id="send_nuts_receiver" style={{ height: '90px' }} readOnly></textarea>
             <label htmlFor="send_nuts_message">Message</label>
             <textarea id="send_nuts_message" placeholder="Optional"></textarea>
             <button className="styled-button" id="send_nuts_submit">OK</button>
@@ -1549,7 +1554,7 @@ const Wallet = () => {
             <button className="styled-button" onClick={zapDeezNuts} >ZAP DEEZ NUTS<LightningIcon style={{ height: '21px', width: '21px', marginLeft: '3px' }} /></button>
           </div>
           <div className="button-container">
-            <button className="styled-button" onClick={payToPubkey} >SEND NUTS 🥜</button>
+            <button className="styled-button" onClick={() => sendNuts()}>SEND NUTS 🥜</button>
           </div>
         </div>
 
