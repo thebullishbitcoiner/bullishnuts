@@ -695,30 +695,16 @@ const Wallet = () => {
       }
       sendEncryptedMessage(hexPubKey, encodedToken);
 
-      // let encryptedMessage = cipher.update(`${encodedToken}`, 'utf8', 'base64')
-      // encryptedMessage += cipher.final('base64')
-      // let ivBase64 = Buffer.from(iv.buffer).toString('base64')
-
-      // let event = {
-      //   pubkey: [publicKey],
-      //   created_at: Math.floor(Date.now() / 1000),
-      //   kind: 4,
-      //   tags: [['p', hexPubKey]],
-      //   content: encryptedMessage + '?iv=' + ivBase64
-      // }
-
-      // // This assigns the pubkey, calculates the event id and signs the event in a single step
-      // const signedEvent = finalizeEvent(event, secretKey)
-
-      // // Try to publish to multiple relays
-      // const pool = new SimplePool();
-      // let relays = ['wss://relay.0xchat.com', 'wss://relay.damus.io', 'wss://relay.primal.net'];
-      // await Promise.any(pool.publish(relays, signedEvent));
-
       removeProofs(proofs, url);
       addProofs(returnChange, wallet.mint.mintUrl);
-      showToast("Succesfully sent nuts! Thank you!");
-      showConfetti(amount);
+
+      // Confetti is reserved for donations
+      if (npub === 'npub1cashuq3y9av98ljm2y75z8cek39d8ux6jk3g6vafkl5j0uj4m5ks378fhq'){
+        showToast("Succesfully sent nuts! Thank you!");
+        showConfetti(amount);
+      } else {
+        showToast(`${amount} sats sent to ${npub} via Nostr DM`)
+      } 
     } catch (error) {
       console.error(error);
       setDataOutput({ error: true, details: error });
@@ -1378,7 +1364,7 @@ const Wallet = () => {
       <div className="app-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.61</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.62</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
