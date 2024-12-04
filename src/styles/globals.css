@@ -199,20 +199,6 @@ main {
   font-weight: bold;
 }
 
-.data-output {
-  background-color: #111111;
-  color: #ff9900;
-  padding: 10px;
-  border: 1px solid #ff9900;
-  white-space: pre-wrap;
-  overflow: scroll;
-  max-width: 100%;
-  height: 300px;
-  max-height: 300px;
-  word-wrap: break-word;
-  margin: 10px 0px 10px 0px;
-}
-
 @layer utilities {
   .text-balance {
     text-wrap: balance;
@@ -463,6 +449,20 @@ main {
     background-color: rgba(0, 0, 0, 0.8);
   }
 
+  .nut_splits_modal {
+    display: block;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.8);
+  }
+
   .input-container {
     display: flex;
     align-items: flex-start;
@@ -581,6 +581,40 @@ main {
     left: 3px;
   }
 
+  input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none; /* For Safari */
+    min-width: 21px; /* Set width */
+    min-height: 21px; /* Set height */
+    border: 2px solid #FF9900;
+    border-radius: 0px; 
+    outline: none;
+    cursor: pointer;
+    background-color: #111111;
+    position: relative;
+
+}
+
+input[type="checkbox"]:checked {
+    background-color: #FF9900;
+}
+
+input[type="checkbox"]:checked::after {
+    content: '✓';
+    font-size: 16px; /* Adjust font size as needed */
+    color: #111111;
+    position: absolute;
+    top: -2px; /* Adjust position as needed */
+    left: 4px; /* Adjust position as needed */
+}
+
+/* Optional: Add a hover effect */
+input[type="checkbox"]:hover {
+    border-color: #FFCC00; /* Change border color on hover */
+}
+
+
+
   .ecash_or_lightning_modal {
     display: block;
     justify-content: center;
@@ -596,6 +630,14 @@ main {
   }
 
   #send_lightning_input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ff9900;
+    border-radius: 0px;
+    background-color: #111111;
+  }
+
+  #nut_splits_input {
     width: 100%;
     padding: 8px;
     border: 1px solid #ff9900;

@@ -1,0 +1,37 @@
+.loading-animation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%; /* Adjust as needed */
+    font-size: 20px; /* Adjust as needed */
+    color: #ff9900; /* Loading text color */
+}
+
+.dot {
+    animation: blink 1s infinite;
+    font-size: 24px; /* Adjust size of dots */
+}
+
+.dot:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.dot:nth-child(2) {
+    animation-delay: 0.2s; /* Delay for the second dot */
+}
+
+.dot:nth-child(3) {
+    animation-delay: 0.4s; /* Delay for the third dot */
+}
+
+@keyframes blink {
+    0%, 20% {
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}

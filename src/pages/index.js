@@ -9,6 +9,7 @@ import Mints from "@/components/Mints";
 import EcashOrLightning from "@/components/EcashOrLightning";
 import Transactions from "@/components/Transactions";
 import QRCodeScanner from '@/components/QRCodeScanner';
+import NutSplits from '@/components/NutSplits';
 
 import QRCode from 'qrcode';
 import JSConfetti from 'js-confetti';
@@ -43,6 +44,9 @@ const Wallet = () => {
   const [isScanQRModalOpen, setIsScanQRModalOpen] = useState(false);
   const [scannedData, setScannedData] = useState('');
 
+  // For NutSplits component
+  const [isNutSplitsModalOpen, setIsNutSplitsModalOpen] = useState(false);
+
   const [typewriterMessages, setTypewriterMessages] = useState([]);
   const [isTypewriterModalOpen, setIsTypewriterModalOpen] = useState(false);
 
@@ -65,13 +69,6 @@ const Wallet = () => {
       localStorage.setItem('contacts', JSON.stringify(newContacts));
     }
   };
-
-  const [formData, setFormData] = useState({
-    mintUrl: "",
-    meltInvoice: "",
-    swapAmount: "",
-  });
-  const [dataOutput, setDataOutput] = useState(null);
 
   /**
    * @type {[CashuWallet|null, React.Dispatch<React.SetStateAction<CashuWallet|null>>]}
@@ -102,8 +99,6 @@ const Wallet = () => {
       if (savedState !== null) {
         setIsBalanceHidden(savedState === 'true');
       }
-
-      setFormData((prevData) => ({ ...prevData, mintUrl: url }));
     }
     else {
       const introMessages = [
@@ -117,19 +112,10 @@ const Wallet = () => {
     }
   }, []);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
-
   const handleMintChange = async (newMint) => {
     try {
       const mint = new CashuMint(newMint);
       const info = await mint.getInfo();
-      setDataOutput(info);
 
       const { keysets } = await mint.getKeys();
       const satKeyset = keysets.find((k) => k.unit === "sat");
@@ -154,7 +140,6 @@ const Wallet = () => {
   const handleQRScan = (data) => {
     setScannedData(data);
     setIsScanQRModalOpen(false); // Close the modal after scanning
-    setDataOutput(data);
 
     // Handle scanned data
     if (data.startsWith('cashu')) {  // Cashu token
@@ -190,7 +175,6 @@ const Wallet = () => {
     //const quote = await wallet.getMintQuote(amount);
     const quote = await wallet.createMintQuote(amount);
 
-    setDataOutput(quote);
     storeJSON(quote);
 
     //Close the receive Lightning modal just before showing the invoice modal
@@ -202,7 +186,6 @@ const Wallet = () => {
         const { proofs } = await wallet.mintTokens(amount, quote.quote, {
           keysetId: wallet.keys.id,
         });
-        setDataOutput({ "minted proofs": proofs });
 
         //Add new proofs to local storage
         var proofsArray = { "proofs": proofs };
@@ -218,7 +201,6 @@ const Wallet = () => {
         clearInterval(intervalId);
       } catch (error) {
         console.error("Quote probably not paid: ", quote.request, error);
-        setDataOutput({ timestamp: new Date().toLocaleTimeString(), error: "Failed to mint", details: error });
       }
     }, 5000);
   }
@@ -255,7 +237,6 @@ const Wallet = () => {
 
           // Use the info from localStorage
           const mintInfo = storedMintInfo[mintURL];
-          setDataOutput(mintInfo);
           storeJSON(mintInfo);
 
           const { keysets } = await mint.getKeys();
@@ -273,7 +254,7 @@ const Wallet = () => {
           return;
         } catch (error) {
           console.error(error);
-          setDataOutput({ error: "Failed to receive ecash.", details: error });
+          storeJSON({ error: "Failed to receive ecash.", details: error });
         }
       }
 
@@ -284,7 +265,6 @@ const Wallet = () => {
       addTransaction_Ecash("Receive", mintURL, totalAmount, token);
       showToast(`Received ${totalAmount} ${totalAmount === 1 ? 'sat' : 'sats'}!`);
 
-      setDataOutput(proofs);
       storeJSON(proofs);
     } catch (error) {
       console.error(error);
@@ -326,11 +306,9 @@ const Wallet = () => {
       removeProofs(proofs, wallet.mint.mintUrl);
       addProofs(returnChange, wallet.mint.mintUrl);
       addTransaction_Ecash("Send", wallet.mint.mintUrl, amount, encodedToken);
-
-      setDataOutput(encodedToken);
     } catch (error) {
       console.error(error);
-      setDataOutput({ error: "Failed to send ecash", details: error });
+      storeJSON({ error: "Failed to send ecash", details: error });
     }
   }
 
@@ -447,7 +425,7 @@ const Wallet = () => {
     }
     catch (error) {
       console.error(error);
-      setDataOutput({ error: "Failed to melt tokens", details: error });
+      storeJSON({ error: "Failed to melt tokens", details: error });
     }
   }
 
@@ -507,7 +485,6 @@ const Wallet = () => {
       //Wait to get melt quote from mint
       const quote = await wallet.createMeltQuote(invoice);
       document.getElementById('waiting_message').textContent = "Getting melt quote...";
-      setDataOutput([{ "got melt quote": quote }]);
       storeJSON(quote);
 
       const amount = quote.amount + quote.fee_reserve;
@@ -600,7 +577,6 @@ const Wallet = () => {
       //Wait to get melt quote from mint
       const quote = await wallet.createMeltQuote(invoice);
       document.getElementById('waiting_message').textContent = "Getting melt quote...";
-      setDataOutput([{ "got melt quote": quote }]);
       storeJSON(quote);
 
       const amount = quote.amount + quote.fee_reserve;
@@ -636,16 +612,13 @@ const Wallet = () => {
     } catch (error) {
       console.error(error);
       showToast(error);
-      setDataOutput({ error: "Failed to zap deez nuts", details: error });
+      storeJSON({ error: "Failed to zap deez nuts", details: error });
     }
   } // End zapDeezNuts
 
-  async function sendNuts(npub = 'npub1cashuq3y9av98ljm2y75z8cek39d8ux6jk3g6vafkl5j0uj4m5ks378fhq') {
+  async function sendNuts(npub, amount, message) {
     let decodedData = decode(npub);
     let hexPubKey = bytesToHex(decodedData.data);
-
-    let { amount, message } = await showSendNutsModal(npub);
-    closeSendNutsModal();
 
     const storedMintData = JSON.parse(localStorage.getItem("activeMint"));
     const { url, keyset } = storedMintData;
@@ -690,24 +663,16 @@ const Wallet = () => {
       const encodedToken = getEncodedToken(tokenData)
 
       // Send the message and token separately
-      if (message){
+      if (message) {
         sendEncryptedMessage(hexPubKey, message);
       }
       sendEncryptedMessage(hexPubKey, encodedToken);
 
       removeProofs(proofs, url);
       addProofs(returnChange, wallet.mint.mintUrl);
-
-      // Confetti is reserved for donations
-      if (npub === 'npub1cashuq3y9av98ljm2y75z8cek39d8ux6jk3g6vafkl5j0uj4m5ks378fhq'){
-        showToast("Succesfully sent nuts! Thank you!");
-        showConfetti(amount);
-      } else {
-        showToast(`${amount} sats sent to ${npub} via Nostr DM`)
-      } 
     } catch (error) {
       console.error(error);
-      setDataOutput({ error: true, details: error });
+      storeJSON({ error: true, details: error });
     }
   }
 
@@ -763,7 +728,7 @@ const Wallet = () => {
       await Promise.any(pool.publish(relays, signedEvent));
     } catch (error) {
       console.error(error);
-      setDataOutput({ error: true, details: error });
+      storeJSON({ error: true, details: error });
     }
   }
 
@@ -1145,7 +1110,6 @@ const Wallet = () => {
     modal.style.display = 'block';
   }
 
-
   function closeReceiveEcashModal() {
     const modal = document.getElementById('receive_ecash_modal');
     document.getElementById('cashu_token').value = '';
@@ -1253,16 +1217,35 @@ const Wallet = () => {
     localStorage.setItem('json', JSON.stringify(existingData));
   }
 
-  //Gets the npub for the selected contact, appends "@npub.cash", and copies it to the clipboard
-  const handleContactSelect = (contact) => {
-    let npub = contact.npub;
-    sendNuts(npub);
+  const handleContactSelect = async (contact) => {
+    let npub = contact.npub; // Move this line up to define npub before using it
+
+    let { amount, message } = await showSendNutsModal(npub);
+    closeSendNutsModal();
+
+    sendNuts(npub, amount, message);
+
+    showToast(`${amount} sats sent to ${npub} via Nostr DM`)
+
+    // Uncomment the following lines if you want to copy the contact address to clipboard
     // const contactAddress = `${contact.npub}@npub.cash`;
     // navigator.clipboard.writeText(contactAddress).then(() => {
     //   showToast(`Copied to clipboard: ${contactAddress}`);
     // }).catch(err => {
     //   showToast(`Failed to copy: ${err}`);
     // });
+  };
+
+  const handleSendNuts = async () => {
+    let npub = 'npub1cashuq3y9av98ljm2y75z8cek39d8ux6jk3g6vafkl5j0uj4m5ks378fhq';
+
+    let { amount, message } = await showSendNutsModal(npub);
+    closeSendNutsModal();
+
+    sendNuts(npub, amount, message);
+
+    showToast("Succesfully sent nuts! Thank you!");
+    showConfetti(amount);
   };
 
   const exportJSON = () => {
@@ -1358,13 +1341,36 @@ const Wallet = () => {
     localStorage.setItem('isBalanceHidden', newState);
   };
 
+  const closeNutSplitsModal = () => {
+    setIsNutSplitsModalOpen(false);
+  }
+
+  const handleNutSplit = (selectedCommenters) => {
+    setIsNutSplitsModalOpen(false); // Close the modal
+
+    let amount = 1;
+    let message = "This is a test nut!";
+
+    console.log('Selected Commenters:', selectedCommenters);
+
+    // Loop through each commenter
+    selectedCommenters.forEach((npub) => {
+      sendNuts(npub, amount, message);
+      // Handle each commenter as needed
+      console.log('Nut(s) sent to:', npub);
+      // You can perform actions with each commenter here
+    });
+
+    showToast(`Sent ${amount} sat(s) each to ${selectedCommenters.length} recipients`);
+  };
+
   return (
     <main>
 
       <div className="app-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.62</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.63</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
@@ -1540,21 +1546,27 @@ const Wallet = () => {
             <button className="styled-button" onClick={zapDeezNuts} >ZAP DEEZ NUTS<LightningIcon style={{ height: '21px', width: '21px', marginLeft: '3px' }} /></button>
           </div>
           <div className="button-container">
-            <button className="styled-button" onClick={() => sendNuts()}>SEND NUTS 🥜</button>
+            <button className="styled-button" onClick={handleSendNuts}>SEND NUTS 🥜</button>
           </div>
         </div>
 
         <div className="data-display-container">
           <h2>Advanced</h2>
-          <p>Data Output</p>
-          <pre id="data-output" className="data-output">{JSON.stringify(dataOutput, null, 2)}</pre>
           <div className="button-container">
             <button className="styled-button" onClick={checkProofs}>Check Proofs<CheckIcon style={{ height: '21px', width: '21px', marginLeft: '3px', marginBottom: '3px' }} /></button>
           </div>
           <div className="button-container">
             <button className="styled-button" onClick={exportJSON}>Export JSON Logs<ExportIcon style={{ height: '21px', width: '21px', marginLeft: '3px', marginBottom: '3px' }} /></button>
           </div>
-
+          <div className="button-container">
+            <button className="styled-button" onClick={() => setIsNutSplitsModalOpen(true)}>Nut Splits</button>
+            {isNutSplitsModalOpen && (
+              <NutSplits
+                onSendNuts={handleNutSplit}
+                onClose={closeNutSplitsModal}
+              />
+            )}
+          </div>
         </div>
 
         <br></br>
