@@ -1,5 +1,5 @@
 import useMultiMintStorage from "@/hooks/useMultiMintStorage";
-import { CashuMint, CashuWallet, getEncodedToken, getDecodedToken, getEncodedTokenV4 } from "@cashu/cashu-ts";
+import { CashuMint, CashuWallet, getEncodedToken, getDecodedToken, getEncodedTokenV4, CheckStateEnum, MeltQuoteState, getKeepAmounts, MintQuoteState } from "@cashu/cashu-ts";
 import React, { useState, useEffect, useRef } from "react";
 
 // Custom components
@@ -181,15 +181,22 @@ const Wallet = () => {
     closeReceiveLightningModal();
     showInvoiceModal(quote.request);
 
-    const intervalId = setInterval(async () => {
-      try {
-        const { proofs } = await wallet.mintTokens(amount, quote.quote, {
-          keysetId: wallet.keys.id,
-        });
+    //==============
+    // After some time of waiting, let's ask the mint if the request has been fullfilled.
+    setTimeout(async () => await checkMintQuote(quote), 1000);
 
-        //Add new proofs to local storage
-        var proofsArray = { "proofs": proofs };
-        storeJSON(proofsArray);
+    const checkMintQuote = async (q) => {
+      // with this call, we can check the current status of a given quote
+      console.log('Checking the status of the quote: ' + q.quote);
+      const quote = await wallet.checkMintQuote(q.quote);
+      if (quote.error) {
+        console.error(quote.error, quote.code, quote.detail);
+        return;
+      }
+      if (quote.state === MintQuoteState.PAID) {
+        //if the quote was paid, we can ask the mint to issue the signatures for the ecash
+        const proofs = await wallet.mintProofs(amount, quote.quote);
+        console.log(`minted proofs: ${proofs.map((p) => p.amount).join(', ')} sats`);
 
         //Add new proofs to existing ones
         addProofs(proofs, wallet.mint.mintUrl);
@@ -197,18 +204,45 @@ const Wallet = () => {
         const totalAmount = getTotalAmountFromProofs(proofs);
         addTransaction_Lightning("Receive", wallet.mint.mintUrl, quote.request, totalAmount, "--");
         showToast(`${amount} sat${amount !== 1 ? 's' : ''} received`);
-
-        clearInterval(intervalId);
-      } catch (error) {
-        console.error("Quote probably not paid: ", quote.request, error);
+      } else if (quote.state === MintQuoteState.ISSUED) {
+        // if the quote has already been issued, we will receive an error if we try to mint again
+        console.error('Quote has already been issued');
+        return;
+      } else {
+        // if the quote has not yet been paid, we will wait some more to get the status of the quote again
+        setTimeout(async () => await checkMintQuote(q), 1000);
       }
-    }, 5000);
+    };
+    //==============
+
+    // const intervalId = setInterval(async () => {
+    //   try {
+
+    //     //const { proofs } = await wallet.mintTokens(amount, quote.quote, { keysetId: wallet.keys.id, });
+    //     const { proofs } = await wallet.mintProofs(amount, quote.quote, { keysetId: wallet.keys.id, });
+
+    //     //Add new proofs to local storage
+    //     var proofsArray = { "proofs": proofs };
+    //     storeJSON(proofsArray);
+
+    //     //Add new proofs to existing ones
+    //     addProofs(proofs, wallet.mint.mintUrl);
+    //     closeInvoiceModal();
+    //     const totalAmount = getTotalAmountFromProofs(proofs);
+    //     addTransaction_Lightning("Receive", wallet.mint.mintUrl, quote.request, totalAmount, "--");
+    //     showToast(`${amount} sat${amount !== 1 ? 's' : ''} received`);
+
+    //     clearInterval(intervalId);
+    //   } catch (error) {
+    //     console.error("Quote probably not paid: ", quote.request, error);
+    //   }
+    // }, 5000);
   }
 
   async function handleReceive_Ecash(token) {
     try {
-      const decoded = getDecodedToken(token);
-      const mintURL = decoded.token[0].mint;
+      const decodedToken = getDecodedToken(token);
+      const mintURL = decodedToken.mint;
 
       // Declare a local variable to track the wallet
       let currentWallet = wallet;
@@ -282,19 +316,20 @@ const Wallet = () => {
   async function handleSend_Ecash(amount) {
     const storedMintData = JSON.parse(localStorage.getItem("activeMint"));
     const { url, keyset } = storedMintData;
-    const proofs = getProofsByAmount(amount, url);
 
+    const proofs = getProofsByAmount(amount, url);
     if (proofs.length === 0) {
       showToast("Insufficient balance");
       return;
     }
 
     try {
-      const { send, returnChange } = await wallet.send(amount, proofs);
+      const response = await wallet.send(amount, proofs);
       const tokenData = {
-        token: [{ proofs: send, mint: wallet.mint.mintUrl }],
+        mint: wallet.mint.mintUrl,
+        proofs: response.send
       };
-      const encodedToken = getEncodedToken(tokenData)
+      const encodedToken = getEncodedToken(tokenData);
 
       //Close the sats input modal and display the cashu token modal
       closeSendEcashModal();
@@ -304,7 +339,7 @@ const Wallet = () => {
       storeJSON(encodedToken);
 
       removeProofs(proofs, wallet.mint.mintUrl);
-      addProofs(returnChange, wallet.mint.mintUrl);
+      addProofs(response.keep, wallet.mint.mintUrl);
       addTransaction_Ecash("Send", wallet.mint.mintUrl, amount, encodedToken);
     } catch (error) {
       console.error(error);
@@ -389,13 +424,13 @@ const Wallet = () => {
         document.getElementById('waiting_message').textContent = "Paying invoice...";
 
         try {
-          // Set a timeout of 10 seconds (10000 milliseconds) for meltTokens
-          const { isPaid, preimage, change } = await withTimeout(
-            wallet.meltTokens(quote, proofs, { keysetId: wallet.keys.id }),
+          // Set a timeout of 10 seconds (10000 milliseconds) for to melt
+          const payRes = await withTimeout(
+            wallet.meltProofs(quote, proofs, { keysetId: wallet.keys.id }),
             10000
           );
 
-          if (isPaid) {
+          if (payRes.quote.paid) {
             waitingModal.style.display = 'none';
 
             setIsLightningModalOpen(false);
@@ -404,9 +439,9 @@ const Wallet = () => {
 
             addTransaction_Lightning("Send", wallet.mint.mintUrl, invoice, quote.amount, quote.fee_reserve);
 
-            var changeArray = { "change": change };
+            var changeArray = { "change": payRes.change };
             storeJSON(changeArray);
-            addProofs(change, wallet.mint.mintUrl);
+            addProofs(payRes.change, wallet.mint.mintUrl);
           }
         } catch (error) {
           // Handle error, whether it's a timeout or another issue
@@ -498,28 +533,27 @@ const Wallet = () => {
       document.getElementById('waiting_message').textContent = "Paying invoice...";
 
       try {
-        // Set a timeout of 10 seconds (10000 milliseconds) for meltTokens
-        const { isPaid, preimage, change } = await withTimeout(
-          wallet.meltTokens(quote, proofs, { keysetId: wallet.keys.id }),
+        // Set a timeout of 10 seconds (10000 milliseconds) for melt
+        const payRes = await withTimeout(
+          wallet.meltProofs(quote, proofs, { keysetId: wallet.keys.id }),
           10000
         );
 
-        // Handle the result if meltTokens succeeds within the timeout
-        console.log("Invoice paid:", isPaid);
-        console.log("Preimage:", preimage);
-        console.log("Change:", change);
+        // Handle the result if above succeeds within the timeout
+        console.log("Invoice paid:", payRes.quote.paid);
+        console.log("Preimage:", payRes.quote.payment_preimage);
+        console.log("Change:", payRes.change);
 
-        if (isPaid) {
+        if (payRes.quote.paid) {
           waitingModal.style.display = 'none';
 
           const message = quote.amount + ' sat(s) sent to ' + input;
           showToast(message);
 
           removeProofs(proofs, wallet.mint.mintUrl);
-          var changeArray = { "change": change };
+          var changeArray = { "change": payRes.change };
           storeJSON(changeArray);
-          addProofs(change, wallet.mint.mintUrl);
-
+          addProofs(payRes.change, wallet.mint.mintUrl);
           addTransaction_Lightning("Send", wallet.mint.mintUrl, invoice, quote.amount, quote.fee_reserve);
         }
       } catch (error) {
@@ -592,22 +626,19 @@ const Wallet = () => {
       }
 
       document.getElementById('waiting_message').textContent = "Paying invoice...";
-      const { isPaid, change } = await wallet.meltTokens(quote, proofs, {
-        keysetId: wallet.keys.id,
-      });
+      const meltProofsResponse = await wallet.meltProofs(quote, proofs);
 
-      if (isPaid) {
+      if (meltProofsResponse.quote.state == MeltQuoteState.PAID) {
         waitingModal.style.display = 'none';
         showConfetti(quote.amount);
-        //makeDeezNutsRain(quote.amount);
         const message = quote.amount + ' sat(s) sent to ' + lightningAddress;
         showToast(message);
         removeProofs(proofs, url);
 
-        var changeArray = { "change": change };
+        var changeArray = { "change": meltProofsResponse.change };
         storeJSON(changeArray);
 
-        addProofs(change, url);
+        addProofs(meltProofsResponse.change, url);
       }
     } catch (error) {
       console.error(error);
@@ -617,9 +648,6 @@ const Wallet = () => {
   } // End zapDeezNuts
 
   async function sendNuts(npub, amount, message) {
-    let decodedData = decode(npub);
-    let hexPubKey = bytesToHex(decodedData.data);
-
     const storedMintData = JSON.parse(localStorage.getItem("activeMint"));
     const { url, keyset } = storedMintData;
 
@@ -629,38 +657,16 @@ const Wallet = () => {
       return;
     }
 
-    // Check if the secret key already exists in local storage
-    let storedSecretKey = localStorage.getItem('secretKey');
-    let secretKey;  // `secretKey` should be a Uint8Array
-
-    if (storedSecretKey) {
-      // If it exists, retrieve it from local storage and convert it back to Uint8Array
-      secretKey = new Uint8Array(JSON.parse(storedSecretKey));
-    } else {
-      // If it doesn't exist, generate a new secret key
-      secretKey = generateSecretKey();
-      // Save the secret key to local storage as a JSON string
-      localStorage.setItem('secretKey', JSON.stringify(Array.from(secretKey)));
-    }
-
-    //let bullishNutsHex = 'c7617e02242f5853fe5b513d411f19b44ad3f0da95a28d33a9b7e927f255dd2d';
-    let publicKey = getPublicKey(secretKey) // `publicKey` is a hex string
-    let sharedPoint = secp.getSharedSecret(secretKey, '02' + hexPubKey)
-    let sharedX = sharedPoint.slice(1, 33)
-
-    let iv = crypto.randomFillSync(new Uint8Array(16))
-    var cipher = crypto.createCipheriv(
-      'aes-256-cbc',
-      Buffer.from(sharedX),
-      iv
-    )
-
     try {
-      const { send, returnChange } = await wallet.send(amount, proofs);
+      const response = await wallet.send(amount, proofs);
       const tokenData = {
-        token: [{ proofs: send, mint: wallet.mint.mintUrl }],
+        mint: wallet.mint.mintUrl,
+        proofs: response.send
       };
-      const encodedToken = getEncodedToken(tokenData)
+      const encodedToken = getEncodedToken(tokenData);
+
+      let decodedData = decode(npub);
+      let hexPubKey = bytesToHex(decodedData.data);
 
       // Send the message and token separately
       if (message) {
@@ -669,7 +675,7 @@ const Wallet = () => {
       sendEncryptedMessage(hexPubKey, encodedToken);
 
       removeProofs(proofs, url);
-      addProofs(returnChange, wallet.mint.mintUrl);
+      addProofs(response.keep, wallet.mint.mintUrl);
     } catch (error) {
       console.error(error);
       storeJSON({ error: true, details: error });
@@ -910,22 +916,7 @@ const Wallet = () => {
   }
 
   async function showCashuTokenModal(tokenData) {
-    let encodedToken;
-
-    try {
-      encodedToken = getEncodedTokenV4(tokenData);
-    }
-    catch (error) {
-      showToast("Unable to generate V4 token. Falling back to V3.");
-      console.log(error);
-      encodedToken = getEncodedToken(tokenData);
-
-      // Set the toggle button to indicate V3 is active
-      const toggleButton = document.getElementById('toggle_token_button');
-      toggleButton.setAttribute('data-version', 'V3'); // Update the data attribute to V3
-      toggleButton.innerText = 'V4'; // Update button text
-    }
-
+    let encodedToken = getEncodedToken(tokenData);
     document.getElementById('send_cashu_token').value = encodedToken;
 
     // Store the current token data in the hidden input
@@ -938,43 +929,6 @@ const Wallet = () => {
 
     const modal = document.getElementById('cashu_token_modal');
     modal.style.display = 'block';
-  }
-
-  // Function to handle toggling between V3 and V4 token formats
-  async function handleToggleToken() {
-    // Retrieve the token data from the hidden input
-    const tokenData = JSON.parse(document.getElementById('current_token_data').value);
-
-    if (!tokenData) {
-      console.error("Token data is undefined");
-      return; // Exit if tokenData is not set
-    }
-
-    const toggleButton = document.getElementById('toggle_token_button');
-    const currentVersion = toggleButton.getAttribute('data-version'); // Get the current version from the data attribute
-
-    try {
-      let encodedToken;
-
-      if (currentVersion === 'V4') {
-        encodedToken = getEncodedToken(tokenData); // Get the V3 token
-        toggleButton.setAttribute('data-version', 'V3'); // Update the data attribute to V3
-        toggleButton.innerText = 'V4'; // Update button text
-      } else {
-        encodedToken = getEncodedTokenV4(tokenData); // Get the V4 token
-        toggleButton.setAttribute('data-version', 'V4'); // Update the data attribute to V4
-        toggleButton.innerText = 'V3'; // Update button text
-      }
-
-      // Display the token in the textarea
-      document.getElementById('send_cashu_token').value = encodedToken;
-
-      const qrCodeDiv = document.getElementById('cashu_token_qrcode');
-      await generateQR(qrCodeDiv, encodedToken); // Generate the QR code
-    } catch (error) {
-      showToast("Unable to toggle the token format.");
-      console.log(error);
-    }
   }
 
   // This function creates a QR code from the encoded token, puts it in a canvas, and add that canvas as a child to the div passed
@@ -1223,7 +1177,7 @@ const Wallet = () => {
     let { amount, message } = await showSendNutsModal(npub);
     closeSendNutsModal();
 
-    sendNuts(npub, amount, message);
+    await sendNuts(npub, amount, message);
 
     showToast(`${amount} sats sent to ${npub} via Nostr DM`)
 
@@ -1242,7 +1196,7 @@ const Wallet = () => {
     let { amount, message } = await showSendNutsModal(npub);
     closeSendNutsModal();
 
-    sendNuts(npub, amount, message);
+    await sendNuts(npub, amount, message);
 
     showToast("Succesfully sent nuts! Thank you!");
     showConfetti(amount);
@@ -1278,10 +1232,20 @@ const Wallet = () => {
       showToast("No proofs to check");
       return;
     }
-    const spentProofs = await wallet.checkProofsSpent(proofs);
-    if (spentProofs.length > 0) {
-      removeProofs(spentProofs, storedMintData.url);
+
+    const proofStates = await wallet.checkProofsStates(proofs);
+    const spentProofs = [];
+
+    for (let i = 0; i < proofStates.length; i++) {
+      const currentProofState = proofStates[i];
+
+      // Check if the state is equal to CheckStateEnum.SPENT
+      if (currentProofState.state === CheckStateEnum.SPENT) {
+        spentProofs.push(proofs[i]);
+      }
     }
+
+    removeProofs(spentProofs, storedMintData.url);
     showToast(`Deleted ${spentProofs.length} proofs`);
   }
 
@@ -1345,23 +1309,83 @@ const Wallet = () => {
     setIsNutSplitsModalOpen(false);
   }
 
-  const handleNutSplit = (selectedCommenters) => {
-    setIsNutSplitsModalOpen(false); // Close the modal
+  const handleNutSplit = async (selectedCommenters) => {
+    try {
+      setIsNutSplitsModalOpen(false); // Close the modal
 
-    let amount = 1;
-    let message = "This is a test nut!";
+      selectedCommenters = ['npub1cashuq3y9av98ljm2y75z8cek39d8ux6jk3g6vafkl5j0uj4m5ks378fhq',
+        'npub15ypxpg429uyjmp0zczuza902chuvvr4pn35wfzv8rx6cej4z8clq6jmpcx'];
 
-    console.log('Selected Commenters:', selectedCommenters);
+      console.log('Selected Commenters:', selectedCommenters);
 
-    // Loop through each commenter
-    selectedCommenters.forEach((npub) => {
-      sendNuts(npub, amount, message);
-      // Handle each commenter as needed
-      console.log('Nut(s) sent to:', npub);
-      // You can perform actions with each commenter here
-    });
+      let amount = 1;
+      let totalAmount = amount * selectedCommenters.length;
+      let message = "This is a test nut!";
 
-    showToast(`Sent ${amount} sat(s) each to ${selectedCommenters.length} recipients`);
+      const waitTime = 1000; // Wait time in milliseconds (e.g., 1000 ms = 1 second)
+      // Function to create a delay
+      const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+      // Loop through each commenter
+      for (const npub of selectedCommenters) {
+        await sendNuts(npub, amount, message);
+        console.log('Nut(s) sent to:', npub);
+        // Wait for the specified time before the next iteration
+        await delay(waitTime);
+      }
+
+      // const proofs = getProofsByAmount(totalAmount, wallet.mint.mintUrl);
+      // if (proofs.length === 0) {
+      //   showToast("Insufficient balance");
+      //   return;
+      // }
+
+      // // Step 1: Calculate the total amount of all proofs
+      // let totalAmountProofs = 0;
+      // for (let i = 0; i < proofs.length; i++) {
+      //   totalAmountProofs += proofs[i].amount; // Assuming each proof has an 'amount' property
+      // }
+
+      // // Create the sendAmounts array
+      // const sendAmounts = new Array(selectedCommenters.length).fill(amount); // Fill with amount to send each npub
+
+      // // Calculate the total of sendAmounts
+      // const totalSendAmounts = sendAmounts.reduce((acc, amount) => acc + amount, 0);
+
+      // // Calculate the keepAmounts
+      // const keepAmounts = new Array(totalAmountProofs - totalSendAmounts).fill(1);
+
+      // // Get all tokens in one call to the mint
+      // await wallet.getKeys();
+      // const mintInfo = await wallet.mint.getInfo();
+      // const result = await wallet.send(8, proofs, {
+      //   outputAmounts: { sendAmounts: Array(5).fill(1), keepAmounts: [1] }
+      // });
+
+      // removeProofs(proofs, wallet.mint.mintUrl);
+      // addProofs(result.keep, wallet.mint.mintUrl);
+
+      // // Loop through each commenter and send out tokens
+      // for (let i = 0; i < selectedCommenters.length; i++) {
+      //   const npub = selectedCommenters[i]; // Access the current npub using the index
+      //   let decodedData = decode(npub);
+      //   let currentHexPubKey = bytesToHex(decodedData.data);
+      //   sendEncryptedMessage(currentHexPubKey, message);
+
+      //   const currentTokenData = {
+      //     mint: wallet.mint.mintUrl,
+      //     proofs: [result.send[i]]
+      //   };
+      //   const cashuString = getEncodedToken(currentTokenData);
+      //   sendEncryptedMessage(currentHexPubKey, cashuString);
+
+      //   console.log('Nut(s) sent to:', npub);
+      // }
+
+      showToast(`Sent ${amount} sat(s) each to ${selectedCommenters.length} recipients`);
+    } catch (error) {
+      console.error("handleNutSplit() =>", error);
+    }
   };
 
   return (
@@ -1370,7 +1394,7 @@ const Wallet = () => {
       <div className="app-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v0.2.63</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v2.0.0</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
@@ -1474,8 +1498,9 @@ const Wallet = () => {
             <h2>Cashu token</h2>
             <div id="cashu_token_qrcode"></div>
             <textarea id="send_cashu_token" readOnly></textarea>
-            <button id="copy_token_button" className="styled-button" onClick={copyCashuToken}>Copy</button>
-            <button id="toggle_token_button" className="styled-button" data-version="V4" onClick={handleToggleToken}>V3</button>
+            <div className="button-container">
+              <button id="copy_token_button" className="styled-button" onClick={copyCashuToken}>Copy</button>
+            </div>
           </div>
         </div>
 
@@ -1553,12 +1578,16 @@ const Wallet = () => {
         <div className="data-display-container">
           <h2>Advanced</h2>
           <div className="button-container">
-            <button className="styled-button" onClick={checkProofs}>Check Proofs<CheckIcon style={{ height: '21px', width: '21px', marginLeft: '3px', marginBottom: '3px' }} /></button>
+            <button className="styled-button" onClick={checkProofs}>
+              Check Proofs<CheckIcon style={{ height: '21px', width: '21px', marginLeft: '3px', marginBottom: '3px' }} />
+            </button>
           </div>
           <div className="button-container">
-            <button className="styled-button" onClick={exportJSON}>Export JSON Logs<ExportIcon style={{ height: '21px', width: '21px', marginLeft: '3px', marginBottom: '3px' }} /></button>
+            <button className="styled-button" onClick={exportJSON}>
+              Export JSON Logs<ExportIcon style={{ height: '21px', width: '21px', marginLeft: '3px', marginBottom: '3px' }} />
+            </button>
           </div>
-          <div className="button-container">
+          {/* <div className="button-container">
             <button className="styled-button" onClick={() => setIsNutSplitsModalOpen(true)}>Nut Splits</button>
             {isNutSplitsModalOpen && (
               <NutSplits
@@ -1566,7 +1595,7 @@ const Wallet = () => {
                 onClose={closeNutSplitsModal}
               />
             )}
-          </div>
+          </div> */}
         </div>
 
         <br></br>

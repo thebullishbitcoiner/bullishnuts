@@ -131,7 +131,7 @@ main {
   max-width: 1000px;
   margin: 0 auto;
   gap: 5px;
-  justify-content: center; 
+  justify-content: center;
 }
 
 .styled-button {
@@ -583,35 +583,42 @@ main {
 
   input[type="checkbox"] {
     appearance: none;
-    -webkit-appearance: none; /* For Safari */
-    min-width: 21px; /* Set width */
-    min-height: 21px; /* Set height */
+    -webkit-appearance: none;
+    /* For Safari */
+    min-width: 21px;
+    /* Set width */
+    min-height: 21px;
+    /* Set height */
     border: 2px solid #FF9900;
-    border-radius: 0px; 
+    border-radius: 0px;
     outline: none;
     cursor: pointer;
     background-color: #111111;
     position: relative;
 
-}
+  }
 
-input[type="checkbox"]:checked {
+  input[type="checkbox"]:checked {
     background-color: #FF9900;
-}
+  }
 
-input[type="checkbox"]:checked::after {
+  input[type="checkbox"]:checked::after {
     content: '✓';
-    font-size: 16px; /* Adjust font size as needed */
+    font-size: 16px;
+    /* Adjust font size as needed */
     color: #111111;
     position: absolute;
-    top: -2px; /* Adjust position as needed */
-    left: 4px; /* Adjust position as needed */
-}
+    top: -2px;
+    /* Adjust position as needed */
+    left: 4px;
+    /* Adjust position as needed */
+  }
 
-/* Optional: Add a hover effect */
-input[type="checkbox"]:hover {
-    border-color: #FFCC00; /* Change border color on hover */
-}
+  /* Optional: Add a hover effect */
+  input[type="checkbox"]:hover {
+    border-color: #FFCC00;
+    /* Change border color on hover */
+  }
 
 
 

@@ -13,7 +13,7 @@ const NutSplits = ({ onSendNuts, onClose }) => {
     const [loading, setLoading] = useState(false); // New loading state
 
     useEffect(() => {
-        const ndkInstance = new NDK({ explicitRelayUrls: ["wss://relay.nostr.band", "wss://relay.damus.io", "wss://relay.primal.net"] });
+        const ndkInstance = new NDK({ explicitRelayUrls: ["wss://relay.damus.io", "wss://relay.primal.net"] });
 
         const connectNdk = async () => {
             try {
@@ -134,7 +134,7 @@ const NutSplits = ({ onSendNuts, onClose }) => {
                         <SearchIcon style={{ height: "21px", width: "21px" }} />
                     </button>
                 </div>
-                <div style={{ height: '200px', overflowY: 'auto', border: '1px solid #ff9900', padding: '10px', marginBottom: '10px' }}>
+                <div style={{ height: '200px', overflowY: 'auto', overflowX: 'hidden', border: '1px solid #ff9900', padding: '10px', marginBottom: '10px' }}>
                     {loading ? (
                         <div className={styles.loadingAnimation}>
                             <span>Loading</span>
@@ -154,7 +154,12 @@ const NutSplits = ({ onSendNuts, onClose }) => {
                             </div>
                         ))
                     )}
+                   
                 </div>
+                 {/* Calculate selected and total counts */}
+                 <div style={{ marginTop: '-5px', marginBottom: '5px' }}>
+                        Selected: {Object.keys(selectedCommenters).filter(id => selectedCommenters[id]).length}/{commenters.length}
+                    </div>
                 <div className="button-container">
                     <button className="styled-button" onClick={handleSelectAll}>Select All</button>
                     <button className="styled-button" onClick={handleDeselectAll}>Deselect All</button>
