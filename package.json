@@ -14,7 +14,6 @@
     "@fortawesome/free-regular-svg-icons": "^6.6.0",
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@noble/secp256k1": "^2.1.0",
-    "@nostr-dev-kit/ndk": "^2.10.7",
     "bech32-buffer": "^0.2.1",
     "bitcoin-qr": "^1.4.1",
     "js-confetti": "^0.12.0",
