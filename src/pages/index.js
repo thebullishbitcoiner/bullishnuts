@@ -10,6 +10,7 @@ import EcashOrLightning from "@/components/EcashOrLightning";
 import Transactions from "@/components/Transactions";
 import QRCodeScanner from '@/components/QRCodeScanner';
 import NutSplits from '@/components/NutSplits';
+import SendNutsModal from '@/components/SendNutsModal';
 
 import QRCode from 'qrcode';
 import JSConfetti from 'js-confetti';
@@ -46,6 +47,10 @@ const Wallet = () => {
 
   // For NutSplits component
   const [isNutSplitsModalOpen, setIsNutSplitsModalOpen] = useState(false);
+
+  // For SendNutsModal component
+  const [isSendNutsModalOpen, setSendNutsModalOpen] = useState(false);
+  const [nutsReceiver, setNutsReceiver] = useState(null);
 
   const [typewriterMessages, setTypewriterMessages] = useState([]);
   const [isTypewriterModalOpen, setIsTypewriterModalOpen] = useState(false);
@@ -1177,30 +1182,38 @@ const Wallet = () => {
     let { amount, message } = await showSendNutsModal(npub);
     closeSendNutsModal();
 
-    await sendNuts(npub, amount, message);
+    // await sendNuts(npub, amount, message);
+    // showToast(`${amount} sats sent to ${npub} via Nostr DM`)
 
-    showToast(`${amount} sats sent to ${npub} via Nostr DM`)
-
-    // Uncomment the following lines if you want to copy the contact address to clipboard
-    // const contactAddress = `${contact.npub}@npub.cash`;
-    // navigator.clipboard.writeText(contactAddress).then(() => {
-    //   showToast(`Copied to clipboard: ${contactAddress}`);
-    // }).catch(err => {
-    //   showToast(`Failed to copy: ${err}`);
-    // });
+    //Uncomment the following lines if you want to copy the contact address to clipboard
+    const contactAddress = `${contact.npub}@npub.cash`;
+    navigator.clipboard.writeText(contactAddress).then(() => {
+      showToast(`Copied to clipboard: ${contactAddress}`);
+    }).catch(err => {
+      showToast(`Failed to copy: ${err}`);
+    });
   };
 
-  const handleSendNuts = async () => {
+  // const handleSendNuts = async () => {
+  //   let npub = 'npub1cashuq3y9av98ljm2y75z8cek39d8ux6jk3g6vafkl5j0uj4m5ks378fhq';
+
+  //   let { amount, message } = await showSendNutsModal(npub);
+  //   closeSendNutsModal();
+
+  //   await sendNuts(npub, amount, message);
+
+  //   showToast("Succesfully sent nuts! Thank you!");
+  //   showConfetti(amount);
+  // };
+
+  function handleSendNuts() {
     let npub = 'npub1cashuq3y9av98ljm2y75z8cek39d8ux6jk3g6vafkl5j0uj4m5ks378fhq';
-
-    let { amount, message } = await showSendNutsModal(npub);
+    //let { amount, message } =  showSendNutsModal(npub);
     closeSendNutsModal();
-
-    await sendNuts(npub, amount, message);
-
-    showToast("Succesfully sent nuts! Thank you!");
+    sendNuts(npub, 1, message);
+    showToast("Successfully sent nuts! Thank you!");
     showConfetti(amount);
-  };
+  }
 
   const exportJSON = () => {
     const existingData = JSON.parse(localStorage.getItem('json')) || {};
@@ -1388,13 +1401,27 @@ const Wallet = () => {
     }
   };
 
+  const handleOpenSendNutsModal = (receiverValue) => {
+    setNutsReceiver(receiverValue);
+    setSendNutsModalOpen(true);
+  };
+
+  const handleCloseSendNutsModal = () => {
+    setSendNutsModalOpen(false);
+  };
+
+  const handleSubmit = (data) => {
+    console.log('Submitted data:', data);
+    sendNuts(data.receiver, data.amount, data.message);
+  };
+
   return (
     <main>
 
       <div className="app-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v2.0.0</small></h2>
+          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v2.0.1</small></h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
@@ -1514,21 +1541,6 @@ const Wallet = () => {
           </div>
         </div>
 
-        {/* Send Nuts modal */}
-        <div id="send_nuts_modal" className="modal">
-          <div className="modal-content">
-            <span className="close-button" onClick={closeSendNutsModal}>&times;</span>
-            <h2>Send Nuts</h2>
-            <label htmlFor="send_nuts_amount">Amount</label>
-            <input type="number" id="send_nuts_amount" inputMode="decimal" min="1" placeholder="Enter amount of sats" />
-            <label htmlFor="send_nuts_receiver">Receiver</label>
-            <textarea id="send_nuts_receiver" style={{ height: '90px' }} readOnly></textarea>
-            <label htmlFor="send_nuts_message">Message</label>
-            <textarea id="send_nuts_message" placeholder="Optional"></textarea>
-            <button className="styled-button" id="send_nuts_submit">OK</button>
-          </div>
-        </div>
-
         {/* Waiting modal */}
         <div className="modal" id="waiting_modal">
           <div className="modal-content">
@@ -1562,7 +1574,10 @@ const Wallet = () => {
         </div>
 
         <div className="section">
-          <Contacts onContactSelect={handleContactSelect} updateContacts={updateContacts} />
+          <Contacts
+            onContactSelect={handleContactSelect}
+            updateContacts={updateContacts}
+          />
         </div>
 
         <div className="section">
@@ -1570,10 +1585,19 @@ const Wallet = () => {
           <div className="button-container">
             <button className="styled-button" onClick={zapDeezNuts} >ZAP DEEZ NUTS<LightningIcon style={{ height: '21px', width: '21px', marginLeft: '3px' }} /></button>
           </div>
-          <div className="button-container">
-            <button className="styled-button" onClick={handleSendNuts}>SEND NUTS 🥜</button>
-          </div>
+          {/* <div className="button-container">
+            <button className="styled-button" onClick={() => handleOpenSendNutsModal()}>SEND NUTS 🥜</button>
+          </div> */}
         </div>
+
+        {isSendNutsModalOpen && (
+          <SendNutsModal
+            receiver={nutsReceiver} // Pass the receiver to the modal
+            onClose={handleCloseSendNutsModal}
+            onSubmit={handleSubmit}
+            isOpen={isSendNutsModalOpen}
+          />
+        )}
 
         <div className="data-display-container">
           <h2>Advanced</h2>
