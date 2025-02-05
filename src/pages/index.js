@@ -1179,14 +1179,13 @@ const Wallet = () => {
   const handleContactSelect = async (contact) => {
     let npub = contact.npub; // Move this line up to define npub before using it
 
-    let { amount, message } = await showSendNutsModal(npub);
-    closeSendNutsModal();
-
+    // let { amount, message } = await showSendNutsModal(npub);
+    // closeSendNutsModal();
     // await sendNuts(npub, amount, message);
     // showToast(`${amount} sats sent to ${npub} via Nostr DM`)
 
     //Uncomment the following lines if you want to copy the contact address to clipboard
-    const contactAddress = `${contact.npub}@npub.cash`;
+    const contactAddress = `${npub}@npub.cash`;
     navigator.clipboard.writeText(contactAddress).then(() => {
       showToast(`Copied to clipboard: ${contactAddress}`);
     }).catch(err => {
@@ -1421,7 +1420,10 @@ const Wallet = () => {
       <div className="app-container">
 
         <div className="app_header">
-          <h2><b><button onClick={() => showConfetti()}>bullishNuts</button></b><small style={{ marginLeft: '3px', marginTop: '1px' }}>v2.0.1</small></h2>
+          <h2>
+            <b><button onClick={() => showConfetti()}>bullishNuts</button></b>
+            <small style={{ marginLeft: '3px', marginTop: '1px' }}>v2.0.2</small>
+          </h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
 
