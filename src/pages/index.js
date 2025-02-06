@@ -635,9 +635,11 @@ const Wallet = () => {
 
       if (meltProofsResponse.quote.state == MeltQuoteState.PAID) {
         waitingModal.style.display = 'none';
+
         showConfetti(quote.amount);
-        const message = quote.amount + ' sat(s) sent to ' + lightningAddress;
-        showToast(message);
+        //const message = quote.amount + ' sat(s) sent to ' + lightningAddress;
+        const message = "Thanks for your support!";
+        showToast(message, 5);
         removeProofs(proofs, url);
 
         var changeArray = { "change": meltProofsResponse.change };
@@ -1231,7 +1233,7 @@ const Wallet = () => {
     if (jsConfettiRef.current) {
       jsConfettiRef.current.addConfetti({
         emojis: ['🐂', '🥜', '⚡️'],
-        emojiSize: 100,
+        emojiSize: 150,
         confettiNumber: confettiNumber,
       });
     }
@@ -1422,7 +1424,7 @@ const Wallet = () => {
         <div className="app_header">
           <h2>
             <b><button onClick={() => showConfetti()}>bullishNuts</button></b>
-            <small style={{ marginLeft: '3px', marginTop: '1px' }}>v2.0.2</small>
+            <small style={{ marginLeft: '3px', marginTop: '1px' }}>v2.0.3</small>
           </h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
