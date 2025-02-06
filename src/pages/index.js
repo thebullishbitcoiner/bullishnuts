@@ -636,7 +636,7 @@ const Wallet = () => {
       if (meltProofsResponse.quote.state == MeltQuoteState.PAID) {
         waitingModal.style.display = 'none';
 
-        showConfetti(quote.amount);
+        showConfetti();
         //const message = quote.amount + ' sat(s) sent to ' + lightningAddress;
         const message = "Thanks for your support!";
         showToast(message, 5);
@@ -1229,13 +1229,35 @@ const Wallet = () => {
     URL.revokeObjectURL(url);
   };
 
+  // function showConfetti(confettiNumber = 21) {
+  //   if (jsConfettiRef.current) {
+  //     jsConfettiRef.current.addConfetti({
+  //       emojis: ['🐂', '🥜', '⚡️'],
+  //       emojiSize: 150,
+  //       confettiNumber: confettiNumber,
+  //     });
+  //   }
+  // }
+
   function showConfetti(confettiNumber = 21) {
     if (jsConfettiRef.current) {
-      jsConfettiRef.current.addConfetti({
-        emojis: ['🐂', '🥜', '⚡️'],
-        emojiSize: 150,
-        confettiNumber: confettiNumber,
-      });
+      const confettiInterval = 1; // Time in milliseconds between each confetti burst
+      const totalConfetti = confettiNumber; // Total number of confetti pieces you want to show
+      let confettiCount = 0; // Counter for how many confetti pieces have been shown
+
+      const intervalId = setInterval(() => {
+        if (confettiCount < totalConfetti) {
+          jsConfettiRef.current.addConfetti({
+            emojis: ['🐂', '🥜', '⚡️'],
+            emojiSize: 150,
+            confettiNumber: 1, // Add one piece of confetti at a time
+          });
+          confettiCount++;
+        } else {
+          clearInterval(intervalId); // Stop the interval when done
+        }
+      }, confettiInterval);
+
     }
   }
 
@@ -1424,7 +1446,7 @@ const Wallet = () => {
         <div className="app_header">
           <h2>
             <b><button onClick={() => showConfetti()}>bullishNuts</button></b>
-            <small style={{ marginLeft: '3px', marginTop: '1px' }}>v2.0.3</small>
+            <small style={{ marginLeft: '3px', marginTop: '1px' }}>v2.0.4</small>
           </h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
