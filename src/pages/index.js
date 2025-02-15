@@ -1,4 +1,5 @@
 import useMultiMintStorage from "@/hooks/useMultiMintStorage";
+import { encodeEmoji, decodeEmoji } from "@/hooks/EmojiEncoder";
 import { CashuMint, CashuWallet, getEncodedToken, getDecodedToken, getEncodedTokenV4, CheckStateEnum, MeltQuoteState, getKeepAmounts, MintQuoteState } from "@cashu/cashu-ts";
 import React, { useState, useEffect, useRef } from "react";
 
@@ -876,7 +877,13 @@ const Wallet = () => {
   function pasteFromClipboard() {
     navigator.clipboard.readText()
       .then(text => {
-        document.getElementById('cashu_token').value = text;
+        if (!text.startsWith('cashu')) {
+          //Try to decode the nuts and display the cashu token
+          const decodedEmoji = decodeEmoji(text);
+          document.getElementById('cashu_token').value = decodedEmoji;
+        } else {
+          document.getElementById('cashu_token').value = text;
+        }
       })
       .catch(err => {
         console.error('Failed to read clipboard contents: ', err);
@@ -895,6 +902,26 @@ const Wallet = () => {
       // Reset button text after 1000ms (1 second)
       setTimeout(() => {
         copyButton.textContent = 'Copy';
+      }, 500);
+
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+    }
+  }
+
+  async function copyCashuEmoji() {
+    try {
+      const token = document.getElementById('send_cashu_token').value;
+      const encodedEmoji = encodeEmoji('🥜', token);
+      await navigator.clipboard.writeText(encodedEmoji);
+
+      // Change button text to "Copied" temporarily
+      const copyEmojiButton = document.getElementById('copy_emoji_button');
+      copyEmojiButton.textContent = 'Copied';
+
+      // Reset button text after 1000ms (1 second)
+      setTimeout(() => {
+        copyEmojiButton.textContent = 'Copy Emoji';
       }, 500);
 
     } catch (err) {
@@ -1446,7 +1473,7 @@ const Wallet = () => {
         <div className="app_header">
           <h2>
             <b><button onClick={() => showConfetti()}>bullishNuts</button></b>
-            <small style={{ marginLeft: '3px', marginTop: '1px' }}>v2.0.4</small>
+            <small style={{ marginLeft: '3px', marginTop: '1px' }}>v2.0.5</small>
           </h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
@@ -1553,6 +1580,7 @@ const Wallet = () => {
             <textarea id="send_cashu_token" readOnly></textarea>
             <div className="button-container">
               <button id="copy_token_button" className="styled-button" onClick={copyCashuToken}>Copy</button>
+              <button id="copy_emoji_button" className="styled-button" onClick={copyCashuEmoji}>Copy Emoji</button>
             </div>
           </div>
         </div>
