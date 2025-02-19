@@ -309,7 +309,7 @@ const Wallet = () => {
     } catch (error) {
       console.error(error);
       closeReceiveEcashModal();
-      showToast("Failed to claim token");
+      showToast(error);
     }
   }
 
@@ -1473,7 +1473,7 @@ const Wallet = () => {
         <div className="app_header">
           <h2>
             <b><button onClick={() => showConfetti()}>bullishNuts</button></b>
-            <small style={{ marginLeft: '3px', marginTop: '1px' }}>v2.0.5</small>
+            <small style={{ marginLeft: '3px', marginTop: '1px' }}>v2.0.6</small>
           </h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
