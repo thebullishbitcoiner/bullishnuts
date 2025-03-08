@@ -1473,7 +1473,7 @@ const Wallet = () => {
         <div className="app_header">
           <h2>
             <b><button onClick={() => showConfetti()}>bullishNuts</button></b>
-            <small style={{ marginLeft: '3px', marginTop: '1px' }}>v2.0.6</small>
+            <small style={{ marginLeft: '3px', marginTop: '1px' }}>v2.0.7</small>
           </h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
@@ -1580,7 +1580,7 @@ const Wallet = () => {
             <textarea id="send_cashu_token" readOnly></textarea>
             <div className="button-container">
               <button id="copy_token_button" className="styled-button" onClick={copyCashuToken}>Copy</button>
-              <button id="copy_emoji_button" className="styled-button" onClick={copyCashuEmoji}>Copy Emoji</button>
+              <button id="copy_emoji_button" className="styled-button" onClick={copyCashuEmoji}>🥜</button>
             </div>
           </div>
         </div>
