@@ -921,7 +921,7 @@ const Wallet = () => {
 
       // Reset button text after 1000ms (1 second)
       setTimeout(() => {
-        copyEmojiButton.textContent = 'Copy Emoji';
+        copyEmojiButton.textContent = '🥜';
       }, 500);
 
     } catch (err) {
@@ -1473,7 +1473,7 @@ const Wallet = () => {
         <div className="app_header">
           <h2>
             <b><button onClick={() => showConfetti()}>bullishNuts</button></b>
-            <small style={{ marginLeft: '3px', marginTop: '1px' }}>v2.0.7</small>
+            <small style={{ marginLeft: '3px', marginTop: '1px' }}>v2.0.8</small>
           </h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
