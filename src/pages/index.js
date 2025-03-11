@@ -335,15 +335,19 @@ const Wallet = () => {
     const targetBalance = parseFloat(autoSweepSettings.targetBalance) || 0;
     const lightningAddress = autoSweepSettings.lightningAddress || '';
 
+    // Check if auto sweep settings are defined
+    if (!lightningAddress || isNaN(targetBalance) || targetBalance <= 0) {
+      console.log("Auto sweep settings are not properly configured.");
+      return; // Exit if settings are not valid
+    }
+
     // Check if the current balance is 10% above the target balance
     if (balance >= targetBalance * 1.1) {
-      // Perform the sweep (you'll need to implement the actual sweep logic)
       await performAutoSweep(wallet, balance - targetBalance * 1.1, lightningAddress);
     }
   }
 
   async function performAutoSweep(wallet, invoiceAmount, lightningAddress) {
-    // Implement the logic to sweep to the lightning address
     const ln = new LightningAddress(lightningAddress);
     await ln.fetch();
     const invoice = await ln.requestInvoice({ satoshi: invoiceAmount });
@@ -1579,7 +1583,7 @@ const Wallet = () => {
         <div className="app_header">
           <h2>
             <b><button onClick={() => showConfetti()}>bullishNuts</button></b>
-            <small style={{ marginLeft: '3px', marginTop: '1px' }}>v2.0.9</small>
+            <small style={{ marginLeft: '3px', marginTop: '1px' }}>v2.0.10</small>
           </h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
