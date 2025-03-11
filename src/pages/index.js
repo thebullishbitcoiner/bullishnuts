@@ -343,7 +343,7 @@ const Wallet = () => {
 
     // Check if the current balance is 10% above the target balance
     if (balance >= targetBalance * 1.1) {
-      await performAutoSweep(wallet, balance - targetBalance * 1.1, lightningAddress);
+      await performAutoSweep(wallet, balance - targetBalance, lightningAddress);
     }
   }
 
