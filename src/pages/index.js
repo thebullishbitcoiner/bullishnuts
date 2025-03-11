@@ -4,6 +4,7 @@ import { CashuMint, CashuWallet, getEncodedToken, getDecodedToken, getEncodedTok
 import React, { useState, useEffect, useRef } from "react";
 
 // Custom components
+import TypewriterModal from '@/components/TypewriterModal';
 import Contacts from "@/components/Contacts";
 import LightningModal from '@/components/LightningModal';
 import Mints from "@/components/Mints";
@@ -12,6 +13,7 @@ import Transactions from "@/components/Transactions";
 import QRCodeScanner from '@/components/QRCodeScanner';
 import NutSplits from '@/components/NutSplits';
 import SendNutsModal from '@/components/SendNutsModal';
+import AutoSweepModal from '@/components/AutoSweepModal';
 
 import QRCode from 'qrcode';
 import JSConfetti from 'js-confetti';
@@ -25,7 +27,8 @@ import { SimplePool } from 'nostr-tools/pool'
 import { encode, decode } from 'bech32-buffer';
 import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
 
-import TypewriterModal from '@/components/TypewriterModal';
+//Lightning
+import { LightningAddress } from "@getalby/lightning-tools";
 
 // Icons
 import { RefreshIcon, SendIcon, ReceiveIcon, LightningIcon, CheckIcon, ExportIcon, QrCodeIcon } from "@bitcoin-design/bitcoin-icons-react/filled";
@@ -57,6 +60,8 @@ const Wallet = () => {
   const [isTypewriterModalOpen, setIsTypewriterModalOpen] = useState(false);
 
   const jsConfettiRef = useRef(null); // Create a ref to store the jsConfetti instance
+
+  const [isAutoSweepModalOpen, setIsAutoSweepModalOpen] = useState(false);
 
   useEffect(() => {
     jsConfettiRef.current = new JSConfetti(); // Initialize the instance
@@ -291,6 +296,9 @@ const Wallet = () => {
           addTransaction_Ecash("Receive", mintURL, totalAmount, token);
           showToast(`Received ${totalAmount} ${totalAmount === 1 ? 'sat' : 'sats'}!`);
 
+          // Check auto sweep settings before returning
+          await checkAndPerformAutoSweep(newWallet);
+
           return;
         } catch (error) {
           console.error(error);
@@ -305,6 +313,9 @@ const Wallet = () => {
       addTransaction_Ecash("Receive", mintURL, totalAmount, token);
       showToast(`Received ${totalAmount} ${totalAmount === 1 ? 'sat' : 'sats'}!`);
 
+      // Check auto sweep settings before returning
+      await checkAndPerformAutoSweep(currentWallet);
+
       storeJSON(proofs);
     } catch (error) {
       console.error(error);
@@ -318,6 +329,70 @@ const Wallet = () => {
       return total + proof.amount;
     }, 0);
   };
+
+  async function checkAndPerformAutoSweep(wallet) {
+    const autoSweepSettings = JSON.parse(localStorage.getItem('autoSweep')) || {};
+    const targetBalance = parseFloat(autoSweepSettings.targetBalance) || 0;
+    const lightningAddress = autoSweepSettings.lightningAddress || '';
+
+    // Check if the current balance is 10% above the target balance
+    if (balance >= targetBalance * 1.1) {
+      // Perform the sweep (you'll need to implement the actual sweep logic)
+      await performAutoSweep(wallet, balance - targetBalance * 1.1, lightningAddress);
+    }
+  }
+
+  async function performAutoSweep(wallet, invoiceAmount, lightningAddress) {
+    // Implement the logic to sweep to the lightning address
+    const ln = new LightningAddress(lightningAddress);
+    await ln.fetch();
+    const invoice = await ln.requestInvoice({ satoshi: invoiceAmount });
+    const waitingModal = document.getElementById('waiting_modal');
+    document.getElementById('waiting_message').textContent = "Getting melt quote...";
+    waitingModal.style.display = 'block';
+
+    const quote = await wallet.createMeltQuote(invoice.paymentRequest);
+    storeJSON(quote);
+
+    const amount = quote.amount + quote.fee_reserve;
+    const proofs = getProofsByAmount(amount, wallet.mint.mintUrl, wallet.keys.id);
+    if (proofs.length === 0) {
+      waitingModal.style.display = 'none';
+      showToast("Insufficient balance");
+      return;
+    }
+
+    document.getElementById('waiting_message').textContent = "Performing auto sweep...";
+
+    try {
+      // Set a timeout of 10 seconds (10000 milliseconds) for to melt
+      const payRes = await withTimeout(
+        wallet.meltProofs(quote, proofs, { keysetId: wallet.keys.id }),
+        10000
+      );
+
+      if (payRes.quote.paid) {
+        waitingModal.style.display = 'none';
+        showToast('Auto sweep successful!');
+        removeProofs(proofs, wallet.mint.mintUrl);
+
+        addTransaction_AutoSweep(wallet.mint.mintUrl, invoice.paymentRequest, quote.amount, quote.fee_reserve);
+
+        var changeArray = { "change": payRes.change };
+        storeJSON(changeArray);
+        addProofs(payRes.change, wallet.mint.mintUrl);
+      }
+    } catch (error) {
+      // Handle error, whether it's a timeout or another issue
+      waitingModal.style.display = 'none';
+      console.error("Error occurred:", error.message);
+      if (error.message === "Operation timed out") {
+        showToast("Payment timed out.");
+      } else {
+        showToast(`Auto sweep failed: ${error.message}`);
+      }
+    }
+  }
 
   async function handleSend_Ecash(amount) {
     const storedMintData = JSON.parse(localStorage.getItem("activeMint"));
@@ -386,6 +461,32 @@ const Wallet = () => {
       type: "Lightning",
       created: timestamp,
       action: action,
+      mint: mint,
+      invoice: invoice,
+      amount: amount,
+      fee: fee,
+    };
+
+    // Retrieve existing transactions from local storage
+    const existingTransactions = JSON.parse(localStorage.getItem("transactions")) || [];
+
+    // Add the new transaction to the beginning of the array
+    existingTransactions.unshift(transaction);
+
+    // Store the updated transactions array back in local storage
+    localStorage.setItem("transactions", JSON.stringify(existingTransactions));
+
+    // Increment the updateFlag to trigger a re-fetch in Transactions
+    setUpdateFlag_Transactions(prev => prev + 1);
+  }
+
+  function addTransaction_AutoSweep(mint, invoice, amount, fee) {
+    const timestamp = getTimestamp();
+
+    const transaction = {
+      action: "Send",
+      type: "Auto Sweep",
+      created: timestamp,
       mint: mint,
       invoice: invoice,
       amount: amount,
@@ -1465,6 +1566,11 @@ const Wallet = () => {
     sendNuts(data.receiver, data.amount, data.message);
   };
 
+  const handleAutoSweepSave = (targetBalance, lightningAddress) => {
+    // Handle the save logic here
+    console.log('Auto Sweep Settings:', { targetBalance, lightningAddress });
+  };
+
   return (
     <main>
 
@@ -1473,7 +1579,7 @@ const Wallet = () => {
         <div className="app_header">
           <h2>
             <b><button onClick={() => showConfetti()}>bullishNuts</button></b>
-            <small style={{ marginLeft: '3px', marginTop: '1px' }}>v2.0.8</small>
+            <small style={{ marginLeft: '3px', marginTop: '1px' }}>v2.0.9</small>
           </h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
@@ -1665,6 +1771,16 @@ const Wallet = () => {
               Export JSON Logs<ExportIcon style={{ height: '21px', width: '21px', marginLeft: '3px', marginBottom: '3px' }} />
             </button>
           </div>
+          <div className="button-container">
+            <button className="styled-button" onClick={() => setIsAutoSweepModalOpen(true)}>
+              Auto Sweep
+            </button>
+          </div>
+          <AutoSweepModal
+            open={isAutoSweepModalOpen}
+            onClose={() => setIsAutoSweepModalOpen(false)}
+            onSave={handleAutoSweepSave}
+          />
           {/* <div className="button-container">
             <button className="styled-button" onClick={() => setIsNutSplitsModalOpen(true)}>Nut Splits</button>
             {isNutSplitsModalOpen && (
@@ -1698,7 +1814,7 @@ const Wallet = () => {
 
       </div>
 
-    </main>
+    </main >
   );
 
 };
