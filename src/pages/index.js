@@ -341,9 +341,11 @@ const Wallet = () => {
       return; // Exit if settings are not valid
     }
 
-    // Check if the current balance is 10% above the target balance
-    if (balance >= targetBalance * 1.1) {
-      await performAutoSweep(wallet, balance - targetBalance * 1.1, lightningAddress);
+    const mintBalance = getMintBalance(wallet.mint.mintUrl);
+    const adjustedTargetBalance = targetBalance * 1.1;  //Add 10% cushion for fees
+
+    if (mintBalance >= adjustedTargetBalance) {
+      await performAutoSweep(wallet, mintBalance - adjustedTargetBalance, lightningAddress);
     }
   }
 
@@ -1583,7 +1585,7 @@ const Wallet = () => {
         <div className="app_header">
           <h2>
             <b><button onClick={() => showConfetti()}>bullishNuts</button></b>
-            <small style={{ marginLeft: '3px', marginTop: '1px' }}>v2.0.10</small>
+            <small style={{ marginLeft: '3px', marginTop: '1px' }}>v2.0.11</small>
           </h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
