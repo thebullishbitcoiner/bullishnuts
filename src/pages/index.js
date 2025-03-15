@@ -123,6 +123,13 @@ const Wallet = () => {
     }
   }, []);
 
+  useEffect(() => {
+    console.log(`Balance changed: ${balance}`);
+    if (wallet) {
+      checkAndPerformAutoSweep(wallet);
+    }
+  }, [balance]);
+
   const handleMintChange = async (newMint) => {
     try {
       const mint = new CashuMint(newMint);
@@ -296,9 +303,6 @@ const Wallet = () => {
           addTransaction_Ecash("Receive", mintURL, totalAmount, token);
           showToast(`Received ${totalAmount} ${totalAmount === 1 ? 'sat' : 'sats'}!`);
 
-          // Check auto sweep settings before returning
-          await checkAndPerformAutoSweep(newWallet);
-
           return;
         } catch (error) {
           console.error(error);
@@ -312,10 +316,6 @@ const Wallet = () => {
       const totalAmount = getTotalAmountFromProofs(proofs);
       addTransaction_Ecash("Receive", mintURL, totalAmount, token);
       showToast(`Received ${totalAmount} ${totalAmount === 1 ? 'sat' : 'sats'}!`);
-
-      // Check auto sweep settings before returning
-      await checkAndPerformAutoSweep(currentWallet);
-
       storeJSON(proofs);
     } catch (error) {
       console.error(error);
@@ -349,12 +349,17 @@ const Wallet = () => {
     }
   }
 
+  const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
   async function performAutoSweep(wallet, invoiceAmount, lightningAddress) {
+      // Wait for 1 second (1000 milliseconds)
+      await delay(1000);
+
     const ln = new LightningAddress(lightningAddress);
     await ln.fetch();
     const invoice = await ln.requestInvoice({ satoshi: invoiceAmount });
     const waitingModal = document.getElementById('waiting_modal');
-    document.getElementById('waiting_message').textContent = "Getting melt quote...";
+    document.getElementById('waiting_message').textContent = `Performing auto sweep...`;
     waitingModal.style.display = 'block';
 
     const quote = await wallet.createMeltQuote(invoice.paymentRequest);
@@ -367,8 +372,6 @@ const Wallet = () => {
       showToast("Insufficient balance");
       return;
     }
-
-    document.getElementById('waiting_message').textContent = "Performing auto sweep...";
 
     try {
       // Set a timeout of 10 seconds (10000 milliseconds) for to melt
@@ -1585,7 +1588,7 @@ const Wallet = () => {
         <div className="app_header">
           <h2>
             <b><button onClick={() => showConfetti()}>bullishNuts</button></b>
-            <small style={{ marginLeft: '3px', marginTop: '1px' }}>v2.0.11</small>
+            <small style={{ marginLeft: '3px', marginTop: '1px' }}>v2.0.12</small>
           </h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>

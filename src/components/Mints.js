@@ -139,7 +139,6 @@ const Mints = ({ onMintChange, balance }) => {
 
     // Effect to re-fetch mint names and balances when the balance changes
     useEffect(() => {
-        console.log("Balance changed:", balance);
         fetchMintNames(); // Re-fetch mint names and balances when balance changes
     }, [balance]);
 
