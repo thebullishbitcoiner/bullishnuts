@@ -1750,7 +1750,7 @@ const Wallet = () => {
         </div>
 
         <div className="section">
-          <h2>Donate</h2>
+          <h2>Support</h2>
           <div className="button-container">
             <button className="styled-button" onClick={zapDeezNuts} >ZAP DEEZ NUTS<LightningIcon style={{ height: '21px', width: '21px', marginLeft: '3px' }} /></button>
           </div>
@@ -1769,7 +1769,12 @@ const Wallet = () => {
         )}
 
         <div className="data-display-container">
-          <h2>Advanced</h2>
+          <h2>Moar Features</h2>
+          <div className="button-container">
+            <button className="styled-button" onClick={() => setIsAutoSweepModalOpen(true)}>
+              Auto Sweep
+            </button>
+          </div>
           <div className="button-container">
             <button className="styled-button" onClick={checkProofs}>
               Check Proofs<CheckIcon style={{ height: '21px', width: '21px', marginLeft: '3px', marginBottom: '3px' }} />
@@ -1778,11 +1783,6 @@ const Wallet = () => {
           <div className="button-container">
             <button className="styled-button" onClick={exportJSON}>
               Export JSON Logs<ExportIcon style={{ height: '21px', width: '21px', marginLeft: '3px', marginBottom: '3px' }} />
-            </button>
-          </div>
-          <div className="button-container">
-            <button className="styled-button" onClick={() => setIsAutoSweepModalOpen(true)}>
-              Auto Sweep
             </button>
           </div>
           <AutoSweepModal
