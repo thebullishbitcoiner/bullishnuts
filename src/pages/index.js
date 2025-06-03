@@ -991,13 +991,34 @@ const Wallet = () => {
           //Try to decode the nuts and display the cashu token
           const decodedEmoji = decodeEmoji(text);
           document.getElementById('cashu_token').value = decodedEmoji;
+          displayTokenInfo(decodedEmoji);
         } else {
           document.getElementById('cashu_token').value = text;
+          displayTokenInfo(text);
         }
       })
       .catch(err => {
         console.error('Failed to read clipboard contents: ', err);
       });
+  }
+
+  function displayTokenInfo(token) {
+    try {
+      const decodedToken = getDecodedToken(token);
+      const totalAmount = decodedToken.proofs.reduce((sum, proof) => sum + proof.amount, 0);
+      
+      // Update the token info display
+      const tokenInfoDiv = document.getElementById('token_info');
+      tokenInfoDiv.innerHTML = `
+        <div class="token-info">
+          <p><strong>Amount:</strong> ${totalAmount} ${totalAmount === 1 ? 'sat' : 'sats'}</p>
+          <p><strong>Mint:</strong> ${decodedToken.mint}</p>
+        </div>
+      `;
+    } catch (error) {
+      console.error('Error decoding token:', error);
+      document.getElementById('token_info').innerHTML = '<p class="error">Invalid token format</p>';
+    }
   }
 
   async function copyCashuToken() {
@@ -1211,6 +1232,7 @@ const Wallet = () => {
   function closeReceiveEcashModal() {
     const modal = document.getElementById('receive_ecash_modal');
     document.getElementById('cashu_token').value = '';
+    document.getElementById('token_info').innerHTML = '';
     modal.style.display = 'none';
   }
 
@@ -1582,13 +1604,12 @@ const Wallet = () => {
 
   return (
     <main>
-
       <div className="app-container">
 
         <div className="app_header">
           <h2>
             <b><button onClick={() => showConfetti()}>bullishNuts</button></b>
-            <small style={{ marginLeft: '3px', marginTop: '1px' }}>v2.0.14</small>
+            <small style={{ marginLeft: '3px', marginTop: '1px' }}>v2.0.15</small>
           </h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
@@ -1725,9 +1746,10 @@ const Wallet = () => {
           <div className="modal-content">
             <span className="close-button" onClick={closeReceiveEcashModal}>&times;</span>
             <label htmlFor="cashu_token">
-              <button className="orange-button" onClick={pasteFromClipboard} >Paste</button> Cashu token
+              <button className="orange-button" onClick={pasteFromClipboard}>Paste</button> Cashu token
             </label>
-            <textarea id="cashu_token"></textarea>
+            <textarea id="cashu_token" onChange={(e) => displayTokenInfo(e.target.value)}></textarea>
+            <div id="token_info"></div>
             <button className="styled-button" onClick={claimButtonClicked}>Claim</button>
           </div>
         </div>

@@ -257,10 +257,10 @@ main {
     background-color: black;
     color: #ff9900;
     font-family: 'Courier New', Courier, monospace;
-    margin: 15% auto;
+    margin: 21px auto;
     padding: 21px;
     border: 1px solid #ff9900;
-    width: 80%;
+    width: 90%;
     max-width: 500px;
     position: relative;
   }
@@ -760,4 +760,26 @@ main {
     background-color: rgba(255, 153, 0, 0.5);
   }
 
+}
+
+/* Token Info Styles */
+.token-info {
+  margin-bottom: 5px;
+  padding: 10px;
+  background-color: #111111;
+  border: 1px solid #ff9900;
+  font-size: 14px;
+}
+
+.token-info p {
+  margin: 5px 0;
+  color: #ff9900;
+}
+
+.error {
+  color: #ff9900;
+  margin: 10px 0;
+  border: 1px solid #ff9900;
+  padding: 10px;
+  background-color: #111111;
 }
