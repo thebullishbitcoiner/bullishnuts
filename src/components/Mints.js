@@ -19,25 +19,27 @@ const MintInfoModal = ({ mintInfo, onClose }) => {
                 <span className="close-button" onClick={onClose}>&times;</span>
                 <h2>{mintInfo.name}</h2>
 
-                <p style={{ marginTop: '5px', marginBottom: '0px' }}>Description</p>
-                <textarea readOnly value={mintInfo.description} style={{ width: '100%', height: '100px', marginBottom: '0px', resize: 'none' }} />
-
-                <p style={{ marginTop: '5px', marginBottom: '0px' }}>Public Key</p>
-                <textarea readOnly value={mintInfo.pubkey} style={{ width: '100%', height: '90px', marginBottom: '0px', resize: 'none' }} />
-
                 <p style={{ marginTop: '5px', marginBottom: '0px' }}>Version</p>
                 <input type="text" readOnly value={mintInfo.version} style={{ width: '100%', marginBottom: '5px' }} />
 
+                <p style={{ marginTop: '5px', marginBottom: '0px' }}>URL</p>
+                <input type="text" readOnly value={mintInfo.url} style={{ width: '100%', marginBottom: '5px' }} />
+
+                <p style={{ marginTop: '5px', marginBottom: '0px' }}>Description</p>
+                <textarea readOnly value={mintInfo.description} style={{ width: '100%', height: '100px', marginBottom: '0px', resize: 'none' }} />
+
                 <p style={{ marginTop: '5px', marginBottom: '0px' }}>Message of the day</p>
-                <textarea readOnly value={mintInfo.motd} style={{ width: '100%', height: '42px', marginBottom: '0px', resize: 'none' }} />
+                <textarea readOnly value={mintInfo.motd} style={{ width: '100%', height: '100px', marginBottom: '0px', resize: 'none' }} />
+
+                <p style={{ marginTop: '5px', marginBottom: '0px' }}>Public Key</p>
+                <textarea readOnly value={mintInfo.pubkey} style={{ width: '100%', height: '90px', marginBottom: '0px', resize: 'none' }} />
 
                 <p style={{ marginTop: '5px', marginBottom: '0px' }}>Contact</p>
                 <textarea
                     readOnly
                     value={formattedContactInfo}
-                    style={{ width: '100%', height: '100px', resize: 'none' }} // Optional styling
+                    style={{ width: '100%', height: '100px', resize: 'none' }}
                 />
-                {/* Add more fields as necessary */}
             </div>
         </div>
     );
@@ -84,6 +86,9 @@ const Mints = ({ onMintChange, balance }) => {
                     if (!storedMintInfo[mintUrl]) {
                         const mint = new CashuMint(mintUrl);
                         const info = await mint.getInfo();
+
+                        // Add the URL to the info object
+                        info.url = mintUrl;
 
                         // Store the fetched mint info in localStorage
                         storedMintInfo[mintUrl] = info;
@@ -193,6 +198,9 @@ const Mints = ({ onMintChange, balance }) => {
             // Get mint info 
             const mint = new CashuMint(newMintURL);
             const info = await mint.getInfo();
+
+            // Add the URL to the info object
+            info.url = newMintURL;
 
             // Add fetched mint info to mintInfo
             storedMintInfo[newMintURL] = info;
