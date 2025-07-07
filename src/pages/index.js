@@ -2,6 +2,7 @@ import useMultiMintStorage from "@/hooks/useMultiMintStorage";
 import { encodeEmoji, decodeEmoji } from "@/hooks/EmojiEncoder";
 import { CashuMint, CashuWallet, getEncodedToken, getDecodedToken, getEncodedTokenV4, CheckStateEnum, MeltQuoteState, getKeepAmounts, MintQuoteState } from "@cashu/cashu-ts";
 import React, { useState, useEffect, useRef } from "react";
+import packageJson from "../../package.json";
 
 // Custom components
 import TypewriterModal from '@/components/TypewriterModal';
@@ -12,14 +13,13 @@ import EcashOrLightning from "@/components/EcashOrLightning";
 import Transactions from "@/components/Transactions";
 import QRCodeScanner from '@/components/QRCodeScanner';
 import NutSplits from '@/components/NutSplits';
-import SendNutsModal from '@/components/SendNutsModal';
 import AutoSweepModal from '@/components/AutoSweepModal';
 
 import QRCode from 'qrcode';
 import JSConfetti from 'js-confetti';
 
 //Nostr
-import { finalizeEvent, generateSecretKey, getPublicKey } from 'nostr-tools/pure';
+import { finalizeEvent, getPublicKey } from 'nostr-tools/pure';
 import crypto from 'crypto'
 import * as secp from '@noble/secp256k1'
 import { Relay } from 'nostr-tools/relay'
@@ -51,10 +51,6 @@ const Wallet = () => {
 
   // For NutSplits component
   const [isNutSplitsModalOpen, setIsNutSplitsModalOpen] = useState(false);
-
-  // For SendNutsModal component
-  const [isSendNutsModalOpen, setSendNutsModalOpen] = useState(false);
-  const [nutsReceiver, setNutsReceiver] = useState(null);
 
   const [typewriterMessages, setTypewriterMessages] = useState([]);
   const [isTypewriterModalOpen, setIsTypewriterModalOpen] = useState(false);
@@ -403,36 +399,56 @@ const Wallet = () => {
     }
   }
 
-  async function handleSend_Ecash(amount) {
+  async function createEcashToken(amount) {
+    if (wallet === null) {
+      throw new Error("Mint needs to be set");
+    }
+
     const storedMintData = JSON.parse(localStorage.getItem("activeMint"));
     const { url, keyset } = storedMintData;
 
-    const proofs = getProofsByAmount(amount, url);
+    const proofs = getProofsByAmount(amount, wallet.mint.mintUrl);
     if (proofs.length === 0) {
-      showToast("Insufficient balance");
-      return;
+      throw new Error("Insufficient balance");
     }
 
+    // Ensure wallet has keys loaded before sending
+    await wallet.getKeys();
+    
+    const response = await wallet.send(amount, proofs);
+    const tokenData = {
+      mint: wallet.mint.mintUrl,
+      proofs: response.send
+    };
+    const encodedToken = getEncodedToken(tokenData);
+
+    // Store token in localStorage
+    storeJSON(encodedToken);
+
+    // Update proofs
+    removeProofs(proofs, wallet.mint.mintUrl);
+    addProofs(response.keep, wallet.mint.mintUrl);
+
+    return {
+      encodedToken,
+      tokenData,
+      proofs,
+      response
+    };
+  }
+
+  async function handleSend_Ecash(amount) {
     try {
-      const response = await wallet.send(amount, proofs);
-      const tokenData = {
-        mint: wallet.mint.mintUrl,
-        proofs: response.send
-      };
-      const encodedToken = getEncodedToken(tokenData);
+      const { encodedToken, tokenData } = await createEcashToken(amount);
 
       //Close the sats input modal and display the cashu token modal
       closeSendEcashModal();
       showCashuTokenModal(tokenData);
 
-      //Add token to local storage
-      storeJSON(encodedToken);
-
-      removeProofs(proofs, wallet.mint.mintUrl);
-      addProofs(response.keep, wallet.mint.mintUrl);
       addTransaction_Ecash("Send", wallet.mint.mintUrl, amount, encodedToken);
     } catch (error) {
       console.error(error);
+      showToast(error.message);
       storeJSON({ error: "Failed to send ecash", details: error });
     }
   }
@@ -766,23 +782,10 @@ const Wallet = () => {
   } // End zapDeezNuts
 
   async function sendNuts(npub, amount, message) {
-    const storedMintData = JSON.parse(localStorage.getItem("activeMint"));
-    const { url, keyset } = storedMintData;
-
-    const proofs = getProofsByAmount(amount, url);
-    if (proofs.length === 0) {
-      showToast("Insufficient balance");
-      return;
-    }
-
     try {
-      const response = await wallet.send(amount, proofs);
-      const tokenData = {
-        mint: wallet.mint.mintUrl,
-        proofs: response.send
-      };
-      const encodedToken = getEncodedToken(tokenData);
+      const { encodedToken } = await createEcashToken(amount);
 
+      // Send via Nostr
       let decodedData = decode(npub);
       let hexPubKey = bytesToHex(decodedData.data);
 
@@ -792,67 +795,75 @@ const Wallet = () => {
       }
       sendEncryptedMessage(hexPubKey, encodedToken);
 
-      removeProofs(proofs, url);
-      addProofs(response.keep, wallet.mint.mintUrl);
+      addTransaction_Ecash("Donate", wallet.mint.mintUrl, amount, encodedToken);
     } catch (error) {
       console.error(error);
-      storeJSON({ error: true, details: error });
+      showToast(error.message);
+      storeJSON({ error: "Failed to send nuts", details: error });
     }
   }
 
   /*
    * Sends a NIP-04 DM to an Nostr user.
    * Receiver should be in the hex pubkey format.
+   * 
+   * Requires environment variable: NEXT_PUBLIC_BULLISHNUTSBOT_NSEC
+   * This should be a valid nsec (Nostr secret key) in bech32 format.
+   * Example: nsec1xyz...
    */
   async function sendEncryptedMessage(receiver, message) {
-    // Check if the secret key already exists in local storage
-    let storedSecretKey = localStorage.getItem('secretKey');
-    let secretKey;  // `secretKey` should be a Uint8Array
-
-    if (storedSecretKey) {
-      // If it exists, retrieve it from local storage and convert it back to Uint8Array
-      secretKey = new Uint8Array(JSON.parse(storedSecretKey));
-    } else {
-      // If it doesn't exist, generate a new secret key
-      secretKey = generateSecretKey();
-      // Save the secret key to local storage as a JSON string
-      localStorage.setItem('secretKey', JSON.stringify(Array.from(secretKey)));
+    // Get secret key from environment variable in nsec format
+    const nsecKey = process.env.NEXT_PUBLIC_BULLISHNUTSBOT_NSEC;
+    
+    if (!nsecKey) {
+      console.error("Nostr secret key not found in environment variables");
+      storeJSON({ error: "Nostr secret key not configured", details: "Missing NEXT_PUBLIC_BULLISHNUTSBOT_NSEC" });
+      return;
     }
 
-    let publicKey = getPublicKey(secretKey) // `publicKey` is a hex string
-    let sharedPoint = secp.getSharedSecret(secretKey, '02' + receiver)
-    let sharedX = sharedPoint.slice(1, 33)
-
-    let iv = crypto.randomFillSync(new Uint8Array(16))
-    var cipher = crypto.createCipheriv(
-      'aes-256-cbc',
-      Buffer.from(sharedX),
-      iv
-    )
-
-    let encryptedMessage = cipher.update(`${message}`, 'utf8', 'base64')
-    encryptedMessage += cipher.final('base64')
-    let ivBase64 = Buffer.from(iv.buffer).toString('base64')
-
-    let event = {
-      pubkey: [publicKey],
-      created_at: Math.floor(Date.now() / 1000),
-      kind: 4,
-      tags: [['p', receiver]],
-      content: encryptedMessage + '?iv=' + ivBase64
-    }
-
-    // this assigns the pubkey, calculates the event id and signs the event in a single step
-    const signedEvent = finalizeEvent(event, secretKey)
-
-    // Try to publish to multiple relays
-    const pool = new SimplePool();
-    let relays = ['wss://relay.0xchat.com', 'wss://relay.damus.io', 'wss://relay.primal.net'];
     try {
-      await Promise.any(pool.publish(relays, signedEvent));
+      // Decode nsec to get the secret key bytes
+      const decodedNsec = decode(nsecKey);
+      const secretKey = new Uint8Array(decodedNsec.data);
+
+      let publicKey = getPublicKey(secretKey) // `publicKey` is a hex string
+      let sharedPoint = secp.getSharedSecret(secretKey, '02' + receiver)
+      let sharedX = sharedPoint.slice(1, 33)
+
+      let iv = crypto.randomFillSync(new Uint8Array(16))
+      var cipher = crypto.createCipheriv(
+        'aes-256-cbc',
+        Buffer.from(sharedX),
+        iv
+      )
+
+      let encryptedMessage = cipher.update(`${message}`, 'utf8', 'base64')
+      encryptedMessage += cipher.final('base64')
+      let ivBase64 = Buffer.from(iv.buffer).toString('base64')
+
+      let event = {
+        pubkey: [publicKey],
+        created_at: Math.floor(Date.now() / 1000),
+        kind: 4,
+        tags: [['p', receiver]],
+        content: encryptedMessage + '?iv=' + ivBase64
+      }
+
+      // this assigns the pubkey, calculates the event id and signs the event in a single step
+      const signedEvent = finalizeEvent(event, secretKey)
+
+      // Try to publish to multiple relays
+      const pool = new SimplePool();
+      let relays = ['wss://relay.0xchat.com', 'wss://relay.damus.io', 'wss://relay.primal.net'];
+      try {
+        await Promise.any(pool.publish(relays, signedEvent));
+      } catch (error) {
+        console.error(error);
+        storeJSON({ error: true, details: error });
+      }
     } catch (error) {
-      console.error(error);
-      storeJSON({ error: true, details: error });
+      console.error("Error in sendEncryptedMessage:", error);
+      storeJSON({ error: "Failed to send encrypted message", details: error });
     }
   }
 
@@ -1156,67 +1167,6 @@ const Wallet = () => {
     modal.style.display = 'none';
   }
 
-  function showSendNutsModal(receiver) {
-    return new Promise((resolve) => {
-      document.getElementById('send_nuts_receiver').value = receiver;
-
-      const modal = document.getElementById('send_nuts_modal');
-      modal.style.display = 'block';
-
-      const submitButton = document.getElementById('send_nuts_submit');
-      submitButton.onclick = () => {
-        const value = document.getElementById('send_nuts_amount').value;
-        const msg = document.getElementById('send_nuts_message').value;
-        resolve({ amount: value, message: msg }); // Resolve with an object
-      };
-    });
-  }
-
-  function closeSendNutsModal() {
-    // Hide modal
-    const modal = document.getElementById('send_nuts_modal');
-    modal.style.display = 'none';
-
-    // Clear inputs
-    document.getElementById('send_nuts_amount').value = '';
-    document.getElementById('send_nuts_message').value = '';
-  }
-
-  //Receive modals
-
-  function showReceiveLightningModal() {
-    if (wallet === null) {
-      showToast("Mint needs to be set");
-      return;
-    }
-    const modal = document.getElementById('receive_lightning_modal');
-    modal.style.display = 'block';
-  }
-
-  function closeReceiveLightningModal() {
-    const modal = document.getElementById('receive_lightning_modal');
-    document.getElementById('receive_lightning_amount').value = '';
-    modal.style.display = 'none';
-  }
-
-  function createInvoiceButtonClicked() {
-    const amount = parseInt(document.getElementById('receive_lightning_amount').value);
-    if (!isNaN(amount) && amount > 0) {
-      handleReceive_Lightning(amount);
-    } else {
-      showToast('Please enter a valid amount of sats');
-    }
-  }
-
-  function claimButtonClicked() {
-    const cashuToken = document.getElementById('cashu_token').value;
-    if (cashuToken !== null) {
-      handleReceive_Ecash(cashuToken);
-    } else {
-      showToast('Please paste a cashu token');
-    }
-  }
-
   function showReceiveEcashModal(token) {
     const modal = document.getElementById('receive_ecash_modal');
 
@@ -1354,26 +1304,66 @@ const Wallet = () => {
     });
   };
 
-  // const handleSendNuts = async () => {
-  //   let npub = 'npub1cashuq3y9av98ljm2y75z8cek39d8ux6jk3g6vafkl5j0uj4m5ks378fhq';
+  //Receive modals
 
-  //   let { amount, message } = await showSendNutsModal(npub);
-  //   closeSendNutsModal();
-
-  //   await sendNuts(npub, amount, message);
-
-  //   showToast("Succesfully sent nuts! Thank you!");
-  //   showConfetti(amount);
-  // };
-
-  function handleSendNuts() {
-    let npub = 'npub1cashuq3y9av98ljm2y75z8cek39d8ux6jk3g6vafkl5j0uj4m5ks378fhq';
-    //let { amount, message } =  showSendNutsModal(npub);
-    closeSendNutsModal();
-    sendNuts(npub, 1, message);
-    showToast("Successfully sent nuts! Thank you!");
-    showConfetti(amount);
+  function showReceiveLightningModal() {
+    if (wallet === null) {
+      showToast("Mint needs to be set");
+      return;
+    }
+    const modal = document.getElementById('receive_lightning_modal');
+    modal.style.display = 'block';
   }
+
+  function closeReceiveLightningModal() {
+    const modal = document.getElementById('receive_lightning_modal');
+    document.getElementById('receive_lightning_amount').value = '';
+    modal.style.display = 'none';
+  }
+
+  function createInvoiceButtonClicked() {
+    const amount = parseInt(document.getElementById('receive_lightning_amount').value);
+    if (!isNaN(amount) && amount > 0) {
+      handleReceive_Lightning(amount);
+    } else {
+      showToast('Please enter a valid amount of sats');
+    }
+  }
+
+  function claimButtonClicked() {
+    const cashuToken = document.getElementById('cashu_token').value;
+    if (cashuToken !== null) {
+      handleReceive_Ecash(cashuToken);
+    } else {
+      showToast('Please paste a cashu token');
+    }
+  }
+
+  // Simplified Send Nuts functions
+  const handleOpenSendNutsModal = () => {
+    const modal = document.getElementById('send_nuts_modal');
+    modal.style.display = 'block';
+  };
+
+  const handleCloseSendNutsModal = () => {
+    const modal = document.getElementById('send_nuts_modal');
+    document.getElementById('send_nuts_amount').value = '';
+    document.getElementById('send_nuts_message').value = '';
+    modal.style.display = 'none';
+  };
+
+  const handleSendNutsSubmit = () => {
+    const amount = parseInt(document.getElementById('send_nuts_amount').value);
+    const message = document.getElementById('send_nuts_message').value;
+    
+    if (!isNaN(amount) && amount > 0) {
+      const receiver = 'npub1cashuq3y9av98ljm2y75z8cek39d8ux6jk3g6vafkl5j0uj4m5ks378fhq';
+      sendNuts(receiver, amount, message);
+      handleCloseSendNutsModal();
+    } else {
+      showToast('Please enter a valid amount of sats');
+    }
+  };
 
   const exportJSON = () => {
     const existingData = JSON.parse(localStorage.getItem('json')) || {};
@@ -1386,6 +1376,11 @@ const Wallet = () => {
     a.download = `bullishNuts_logs_${timestamp}.json`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleAutoSweepSave = (targetBalance, lightningAddress) => {
+    // Handle the save logic here
+    console.log('Auto Sweep Settings:', { targetBalance, lightningAddress });
   };
 
   // function showConfetti(confettiNumber = 21) {
@@ -1583,25 +1578,6 @@ const Wallet = () => {
     }
   };
 
-  const handleOpenSendNutsModal = (receiverValue) => {
-    setNutsReceiver(receiverValue);
-    setSendNutsModalOpen(true);
-  };
-
-  const handleCloseSendNutsModal = () => {
-    setSendNutsModalOpen(false);
-  };
-
-  const handleSubmit = (data) => {
-    console.log('Submitted data:', data);
-    sendNuts(data.receiver, data.amount, data.message);
-  };
-
-  const handleAutoSweepSave = (targetBalance, lightningAddress) => {
-    // Handle the save logic here
-    console.log('Auto Sweep Settings:', { targetBalance, lightningAddress });
-  };
-
   return (
     <main>
       <div className="app-container">
@@ -1609,7 +1585,7 @@ const Wallet = () => {
         <div className="app_header">
           <h2>
             <b><button onClick={() => showConfetti()}>bullishNuts</button></b>
-            <small style={{ marginLeft: '3px', marginTop: '1px' }}>v2.0.16</small>
+            <small style={{ marginLeft: '3px', marginTop: '1px' }}>v{packageJson.version}</small>
           </h2>
           <div id="refresh-icon" onClick={refreshPage}><RefreshIcon style={{ height: '21px', width: '21px' }} /></div>
         </div>
@@ -1776,19 +1752,23 @@ const Wallet = () => {
           <div className="button-container">
             <button className="styled-button" onClick={zapDeezNuts} >ZAP DEEZ NUTS<LightningIcon style={{ height: '21px', width: '21px', marginLeft: '3px' }} /></button>
           </div>
-          {/* <div className="button-container">
+          <div className="button-container">
             <button className="styled-button" onClick={() => handleOpenSendNutsModal()}>SEND NUTS 🥜</button>
-          </div> */}
+          </div>
         </div>
 
-        {isSendNutsModalOpen && (
-          <SendNutsModal
-            receiver={nutsReceiver} // Pass the receiver to the modal
-            onClose={handleCloseSendNutsModal}
-            onSubmit={handleSubmit}
-            isOpen={isSendNutsModalOpen}
-          />
-        )}
+        {/* Send Nuts Modal */}
+        <div id="send_nuts_modal" className="modal">
+          <div className="modal-content">
+            <span className="close-button" onClick={handleCloseSendNutsModal}>&times;</span>
+            <h2>Send Nuts</h2>
+            <label htmlFor="send_nuts_amount">Amount of sats:</label>
+            <input type="number" id="send_nuts_amount" inputMode="decimal" min="1" />
+            <label htmlFor="send_nuts_message">Message (optional):</label>
+            <textarea id="send_nuts_message"></textarea>
+            <button className="styled-button" onClick={handleSendNutsSubmit}>Send Nuts</button>
+          </div>
+        </div>
 
         <div className="data-display-container">
           <h2>Moar Features</h2>
