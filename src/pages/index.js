@@ -1780,18 +1780,18 @@ const Wallet = () => {
 
         <div className="centered-container">
           <div className="button-container" style={{ marginBottom: '10px' }}>
-            <a href="https://njump.me/npub1cashuq3y9av98ljm2y75z8cek39d8ux6jk3g6vafkl5j0uj4m5ks378fhq">
+            <a href="https://njump.me/npub1cashuq3y9av98ljm2y75z8cek39d8ux6jk3g6vafkl5j0uj4m5ks378fhq" target="_blank" rel="noopener noreferrer">
               <img src="/images/nostr-orange.png" alt="Nostr icon" style={{ height: '33px', marginTop: '2px' }} />
             </a>
-            <a href="https://simplex.chat/contact#/?v=2-7&smp=smp%3A%2F%2F1OwYGt-yqOfe2IyVHhxz3ohqo3aCCMjtB-8wn4X_aoY%3D%40smp11.simplex.im%2FOdneEQIS5ONmyX_gTFJmAZWTdBi6ueMD%23%2F%3Fv%3D1-3%26dh%3DMCowBQYDK2VuAyEARR3S-y3Gga4bRRi23CIrZYhtg8G21jbKgl861DN9NW0%253D%26srv%3D6ioorbm6i3yxmuoezrhjk6f6qgkc4syabh7m3so74xunb5nzr4pwgfqd.onion">
+            <a href="https://simplex.chat/contact#/?v=2-7&smp=smp%3A%2F%2F1OwYGt-yqOfe2IyVHhxz3ohqo3aCCMjtB-8wn4X_aoY%3D%40smp11.simplex.im%2FOdneEQIS5ONmyX_gTFJmAZWTdBi6ueMD%23%2F%3Fv%3D1-3%26dh%3DMCowBQYDK2VuAyEARR3S-y3Gga4bRRi23CIrZYhtg8G21jbKgl861DN9NW0%253D%26srv%3D6ioorbm6i3yxmuoezrhjk6f6qgkc4syabh7m3so74xunb5nzr4pwgfqd.onion" target="_blank" rel="noopener noreferrer">
               <img src="/images/simplex-svgrepo-com.png" alt="SimpleX icon" style={{ height: '33px' }} />
             </a>
-            <a href="https://github.com/thebullishbitcoiner/bullishnuts">
+            <a href="https://github.com/thebullishbitcoiner/bullishnuts" target="_blank" rel="noopener noreferrer">
               <img src="/images/github-svgrepo-com.png" alt="GitHub icon" style={{ height: '33px' }} />
             </a>
           </div>
           <p style={{ fontSize: '14px' }}>
-            Made with 🐂 by <a href="https://primal.net/thebullishbitcoiner">thebullishbitcoiner</a>
+            Made with 🐂 by <a href="https://thebullishbitcoiner.com" target="_blank" rel="noopener noreferrer">thebullishbitcoiner</a>
           </p>
 
         </div>

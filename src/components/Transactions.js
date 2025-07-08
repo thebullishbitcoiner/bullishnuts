@@ -2,8 +2,6 @@ import React, { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import { LightningIcon } from "@bitcoin-design/bitcoin-icons-react/filled";
 import { TrashIcon } from "@bitcoin-design/bitcoin-icons-react/outline";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMoneyBill1 } from '@fortawesome/free-regular-svg-icons';
 
 // Function to convert timestamp to human-readable format
 const timeAgo = (date) => {
@@ -228,9 +226,9 @@ const Transactions = ({ updateFlag_Transactions }) => {
                             >
                                 <div style={{ display: 'flex', alignItems: 'center' }}>
                                     {transaction.type === "Ecash" ? (
-                                        <FontAwesomeIcon icon={faMoneyBill1} style={{ height: '21px', width: '21px', marginRight: '10px' }} />
+                                        <img src="/images/cashu-orange.png" alt="Cashu icon" style={{ height: '30px', width: '30px', marginRight: '15px' }} />
                                     ) : (
-                                        <LightningIcon style={{ height: '25px', width: '25px', marginRight: '10px' }} />
+                                        <LightningIcon style={{ height: '35px', width: '35px', marginRight: '12px', marginLeft: '-3px' }} />
                                     )}
                                     <div>
                                         <div style={{ marginTop: '2px' }}>{transaction.action}</div>
