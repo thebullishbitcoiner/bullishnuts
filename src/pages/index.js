@@ -216,7 +216,7 @@ const Wallet = () => {
         addProofs(proofs, wallet.mint.mintUrl);
         closeInvoiceModal();
         const totalAmount = getTotalAmountFromProofs(proofs);
-        addTransaction_Lightning("Receive", wallet.mint.mintUrl, quote.request, totalAmount, "--");
+        addTransaction("Lightning", "Receive", wallet.mint.mintUrl, quote.request, totalAmount, "--");
         showToast(`${amount} sat${amount !== 1 ? 's' : ''} received`);
       } else if (quote.state === MintQuoteState.ISSUED) {
         // if the quote has already been issued, we will receive an error if we try to mint again
@@ -296,7 +296,7 @@ const Wallet = () => {
           addProofs(proofs, mintURL);
           closeReceiveEcashModal();
           const totalAmount = getTotalAmountFromProofs(proofs);
-          addTransaction_Ecash("Receive", mintURL, totalAmount, token);
+          addTransaction("Ecash", "Receive", mintURL, null, totalAmount, null, token);
           showToast(`Received ${totalAmount} ${totalAmount === 1 ? 'sat' : 'sats'}!`);
 
           return;
@@ -310,7 +310,7 @@ const Wallet = () => {
       addProofs(proofs, mintURL);
       closeReceiveEcashModal();
       const totalAmount = getTotalAmountFromProofs(proofs);
-      addTransaction_Ecash("Receive", mintURL, totalAmount, token);
+      addTransaction("Ecash", "Receive", mintURL, null, totalAmount, null, token);
       showToast(`Received ${totalAmount} ${totalAmount === 1 ? 'sat' : 'sats'}!`);
       storeJSON(proofs);
     } catch (error) {
@@ -348,8 +348,8 @@ const Wallet = () => {
   const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
   async function performAutoSweep(wallet, invoiceAmount, lightningAddress) {
-      // Wait for 1 second (1000 milliseconds)
-      await delay(1000);
+    // Wait for 1 second (1000 milliseconds)
+    await delay(1000);
 
     const ln = new LightningAddress(lightningAddress);
     await ln.fetch();
@@ -381,7 +381,7 @@ const Wallet = () => {
         showToast('Auto sweep successful!');
         removeProofs(proofs, wallet.mint.mintUrl);
 
-        addTransaction_AutoSweep(wallet.mint.mintUrl, invoice.paymentRequest, quote.amount, quote.fee_reserve);
+        addTransaction("Lightning", "Auto Sweep", wallet.mint.mintUrl, invoice.paymentRequest, quote.amount, quote.fee_reserve);
 
         var changeArray = { "change": payRes.change };
         storeJSON(changeArray);
@@ -414,7 +414,7 @@ const Wallet = () => {
 
     // Ensure wallet has keys loaded before sending
     await wallet.getKeys();
-    
+
     const response = await wallet.send(amount, proofs);
     const tokenData = {
       mint: wallet.mint.mintUrl,
@@ -445,7 +445,7 @@ const Wallet = () => {
       closeSendEcashModal();
       showCashuTokenModal(tokenData);
 
-      addTransaction_Ecash("Send", wallet.mint.mintUrl, amount, encodedToken);
+      addTransaction("Ecash", "Send", wallet.mint.mintUrl, null, amount, null, encodedToken);
     } catch (error) {
       console.error(error);
       showToast(error.message);
@@ -453,79 +453,52 @@ const Wallet = () => {
     }
   }
 
-  // Handles adding a transaction to localStorage
-  function addTransaction_Ecash(action, mint, amount, token) {
+  function addTransaction(type, action, mint, invoice, amount, fee, token) {
     const timestamp = getTimestamp();
 
     const transaction = {
-      type: "Ecash",
+      type: type,
       created: timestamp,
       action: action,
       mint: mint,
       amount: amount,
-      token: token,
     };
 
-    // Retrieve existing transactions from local storage
-    const existingTransactions = JSON.parse(localStorage.getItem("transactions")) || [];
+    // Add type-specific fields
+    if (type === "Ecash") {
+      transaction.token = token;
+    } else if (type === "Lightning" || type === "Auto Sweep") {
+      transaction.invoice = invoice;
+      transaction.fee = fee;
+    }
+
+    // Retrieve existing transactions from local storage, create key if it doesn't exist
+    let existingTransactions = [];
+    try {
+      const stored = localStorage.getItem("bullishnuts_transactions");
+      if (stored === null) {
+        // Key doesn't exist, create it with empty array
+        localStorage.setItem("bullishnuts_transactions", JSON.stringify([]));
+        existingTransactions = [];
+        console.log("Created new bullishnuts_transactions key in localStorage");
+      } else {
+        existingTransactions = JSON.parse(stored);
+      }
+    } catch (error) {
+      console.warn("Error reading transactions from localStorage, creating new key:", error);
+      localStorage.setItem("bullishnuts_transactions", JSON.stringify([]));
+      existingTransactions = [];
+    }
 
     // Add the new transaction to the beginning of the array
     existingTransactions.unshift(transaction);
 
     // Store the updated transactions array back in local storage
-    localStorage.setItem("transactions", JSON.stringify(existingTransactions));
-
-    // Increment the updateFlag to trigger a re-fetch in Transactions
-    setUpdateFlag_Transactions(prev => prev + 1);
-  }
-
-  function addTransaction_Lightning(action, mint, invoice, amount, fee) {
-    const timestamp = getTimestamp();
-
-    const transaction = {
-      type: "Lightning",
-      created: timestamp,
-      action: action,
-      mint: mint,
-      invoice: invoice,
-      amount: amount,
-      fee: fee,
-    };
-
-    // Retrieve existing transactions from local storage
-    const existingTransactions = JSON.parse(localStorage.getItem("transactions")) || [];
-
-    // Add the new transaction to the beginning of the array
-    existingTransactions.unshift(transaction);
-
-    // Store the updated transactions array back in local storage
-    localStorage.setItem("transactions", JSON.stringify(existingTransactions));
-
-    // Increment the updateFlag to trigger a re-fetch in Transactions
-    setUpdateFlag_Transactions(prev => prev + 1);
-  }
-
-  function addTransaction_AutoSweep(mint, invoice, amount, fee) {
-    const timestamp = getTimestamp();
-
-    const transaction = {
-      action: "Send",
-      type: "Auto Sweep",
-      created: timestamp,
-      mint: mint,
-      invoice: invoice,
-      amount: amount,
-      fee: fee,
-    };
-
-    // Retrieve existing transactions from local storage
-    const existingTransactions = JSON.parse(localStorage.getItem("transactions")) || [];
-
-    // Add the new transaction to the beginning of the array
-    existingTransactions.unshift(transaction);
-
-    // Store the updated transactions array back in local storage
-    localStorage.setItem("transactions", JSON.stringify(existingTransactions));
+    try {
+      localStorage.setItem("bullishnuts_transactions", JSON.stringify(existingTransactions));
+    } catch (error) {
+      console.error("Error saving transaction to localStorage:", error);
+    }
 
     // Increment the updateFlag to trigger a re-fetch in Transactions
     setUpdateFlag_Transactions(prev => prev + 1);
@@ -569,7 +542,7 @@ const Wallet = () => {
             showToast('Invoice paid!');
             removeProofs(proofs, wallet.mint.mintUrl);
 
-            addTransaction_Lightning("Send", wallet.mint.mintUrl, invoice, quote.amount, quote.fee_reserve);
+            addTransaction("Lightning", "Send", wallet.mint.mintUrl, invoice, quote.amount, quote.fee_reserve);
 
             var changeArray = { "change": payRes.change };
             storeJSON(changeArray);
@@ -686,7 +659,7 @@ const Wallet = () => {
           var changeArray = { "change": payRes.change };
           storeJSON(changeArray);
           addProofs(payRes.change, wallet.mint.mintUrl);
-          addTransaction_Lightning("Send", wallet.mint.mintUrl, invoice, quote.amount, quote.fee_reserve);
+          addTransaction("Lightning", "Send", wallet.mint.mintUrl, invoice, quote.amount, quote.fee_reserve);
         }
       } catch (error) {
         // Handle error, whether it's a timeout or another issue
@@ -762,8 +735,6 @@ const Wallet = () => {
 
       if (meltProofsResponse.quote.state == MeltQuoteState.PAID) {
         waitingModal.style.display = 'none';
-
-        showConfetti();
         //const message = quote.amount + ' sat(s) sent to ' + lightningAddress;
         const message = "Thanks for your support!";
         showToast(message, 5);
@@ -771,8 +742,9 @@ const Wallet = () => {
 
         var changeArray = { "change": meltProofsResponse.change };
         storeJSON(changeArray);
-
         addProofs(meltProofsResponse.change, url);
+        addTransaction("Lightning", "Donate", url, invoice, quote.amount, quote.fee_reserve);
+        showConfetti();
       }
     } catch (error) {
       console.error(error);
@@ -795,7 +767,8 @@ const Wallet = () => {
       }
       sendEncryptedMessage(hexPubKey, encodedToken);
 
-      addTransaction_Ecash("Donate", wallet.mint.mintUrl, amount, encodedToken);
+      addTransaction("Ecash", "Donate", wallet.mint.mintUrl, null, amount, null, encodedToken);
+      showConfetti();
     } catch (error) {
       console.error(error);
       showToast(error.message);
@@ -807,18 +780,18 @@ const Wallet = () => {
    * Sends a NIP-04 DM to an Nostr user.
    * Receiver should be in the hex pubkey format.
    * 
-   * Requires environment variable: NEXT_PUBLIC_BULLISHNUTSBOT_NSEC
-   * This should be a valid nsec (Nostr secret key) in bech32 format.
-   * Example: nsec1xyz...
+   * Generates an ephemeral key if one doesn't exist in localStorage.
    */
   async function sendEncryptedMessage(receiver, message) {
-    // Get secret key from environment variable in nsec format
-    const nsecKey = process.env.NEXT_PUBLIC_BULLISHNUTSBOT_NSEC;
-    
+    // Check if we have an ephemeral key in localStorage
+    let nsecKey = localStorage.getItem('bullishnuts_ephemeralKey');
+
     if (!nsecKey) {
-      console.error("Nostr secret key not found in environment variables");
-      storeJSON({ error: "Nostr secret key not configured", details: "Missing NEXT_PUBLIC_BULLISHNUTSBOT_NSEC" });
-      return;
+      // Generate a new ephemeral key
+      const secretKey = secp.utils.randomPrivateKey();
+      nsecKey = encode('nsec', secretKey);
+      localStorage.setItem('bullishnuts_ephemeralKey', nsecKey);
+      console.log('Generated new ephemeral key for encrypted messaging');
     }
 
     try {
@@ -1017,7 +990,7 @@ const Wallet = () => {
     try {
       const decodedToken = getDecodedToken(token);
       const totalAmount = decodedToken.proofs.reduce((sum, proof) => sum + proof.amount, 0);
-      
+
       // Update the token info display
       const tokenInfoDiv = document.getElementById('token_info');
       tokenInfoDiv.innerHTML = `
@@ -1355,7 +1328,7 @@ const Wallet = () => {
   const handleSendNutsSubmit = () => {
     const amount = parseInt(document.getElementById('send_nuts_amount').value);
     const message = document.getElementById('send_nuts_message').value;
-    
+
     if (!isNaN(amount) && amount > 0) {
       const receiver = 'npub1cashuq3y9av98ljm2y75z8cek39d8ux6jk3g6vafkl5j0uj4m5ks378fhq';
       sendNuts(receiver, amount, message);

@@ -2,22 +2,11 @@
 
 A Cashu wallet PWA for sending and receiving ecash tokens.
 
-## Environment Variables
+## Nostr Integration
 
-### Nostr Integration
+The app automatically generates an ephemeral Nostr key for encrypted messaging when needed. This key is stored in localStorage under the key `bullishnuts_ephemeralKey` and is used for sending encrypted messages to Nostr users.
 
-To enable Nostr DM functionality for sending tokens, you need to set the following environment variable:
-
-```bash
-NEXT_PUBLIC_BULLISHNUTSBOT_NSEC=nsec1your_secret_key_here
-```
-
-**How to get an nsec key:**
-1. Use a Nostr client like Damus, Amethyst, or Snort
-2. Export your private key in nsec format
-3. Add it to your Vercel environment variables
-
-**Security Note:** The `NEXT_PUBLIC_` prefix makes this variable available to the client-side code. This is necessary for the Nostr functionality but means the secret key will be visible in the browser. For production use, consider the security implications.
+**Security Note:** The ephemeral key is generated locally and stored in the browser's localStorage. It's used only for encrypted messaging and is not tied to any permanent identity.
 
 ## Development
 

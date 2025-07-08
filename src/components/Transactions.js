@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
-import { SendIcon, ReceiveIcon } from "@bitcoin-design/bitcoin-icons-react/filled";
+import { LightningIcon } from "@bitcoin-design/bitcoin-icons-react/filled";
 import { TrashIcon } from "@bitcoin-design/bitcoin-icons-react/outline";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMoneyBill1 } from '@fortawesome/free-regular-svg-icons';
 
 // Function to convert timestamp to human-readable format
 const timeAgo = (date) => {
@@ -174,14 +176,14 @@ const Transactions = ({ updateFlag_Transactions }) => {
     }, [showDetailsModal, selectedTransaction]);
 
     const updateTransactions = () => {
-        const storedTransactions = JSON.parse(localStorage.getItem("transactions")) || [];
+        const storedTransactions = JSON.parse(localStorage.getItem("bullishnuts_transactions")) || [];
         setTransactions(storedTransactions);
     };
 
     const clearTransactions = () => {
         const confirmDelete = window.confirm("Are you sure you want to delete all transactions?");
         if (confirmDelete) {
-            localStorage.removeItem('transactions');
+            localStorage.removeItem('bullishnuts_transactions');
             updateTransactions();
         }
     };
@@ -225,17 +227,23 @@ const Transactions = ({ updateFlag_Transactions }) => {
                                 onClick={() => handleTransactionClick(transaction)}
                             >
                                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                                    {transaction.action.toLowerCase() === "send" ? (
-                                        <SendIcon style={{ height: '21px', width: '21px', marginRight: '10px' }} />
+                                    {transaction.type === "Ecash" ? (
+                                        <FontAwesomeIcon icon={faMoneyBill1} style={{ height: '21px', width: '21px', marginRight: '10px' }} />
                                     ) : (
-                                        <ReceiveIcon style={{ height: '21px', width: '21px', marginRight: '10px' }} />
+                                        <LightningIcon style={{ height: '25px', width: '25px', marginRight: '10px' }} />
                                     )}
                                     <div>
-                                        <div style={{ marginTop: '2px' }}>{transaction.type}</div>
+                                        <div style={{ marginTop: '2px' }}>{transaction.action}</div>
                                         <div style={{ fontSize: '0.8em', color: '#666', marginTop: '-3px' }}>{timeAgo(transaction.created)}</div> {/* Human-readable timestamp */}
                                     </div>
                                 </div>
-                                <div>{transaction.amount} {transaction.amount === 1 ? 'sat' : 'sats'}</div> {/* Append "sat" or "sats" */}
+                                <div>
+                                    {(() => {
+                                        const action = transaction.action.toLowerCase();
+                                        const sign = (action === "send" || action === "auto sweep" || action === "donate") ? "-" : "+";
+                                        return `${sign}${transaction.amount} ${transaction.amount === 1 ? 'sat' : 'sats'}`;
+                                    })()}
+                                </div>
                             </li>
                         ))}
                     </ul>
