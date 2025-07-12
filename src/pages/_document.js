@@ -5,7 +5,7 @@ export default function Document() {
     <Html lang="en">
       <Head>
       <link rel="manifest" href="/manifest.json" />
-      <link rel="icon" href="/images/bullishNuts_logo-192x192.png" type="image/png" />
+      <link rel="icon" href="/images/logo.png" type="image/png" />
       </Head>
       <body>
         <Main />
