@@ -33,6 +33,38 @@ import { LightningAddress } from "@getalby/lightning-tools";
 // Icons
 import { RefreshIcon, SendIcon, ReceiveIcon, LightningIcon, CheckIcon, ExportIcon, QrCodeIcon } from "@bitcoin-design/bitcoin-icons-react/filled";
 
+// Product data
+const products = [
+  {
+    id: 1,
+    name: "bullishNuts Hat",
+    price: 21000,
+    thumbnail: "/images/bullishNuts_logo-192x192.png",
+    description: "Comfortable cotton hat with the bullishNuts logo"
+  },
+  {
+    id: 2,
+    name: "bullishNuts Hoodie",
+    price: 15000, // 15000 sats
+    thumbnail: "/images/bullishNuts_logo-192x192.png",
+    description: "Warm hoodie perfect for cold weather"
+  },
+  {
+    id: 3,
+    name: "bullishNuts Sticker Pack",
+    price: 1000, // 1000 sats
+    thumbnail: "/images/bullishNuts_logo-192x192.png",
+    description: "Set of 5 high-quality vinyl stickers"
+  },
+  {
+    id: 4,
+    name: "bullishNuts Mug",
+    price: 3000, // 3000 sats
+    thumbnail: "/images/bullishNuts_logo-192x192.png",
+    description: "Ceramic mug with the bullishNuts logo"
+  }
+];
+
 const Wallet = () => {
   const [isBalanceHidden, setIsBalanceHidden] = useState(true);
 
@@ -58,6 +90,12 @@ const Wallet = () => {
   const jsConfettiRef = useRef(null); // Create a ref to store the jsConfetti instance
 
   const [isAutoSweepModalOpen, setIsAutoSweepModalOpen] = useState(false);
+
+  // For Merch Modal
+  const [isMerchModalOpen, setIsMerchModalOpen] = useState(false);
+  const [isMerchPaymentModalOpen, setIsMerchPaymentModalOpen] = useState(false);
+  const [selectedProducts, setSelectedProducts] = useState([]);
+  const [merchTotal, setMerchTotal] = useState(0);
 
   useEffect(() => {
     jsConfettiRef.current = new JSConfetti(); // Initialize the instance
@@ -125,6 +163,13 @@ const Wallet = () => {
       checkAndPerformAutoSweep(wallet);
     }
   }, [balance]);
+
+  // Cleanup effect to restore body overflow when component unmounts
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
 
   const handleMintChange = async (newMint) => {
     try {
@@ -1472,6 +1517,87 @@ const Wallet = () => {
     setIsNutSplitsModalOpen(false);
   }
 
+  // Merch Modal functions
+  const handleOpenMerchModal = () => {
+    setIsMerchModalOpen(true);
+    setSelectedProducts([]);
+    setMerchTotal(0);
+    document.body.style.overflow = 'hidden';
+  };
+
+  const handleCloseMerchModal = () => {
+    setIsMerchModalOpen(false);
+    setSelectedProducts([]);
+    setMerchTotal(0);
+    document.body.style.overflow = 'auto';
+  };
+
+  const handleProductQuantityChange = (productId, newQuantity) => {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    let updatedProducts = [...selectedProducts];
+    const existingIndex = updatedProducts.findIndex(p => p.id === productId);
+
+    if (newQuantity <= 0) {
+      // Remove product if quantity is 0 or negative
+      if (existingIndex !== -1) {
+        updatedProducts.splice(existingIndex, 1);
+      }
+    } else {
+      // Update or add product
+      if (existingIndex !== -1) {
+        updatedProducts[existingIndex] = { ...product, quantity: newQuantity };
+      } else {
+        updatedProducts.push({ ...product, quantity: newQuantity });
+      }
+    }
+
+    setSelectedProducts(updatedProducts);
+    
+    // Calculate total
+    const total = updatedProducts.reduce((sum, p) => sum + (p.price * p.quantity), 0);
+    setMerchTotal(total);
+  };
+
+  const handleMerchNext = () => {
+    if (selectedProducts.length === 0) {
+      showToast("Please select at least one product");
+      return;
+    }
+    setIsMerchModalOpen(false);
+    setIsMerchPaymentModalOpen(true);
+    // Keep overflow hidden since we're transitioning to another modal
+  };
+
+  const handleCloseMerchPaymentModal = () => {
+    setIsMerchPaymentModalOpen(false);
+    setSelectedProducts([]);
+    setMerchTotal(0);
+    document.body.style.overflow = 'auto';
+  };
+
+  const handleMerchPaymentSubmit = () => {
+    const amount = parseInt(document.getElementById('merch_payment_amount').value);
+    const message = document.getElementById('merch_payment_message').value;
+    
+    if (amount !== merchTotal) {
+      showToast("Amount must match the total price");
+      return;
+    }
+
+    // Create order summary
+    const orderSummary = selectedProducts.map(p => 
+      `${p.name} x${p.quantity} (${p.price * p.quantity} sats)`
+    ).join(', ');
+
+    const finalMessage = message ? `${message}\n\nOrder: ${orderSummary}` : `Order: ${orderSummary}`;
+    
+    const receiver = 'npub1cashuq3y9av98ljm2y75z8cek39d8ux6jk3g6vafkl5j0uj4m5ks378fhq';
+    sendNuts(receiver, amount, finalMessage);
+    handleCloseMerchPaymentModal();
+  };
+
   const handleNutSplit = async (selectedCommenters) => {
     try {
       setIsNutSplitsModalOpen(false); // Close the modal
@@ -1728,6 +1854,9 @@ const Wallet = () => {
           <div className="button-container">
             <button className="styled-button" onClick={() => handleOpenSendNutsModal()}>SEND NUTS 🥜</button>
           </div>
+          <div className="button-container">
+            <button className="styled-button" onClick={handleOpenMerchModal}>BUY MERCH 🛍️</button>
+          </div>
         </div>
 
         {/* Send Nuts Modal */}
@@ -1742,6 +1871,99 @@ const Wallet = () => {
             <button className="styled-button" onClick={handleSendNutsSubmit}>Send Nuts</button>
           </div>
         </div>
+
+        {/* Merch Product Selection Modal */}
+        {isMerchModalOpen && (
+          <div className="modal" style={{ display: 'block' }}>
+            <div className="modal-content">
+              <span className="close-button" onClick={handleCloseMerchModal}>&times;</span>
+              <h2>Select Products</h2>
+              <div className="products-list">
+                {products.map((product) => {
+                  const selectedProduct = selectedProducts.find(p => p.id === product.id);
+                  const quantity = selectedProduct ? selectedProduct.quantity : 0;
+                  
+                  return (
+                    <div key={product.id} className="product-item">
+                      <div className="product-info">
+                        <img 
+                          src={product.thumbnail} 
+                          alt={product.name} 
+                          className="product-thumbnail"
+                        />
+                        <div className="product-details">
+                          <h3>{product.name}</h3>
+                          <p className="product-price">{product.price} sats</p>
+                          <p className="product-description">{product.description}</p>
+                        </div>
+                      </div>
+                      <div className="product-quantity">
+                        <button 
+                          className="quantity-btn"
+                          onClick={() => handleProductQuantityChange(product.id, quantity - 1)}
+                          disabled={quantity <= 0}
+                        >
+                          -
+                        </button>
+                        <span className="quantity-display">{quantity}</span>
+                        <button 
+                          className="quantity-btn"
+                          onClick={() => handleProductQuantityChange(product.id, quantity + 1)}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="merch-total">
+                <h3>Total: {merchTotal} sats</h3>
+              </div>
+              <button 
+                className="styled-button" 
+                onClick={handleMerchNext}
+                disabled={selectedProducts.length === 0}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Merch Payment Modal */}
+        {isMerchPaymentModalOpen && (
+          <div className="modal" style={{ display: 'block' }}>
+            <div className="modal-content">
+              <span className="close-button" onClick={handleCloseMerchPaymentModal}>&times;</span>
+              <h2>Complete Purchase</h2>
+              <div className="order-summary">
+                <h3>Order Summary:</h3>
+                {selectedProducts.map((product) => (
+                  <div key={product.id} className="order-item">
+                    <span>{product.name} x{product.quantity}</span>
+                    <span>{product.price * product.quantity} sats</span>
+                  </div>
+                ))}
+                <div className="order-total">
+                  <strong>Total: {merchTotal} sats</strong>
+                </div>
+              </div>
+              <label htmlFor="merch_payment_amount">Amount of sats:</label>
+              <input 
+                type="number" 
+                id="merch_payment_amount" 
+                inputMode="decimal" 
+                min="1" 
+                defaultValue={merchTotal}
+                readOnly
+              />
+              <label htmlFor="merch_payment_message">Message (optional):</label>
+              <textarea id="merch_payment_message" placeholder="Add any special instructions..."></textarea>
+              <button className="styled-button" onClick={handleMerchPaymentSubmit}>Complete Purchase</button>
+            </div>
+          </div>
+        )}
 
         <div className="data-display-container">
           <h2>Moar Features</h2>

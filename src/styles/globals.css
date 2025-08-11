@@ -783,3 +783,133 @@ main {
   padding: 10px;
   background-color: #111111;
 }
+
+/* Merch Modal Styles */
+.products-list {
+  max-height: 400px;
+  overflow-y: auto;
+  margin-bottom: 20px;
+}
+
+.product-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  margin-bottom: 10px;
+  border: 1px solid #ff9900;
+  border-radius: 5px;
+  background-color: rgba(255, 153, 0, 0.05);
+}
+
+.product-info {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.product-thumbnail {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 5px;
+  margin-right: 15px;
+  border: 1px solid #ff9900;
+}
+
+.product-details h3 {
+  margin: 0 0 5px 0;
+  font-size: 1rem;
+  color: #ff9900;
+}
+
+.product-price {
+  margin: 0 0 5px 0;
+  font-weight: bold;
+  color: #ff9900;
+}
+
+.product-description {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #ccc;
+  max-width: 200px;
+}
+
+.product-quantity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.quantity-btn {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #ff9900;
+  background-color: transparent;
+  color: #ff9900;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+}
+
+.quantity-btn:hover:not(:disabled) {
+  background-color: #ff9900;
+  color: black;
+}
+
+.quantity-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.quantity-display {
+  min-width: 30px;
+  text-align: center;
+  font-weight: bold;
+  color: #ff9900;
+}
+
+.merch-total {
+  text-align: right;
+  margin-bottom: 20px;
+  padding: 10px;
+  border-top: 1px solid #ff9900;
+}
+
+.merch-total h3 {
+  margin: 0;
+  color: #ff9900;
+}
+
+.order-summary {
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 1px solid #ff9900;
+  border-radius: 5px;
+  background-color: rgba(255, 153, 0, 0.05);
+}
+
+.order-summary h3 {
+  margin: 0 0 10px 0;
+  color: #ff9900;
+}
+
+.order-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+  color: #ff9900;
+}
+
+.order-total {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #ff9900;
+  text-align: right;
+  color: #ff9900;
+}
