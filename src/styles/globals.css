@@ -205,17 +205,22 @@ main {
   }
 
   /* Modal styles */
-  .modal {
-    display: none;
-    position: fixed;
-    z-index: 1;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0, 0, 0, .9);
-  }
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: rgba(0, 0, 0, .9);
+}
+
+/* Prevent body scrolling when modal is open */
+body.modal-open {
+  overflow: hidden;
+}
 
   .modal h2 {
     font-weight: bold;
@@ -254,16 +259,18 @@ main {
   }
 
   .modal-content {
-    background-color: black;
-    color: #ff9900;
-    font-family: 'Courier New', Courier, monospace;
-    margin: 21px auto;
-    padding: 21px;
-    border: 1px solid #ff9900;
-    width: 90%;
-    max-width: 500px;
-    position: relative;
-  }
+  background-color: black;
+  color: #ff9900;
+  font-family: 'Courier New', Courier, monospace;
+  margin: 21px auto;
+  padding: 21px;
+  border: 1px solid #ff9900;
+  width: 90%;
+  max-width: 500px;
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+}
 
   .close-button {
     position: absolute;
@@ -800,12 +807,15 @@ main {
   border: 1px solid #ff9900;
   border-radius: 5px;
   background-color: rgba(255, 153, 0, 0.05);
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .product-info {
   display: flex;
   align-items: center;
   flex: 1;
+  min-width: 200px;
 }
 
 .product-thumbnail {
@@ -840,6 +850,7 @@ main {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-shrink: 0;
 }
 
 .quantity-btn {
@@ -912,4 +923,77 @@ main {
   border-top: 1px solid #ff9900;
   text-align: right;
   color: #ff9900;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+  .product-item {
+    flex-direction: row;
+    align-items: center;
+    text-align: left;
+    gap: 8px;
+  }
+  
+  .product-info {
+    flex-direction: row;
+    min-width: auto;
+    margin-bottom: 0;
+    flex: 1;
+  }
+  
+  .product-thumbnail {
+    margin-right: 8px;
+    margin-bottom: 0;
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
+  }
+  
+  .product-details h3 {
+    font-size: 0.9rem;
+    margin-bottom: 2px;
+  }
+  
+  .product-price {
+    font-size: 0.8rem;
+    margin-bottom: 0;
+  }
+  
+  .product-quantity {
+    justify-content: flex-end;
+    gap: 4px;
+  }
+  
+  .quantity-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 1rem;
+  }
+  
+  .quantity-display {
+    min-width: 30px;
+    font-size: 0.9rem;
+  }
+  
+  .modal-content {
+    margin: 5% auto;
+    width: 95%;
+    max-width: 95%;
+    max-height: 90vh;
+  }
+  
+  .products-list {
+    max-height: 60vh;
+  }
+  
+  .order-summary {
+    font-size: 0.9rem;
+  }
+  
+  .order-item {
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
+    text-align: left;
+  }
 }

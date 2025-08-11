@@ -39,29 +39,25 @@ const products = [
     id: 1,
     name: "bullishNuts Hat",
     price: 21000,
-    thumbnail: "/images/bullishNuts_logo-192x192.png",
-    description: "Comfortable cotton hat with the bullishNuts logo"
+    thumbnail: "/images/bullishNuts_logo-192x192.png"
   },
   {
     id: 2,
     name: "bullishNuts Hoodie",
-    price: 15000, // 15000 sats
-    thumbnail: "/images/bullishNuts_logo-192x192.png",
-    description: "Warm hoodie perfect for cold weather"
+    price: 30000,
+    thumbnail: "/images/bullishNuts_logo-192x192.png"
   },
   {
     id: 3,
     name: "bullishNuts Sticker Pack",
-    price: 1000, // 1000 sats
-    thumbnail: "/images/bullishNuts_logo-192x192.png",
-    description: "Set of 5 high-quality vinyl stickers"
+    price: 1000, 
+    thumbnail: "/images/bullishNuts_logo-192x192.png"
   },
   {
     id: 4,
-    name: "bullishNuts Mug",
-    price: 3000, // 3000 sats
-    thumbnail: "/images/bullishNuts_logo-192x192.png",
-    description: "Ceramic mug with the bullishNuts logo"
+    name: "bullishNuts Test",
+    price: 2,
+    thumbnail: "/images/bullishNuts_logo-192x192.png"
   }
 ];
 
@@ -1894,7 +1890,6 @@ const Wallet = () => {
                         <div className="product-details">
                           <h3>{product.name}</h3>
                           <p className="product-price">{product.price} sats</p>
-                          <p className="product-description">{product.description}</p>
                         </div>
                       </div>
                       <div className="product-quantity">
@@ -1959,7 +1954,7 @@ const Wallet = () => {
                 readOnly
               />
               <label htmlFor="merch_payment_message">Message (optional):</label>
-              <textarea id="merch_payment_message" placeholder="Add any special instructions..."></textarea>
+              <textarea id="merch_payment_message" placeholder="Let me know where to send and/or how to contact you."></textarea>
               <button className="styled-button" onClick={handleMerchPaymentSubmit}>Complete Purchase</button>
             </div>
           </div>
