@@ -31,7 +31,7 @@ import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
 import { LightningAddress } from "@getalby/lightning-tools";
 
 // Icons
-import { RefreshIcon, SendIcon, ReceiveIcon, LightningIcon, CheckIcon, ExportIcon, QrCodeIcon } from "@bitcoin-design/bitcoin-icons-react/filled";
+import { RefreshIcon, SendIcon, ReceiveIcon, CheckIcon, ExportIcon, QrCodeIcon } from "@bitcoin-design/bitcoin-icons-react/filled";
 
 // Product data
 const products = [
@@ -1845,13 +1845,13 @@ const Wallet = () => {
         <div className="section">
           <h2>Support</h2>
           <div className="button-container">
-            <button className="styled-button" onClick={zapDeezNuts} >ZAP DEEZ NUTS<LightningIcon style={{ height: '21px', width: '21px', marginLeft: '3px' }} /></button>
+            <button className="styled-button" onClick={() => handleOpenSendNutsModal()}>SEND NUTS</button>
           </div>
           <div className="button-container">
-            <button className="styled-button" onClick={() => handleOpenSendNutsModal()}>SEND NUTS 🥜</button>
+            <button className="styled-button" onClick={handleOpenMerchModal}>BUY MERCH</button>
           </div>
           <div className="button-container">
-            <button className="styled-button" onClick={handleOpenMerchModal}>BUY MERCH 🛍️</button>
+            <button className="styled-button" onClick={zapDeezNuts} >ZAP DEEZ NUTS</button>
           </div>
         </div>
 
