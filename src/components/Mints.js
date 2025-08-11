@@ -3,6 +3,7 @@ import useMultiMintStorage from "@/hooks/useMultiMintStorage";
 import { CashuMint } from "@cashu/cashu-ts";
 import { PlusIcon, CrossIcon } from '@bitcoin-design/bitcoin-icons-react/filled'
 import { InfoCircleIcon } from '@bitcoin-design/bitcoin-icons-react/outline'
+import { discoverMints } from "cashu-kym";
 
 const MintInfoModal = ({ mintInfo, onClose }) => {
 
@@ -53,6 +54,8 @@ const Mints = ({ onMintChange, balance }) => {
     const [showInfoModal, setShowInfoModal] = useState(false); // State for showing/hiding modal
     const [newMintURL, setNewMintURL] = useState(""); // State for holding new mint URL
     const [selectedMintInfo, setSelectedMintInfo] = useState(null);
+    const [recommendations, setRecommendations] = useState([]); // State for mint recommendations
+    const [loadingRecommendations, setLoadingRecommendations] = useState(false); // State for loading recommendations
 
     useEffect(() => {
         // Prevent scrolling when the modal is open
@@ -147,6 +150,13 @@ const Mints = ({ onMintChange, balance }) => {
         fetchMintNames(); // Re-fetch mint names and balances when balance changes
     }, [balance]);
 
+    // Effect to fetch recommendations when the modal opens
+    useEffect(() => {
+        if (showInfoModal) {
+            fetchRecommendations();
+        }
+    }, [showInfoModal]);
+
     const handleMintSelection = (mint) => {
         onMintChange(mint);
         setLocalActiveMint(mint); // Update local state
@@ -240,6 +250,28 @@ const Mints = ({ onMintChange, balance }) => {
         setSelectedMintInfo(null);
     };
 
+    const fetchRecommendations = async () => {
+        setLoadingRecommendations(true);
+        try {
+            const relays = ["wss://relay.damus.io"];
+            const timeoutMs = 3000;
+            const mints = await discoverMints(relays, timeoutMs);
+            // Sort recommendations by score in descending order (highest first)
+            const sortedMints = mints.sort((a, b) => b.score - a.score);
+            setRecommendations(sortedMints);
+        } catch (error) {
+            console.error("Failed to fetch recommendations:", error);
+            showToast("Failed to fetch recommendations. Please try again later.");
+            setRecommendations([]);
+        } finally {
+            setLoadingRecommendations(false);
+        }
+    };
+
+    const handleRecommendationClick = (url) => {
+        setNewMintURL(url);
+    };
+
     return (
         <div>
             <div className="box_header">
@@ -278,7 +310,7 @@ const Mints = ({ onMintChange, balance }) => {
                         </div>
                     ))
                 ) : (
-                    <p>No mints added. Add one from <a href="https://bitcoinmints.com/">bitcoinmints.com</a> or <a href="https://cashumints.space/">cashumints.space</a></p>
+                    <p>Add a mint manually or receive an ecash token and it'll be automaticaly set.</p>
                 )}
             </div>
 
@@ -295,6 +327,29 @@ const Mints = ({ onMintChange, balance }) => {
                             onChange={(e) => setNewMintURL(e.target.value)}
                         />
                         <button className="styled-button" onClick={handleAddMint}>Submit</button>
+                        
+                        {/* Recommendations Section */}
+                        <div className="recommendations-section">
+                            <h3>Recommendations {recommendations.length > 0 && `(${recommendations.length})`}</h3>
+                            {loadingRecommendations ? (
+                                <p>Loading recommendations...</p>
+                            ) : recommendations.length > 0 ? (
+                                <div className="recommendations-list">
+                                    {recommendations.map((mint, index) => (
+                                        <div 
+                                            key={index} 
+                                            className="recommendation-item"
+                                            onClick={() => handleRecommendationClick(mint.url)}
+                                        >
+                                            <div className="recommendation-url">{mint.url}</div>
+                                            <div className="recommendation-score">{mint.score.toFixed(1)}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p>No recommendations available</p>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}

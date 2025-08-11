@@ -428,6 +428,58 @@ body.modal-open {
     background-color: rgba(0, 0, 0, 0.8);
   }
 
+  .recommendations-section {
+    margin-top: 20px;
+    border-top: 1px solid #ff9900;
+    padding-top: 15px;
+  }
+
+  .recommendations-section h3 {
+    margin: 0 0 10px 0;
+    font-size: 1rem;
+    color: #ff9900;
+  }
+
+  .recommendations-list {
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .recommendation-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    margin: 5px 0;
+    border: 1px solid #ff9900;
+    background-color: transparent;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+
+  .recommendation-item:hover {
+    background-color: rgba(255, 153, 0, 0.1);
+  }
+
+  .recommendation-url {
+    flex: 1;
+    font-size: 0.9rem;
+    color: #ff9900;
+    word-break: break-all;
+  }
+
+  .recommendation-score {
+    margin-left: 10px;
+    padding: 2px 8px;
+    background-color: #ff9900;
+    color: black;
+    border-radius: 3px;
+    font-weight: bold;
+    font-size: 0.8rem;
+    min-width: 30px;
+    text-align: center;
+  }
+
   .transaction_modal {
     display: block;
     justify-content: center;

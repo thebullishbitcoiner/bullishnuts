@@ -31,7 +31,7 @@ import { bytesToHex, hexToBytes } from '@noble/hashes/utils';
 import { LightningAddress } from "@getalby/lightning-tools";
 
 // Icons
-import { RefreshIcon, SendIcon, ReceiveIcon, CheckIcon, ExportIcon, QrCodeIcon } from "@bitcoin-design/bitcoin-icons-react/filled";
+import { RefreshIcon, SendIcon, ReceiveIcon, QrCodeIcon } from "@bitcoin-design/bitcoin-icons-react/filled";
 
 // Product data
 const products = [
@@ -50,7 +50,7 @@ const products = [
   {
     id: 3,
     name: "bullishNuts Sticker Pack",
-    price: 1000, 
+    price: 1000,
     thumbnail: "/images/bullishNuts_logo-192x192.png"
   },
   {
@@ -1550,7 +1550,7 @@ const Wallet = () => {
     }
 
     setSelectedProducts(updatedProducts);
-    
+
     // Calculate total
     const total = updatedProducts.reduce((sum, p) => sum + (p.price * p.quantity), 0);
     setMerchTotal(total);
@@ -1576,19 +1576,19 @@ const Wallet = () => {
   const handleMerchPaymentSubmit = () => {
     const amount = parseInt(document.getElementById('merch_payment_amount').value);
     const message = document.getElementById('merch_payment_message').value;
-    
+
     if (amount !== merchTotal) {
       showToast("Amount must match the total price");
       return;
     }
 
     // Create order summary
-    const orderSummary = selectedProducts.map(p => 
+    const orderSummary = selectedProducts.map(p =>
       `${p.name} x${p.quantity} (${p.price * p.quantity} sats)`
     ).join(', ');
 
     const finalMessage = message ? `${message}\n\nOrder: ${orderSummary}` : `Order: ${orderSummary}`;
-    
+
     const receiver = 'npub1cashuq3y9av98ljm2y75z8cek39d8ux6jk3g6vafkl5j0uj4m5ks378fhq';
     sendNuts(receiver, amount, finalMessage);
     handleCloseMerchPaymentModal();
@@ -1878,13 +1878,13 @@ const Wallet = () => {
                 {products.map((product) => {
                   const selectedProduct = selectedProducts.find(p => p.id === product.id);
                   const quantity = selectedProduct ? selectedProduct.quantity : 0;
-                  
+
                   return (
                     <div key={product.id} className="product-item">
                       <div className="product-info">
-                        <img 
-                          src={product.thumbnail} 
-                          alt={product.name} 
+                        <img
+                          src={product.thumbnail}
+                          alt={product.name}
                           className="product-thumbnail"
                         />
                         <div className="product-details">
@@ -1893,7 +1893,7 @@ const Wallet = () => {
                         </div>
                       </div>
                       <div className="product-quantity">
-                        <button 
+                        <button
                           className="quantity-btn"
                           onClick={() => handleProductQuantityChange(product.id, quantity - 1)}
                           disabled={quantity <= 0}
@@ -1901,7 +1901,7 @@ const Wallet = () => {
                           -
                         </button>
                         <span className="quantity-display">{quantity}</span>
-                        <button 
+                        <button
                           className="quantity-btn"
                           onClick={() => handleProductQuantityChange(product.id, quantity + 1)}
                         >
@@ -1915,8 +1915,8 @@ const Wallet = () => {
               <div className="merch-total">
                 <h3>Total: {merchTotal} sats</h3>
               </div>
-              <button 
-                className="styled-button" 
+              <button
+                className="styled-button"
                 onClick={handleMerchNext}
                 disabled={selectedProducts.length === 0}
               >
@@ -1945,11 +1945,11 @@ const Wallet = () => {
                 </div>
               </div>
               <label htmlFor="merch_payment_amount">Amount of sats:</label>
-              <input 
-                type="number" 
-                id="merch_payment_amount" 
-                inputMode="decimal" 
-                min="1" 
+              <input
+                type="number"
+                id="merch_payment_amount"
+                inputMode="decimal"
+                min="1"
                 defaultValue={merchTotal}
                 readOnly
               />
@@ -1969,12 +1969,12 @@ const Wallet = () => {
           </div>
           <div className="button-container">
             <button className="styled-button" onClick={checkProofs}>
-              Check Proofs<CheckIcon style={{ height: '21px', width: '21px', marginLeft: '3px', marginBottom: '3px' }} />
+              Check Proofs
             </button>
           </div>
           <div className="button-container">
             <button className="styled-button" onClick={exportJSON}>
-              Export JSON Logs<ExportIcon style={{ height: '21px', width: '21px', marginLeft: '3px', marginBottom: '3px' }} />
+              Export JSON Logs
             </button>
           </div>
           <AutoSweepModal

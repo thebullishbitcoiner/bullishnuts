@@ -1,6 +1,6 @@
 {
   "name": "bullishnuts",
-  "version": "2.5.8",
+  "version": "2.5.9",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -17,6 +17,7 @@
     "@noble/secp256k1": "^2.1.0",
     "bech32-buffer": "^0.2.1",
     "bitcoin-qr": "^1.4.1",
+    "cashu-kym": "^0.1.0",
     "js-confetti": "^0.12.0",
     "light-bolt11-decoder": "^3.2.0",
     "next": "14.2.3",
