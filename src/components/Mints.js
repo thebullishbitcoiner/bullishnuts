@@ -310,7 +310,7 @@ const Mints = ({ onMintChange, balance }) => {
                         </div>
                     ))
                 ) : (
-                    <p>Add a mint manually or receive an ecash token and it'll be automaticaly set.</p>
+                    <p>Add a mint manually or receive an ecash token and it&apos;ll be automaticaly set.</p>
                 )}
             </div>
 
