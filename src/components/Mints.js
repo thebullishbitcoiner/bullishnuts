@@ -150,10 +150,14 @@ const Mints = ({ onMintChange, balance }) => {
         fetchMintNames(); // Re-fetch mint names and balances when balance changes
     }, [balance]);
 
-    // Effect to fetch recommendations when the modal opens
+    // Effect to fetch recommendations when the modal opens and clear when it closes
     useEffect(() => {
         if (showInfoModal) {
             fetchRecommendations();
+        } else {
+            // Clear recommendations when modal closes
+            setRecommendations([]);
+            setLoadingRecommendations(false);
         }
     }, [showInfoModal]);
 
@@ -253,7 +257,7 @@ const Mints = ({ onMintChange, balance }) => {
     const fetchRecommendations = async () => {
         setLoadingRecommendations(true);
         try {
-            const relays = ["wss://relay.damus.io"];
+            const relays = ["wss://relay.damus.io", "wss://relay.primal.net"];
             const timeoutMs = 3000;
             const mints = await discoverMints(relays, timeoutMs);
             // Sort recommendations by score in descending order (highest first)
